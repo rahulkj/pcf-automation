@@ -1,0 +1,70 @@
+product-properties: |
+  ".properties.opsman":
+    value: enable
+  ".properties.opsman.enable.url":
+    value: https://((ops_mgr_host))
+  ".properties.boshtasks":
+    value: enable
+  ".properties.boshtasks.enable.bosh_taskcheck_username":
+    value: ((healthwatch_username))
+  ".properties.boshtasks.enable.bosh_taskcheck_password":
+    value:
+      secret: ((healthwatch_password))
+  ".properties.syslog_selector":
+    value: inactive
+  ".mysql.skip_name_resolve":
+    value: true
+  ".healthwatch-forwarder.foundation_name":
+    value: Homelab
+  ".healthwatch-forwarder.ingestor_instance_count":
+    value: 1
+  ".healthwatch-forwarder.worker_instance_count":
+    value: 1
+  ".healthwatch-forwarder.canary_instance_count":
+    value: 1
+  ".healthwatch-forwarder.boshhealth_instance_count":
+    value: 1
+  ".healthwatch-forwarder.boshtasks_instance_count":
+    value: 1
+  ".healthwatch-forwarder.cli_instance_count":
+    value: 1
+  ".healthwatch-forwarder.opsman_instance_count":
+    value: 1
+  ".healthwatch-forwarder.publish_to_eva":
+    value: true
+  ".healthwatch-forwarder.health_check_az":
+    value: AZ-1
+  ".healthwatch-forwarder.health_check_vm_type":
+    value: nano
+
+# Resources for p-healthwatch are:
+product-resources: |
+  mysql:
+    instances: 1
+    instance_type:
+      id: 2xlarge
+    persistent_disk:
+      size_mb: "102400"
+  redis:
+    instances: 1
+    instance_type:
+      id: xlarge
+    persistent_disk:
+      size_mb: "102400"
+  healthwatch-forwarder:
+    instances: 2
+    instance_type:
+      id: xlarge
+    persistent_disk:
+      size_mb: "102400"
+
+product-network: |
+  network:
+    name: SERVICES
+  service_network:
+    name: SERVICES
+  other_availability_zones:
+    - name: AZ-1
+    - name: AZ-2
+  singleton_availability_zone:
+    name: AZ-1

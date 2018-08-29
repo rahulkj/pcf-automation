@@ -1,0 +1,107 @@
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+resources:
+- name: platform-automation-image
+  type: docker-image
+  source:
+    repository: pivotalservices/platform-automation
+    tag: 0.0.1-rc.130
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+- name: healthwatch-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: p-healthwatch
+    product_version: ((healthwatch_version))
+- name: config-repo
+  type: git
+  source:
+    uri: https://github.com/rahul-kj/test-automation.git
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+jobs:
+- name: upload-and-stage-healthwatch
+  plan:
+  - aggregate:
+    - get: config-repo
+    - get: pcf-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs:
+        - "*.zip"
+        unpack: true
+    - get: config
+      params:
+        unpack: true
+    - get: healthwatch-product
+      params:
+        globs: ["*.pivotal"]
+    - get: auth
+      passed:
+      - upload-stemcell
+      trigger: true
+  - task: upload-and-stage-product
+    image: pcf-automation-image
+    file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+    input_mapping:
+      config: config-repo/healthwatch
+      product: healthwatch-product
+    params:
+      CONFIG_FILE: healthwatch.yml
+- name: configure-healthwatch
+  plan:
+  - aggregate:
+    - get: pcf-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs:
+        - "*.zip"
+        unpack: true
+    - get: config-repo
+      params:
+        unpack: true
+  - task: configure-healthwatch
+    input_mapping:
+      auth: config-repo/global/auth.yml
+      config: config-repo/healthwatch
+    image: pcf-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    params:
+      CONFIG_FILE: healthwatch.yml
+      VARS_FILE:
+- name: apply-product-changes
+  plan:
+  - aggregate:
+    - get: pcf-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs:
+        - "*.zip"
+        unpack: true
+    - get: config-repo
+      passed:
+      - configure-healthwatch
+      trigger: true
+  - task: apply-product-changes
+    input_mapping:
+      auth: config-repo/global/auth.yml
+    image: pcf-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml

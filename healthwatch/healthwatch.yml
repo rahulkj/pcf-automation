@@ -1,4 +1,17 @@
-product-properties: |
+product_name: p-healthwatch
+
+network-properties:
+  network:
+    name: SERVICES
+  service_network:
+    name: SERVICES
+  other_availability_zones:
+    - name: AZ-1
+    - name: AZ-2
+  singleton_availability_zone:
+    name: AZ-1
+
+product-properties:
   ".properties.opsman":
     value: enable
   ".properties.opsman.enable.url":
@@ -38,7 +51,7 @@ product-properties: |
     value: nano
 
 # Resources for p-healthwatch are:
-product-resources: |
+resource-config:
   mysql:
     instances: 1
     instance_type:
@@ -57,14 +70,3 @@ product-resources: |
       id: xlarge
     persistent_disk:
       size_mb: "102400"
-
-product-network: |
-  network:
-    name: SERVICES
-  service_network:
-    name: SERVICES
-  other_availability_zones:
-    - name: AZ-1
-    - name: AZ-2
-  singleton_availability_zone:
-    name: AZ-1

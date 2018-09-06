@@ -2,14 +2,14 @@ product-properties: |
   ".properties.opsman":
     value: enable
   ".properties.opsman.enable.url":
-    value: https://((ops_mgr_host))
+    value: https://opsmgr.homelab.io
   ".properties.boshtasks":
     value: enable
   ".properties.boshtasks.enable.bosh_taskcheck_username":
-    value: ((healthwatch_username))
+    value: hello
   ".properties.boshtasks.enable.bosh_taskcheck_password":
     value:
-      secret: ((healthwatch_password))
+      secret: junk
   ".properties.syslog_selector":
     value: inactive
   ".mysql.skip_name_resolve":

@@ -30,13 +30,17 @@ resources:
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
+- name: pipeline-utilities
+  type: git
+  source:
+    uri: https://github.com/pivotalservices/pipeline-utilities.git
 
 jobs:
 - name: upload-and-stage-healthwatch
   plan:
   - aggregate:
-    - get: config-repo
-    - get: pcf-automation-image
+    - get: pipeline-utilities
+    - get: platform-automation-image
       params:
         unpack: true
     - get: platform-automation-tasks
@@ -44,28 +48,33 @@ jobs:
         globs:
         - "*.zip"
         unpack: true
-    - get: config
-      params:
-        unpack: true
+    - get: config-repo
+      trigger: true
     - get: healthwatch-product
       params:
         globs: ["*.pivotal"]
-    - get: auth
-      passed:
-      - upload-stemcell
-      trigger: true
+
+  - aggregate:
+    - task: create-om-env
+      file: pipeline-utilities/tasks/create-om-env.yml
+      params:
+        OPSMAN_TARGET: ((ops_mgr_host))
+        OPSMAN_SKIP_SSL_VALIDATION: true
+        OPSMAN_USERNAME: ((ops_mgr_usr))
+        OPSMAN_PASSWORD: ((ops_mgr_pwd))
+
   - task: upload-and-stage-product
-    image: pcf-automation-image
+    image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-and-stage-product.yml
     input_mapping:
-      config: config-repo/healthwatch
+      config: config-repo
       product: healthwatch-product
-    params:
-      CONFIG_FILE: healthwatch.yml
+
 - name: configure-healthwatch
   plan:
   - aggregate:
-    - get: pcf-automation-image
+    - get: pipeline-utilities
+    - get: platform-automation-image
       params:
         unpack: true
     - get: platform-automation-tasks
@@ -76,19 +85,34 @@ jobs:
     - get: config-repo
       params:
         unpack: true
+      passed: [upload-and-stage-healthwatch]
+      trigger: true
+    - get: healthwatch-product
+      params:
+        globs: ["*.pivotal"]
+  - aggregate:
+    - task: create-om-env
+      file: pipeline-utilities/tasks/create-om-env.yml
+      params:
+        OPSMAN_TARGET: ((ops_mgr_host))
+        OPSMAN_SKIP_SSL_VALIDATION: true
+        OPSMAN_USERNAME: ((ops_mgr_usr))
+        OPSMAN_PASSWORD: ((ops_mgr_pwd))
+
   - task: configure-healthwatch
     input_mapping:
-      auth: config-repo/global/auth.yml
-      config: config-repo/healthwatch
-    image: pcf-automation-image
+      product: healthwatch-product
+      config: config-repo
+    image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     params:
-      CONFIG_FILE: healthwatch.yml
-      VARS_FILE:
+      CONFIG_FILE: healthwatch/healthwatch.yml
+
 - name: apply-product-changes
   plan:
   - aggregate:
-    - get: pcf-automation-image
+    - get: pipeline-utilities
+    - get: platform-automation-image
       params:
         unpack: true
     - get: platform-automation-tasks
@@ -100,8 +124,14 @@ jobs:
       passed:
       - configure-healthwatch
       trigger: true
+  - aggregate:
+    - task: create-om-env
+      file: pipeline-utilities/tasks/create-om-env.yml
+      params:
+        OPSMAN_TARGET: ((ops_mgr_host))
+        OPSMAN_SKIP_SSL_VALIDATION: true
+        OPSMAN_USERNAME: ((ops_mgr_usr))
+        OPSMAN_PASSWORD: ((ops_mgr_pwd))
   - task: apply-product-changes
-    input_mapping:
-      auth: config-repo/global/auth.yml
-    image: pcf-automation-image
+    image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-changes.yml

@@ -11,18 +11,29 @@ resources:
   source:
     repository: pivotalservices/platform-automation
     tag: 0.0.1-rc.130
+
 - name: platform-automation-tasks
   type: pivnet
   source:
     api_token: ((pivnet_token))
     product_slug: platform-automation
     product_version: ((platform_automation_version))
+
 - name: healthwatch-product
   type: pivnet
   source:
     api_token: ((pivnet_token))
     product_slug: p-healthwatch
     product_version: ((healthwatch_version))
+
+- name: healthwatch-stemcell
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: stemcells
+    product_version: 3541\..*
+    sort_by: semver
+
 - name: config-repo
   type: git
   source:
@@ -30,6 +41,7 @@ resources:
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
+
 - name: pipeline-utilities
   type: git
   source:
@@ -49,10 +61,13 @@ jobs:
         - "*.zip"
         unpack: true
     - get: config-repo
-      trigger: true
     - get: healthwatch-product
       params:
         globs: ["*.pivotal"]
+      trigger: true
+    - get: healthwatch-stemcell
+      params:
+        globs: ["*vsphere*"]
 
   - aggregate:
     - task: create-om-env
@@ -70,6 +85,12 @@ jobs:
       config: config-repo
       product: healthwatch-product
 
+  - task: upload-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+     stemcell: healthwatch-stemcell
+
 - name: configure-healthwatch
   plan:
   - aggregate:
@@ -85,11 +106,11 @@ jobs:
     - get: config-repo
       params:
         unpack: true
-      passed: [upload-and-stage-healthwatch]
-      trigger: true
     - get: healthwatch-product
       params:
         globs: ["*.pivotal"]
+      passed: [upload-and-stage-healthwatch]
+      trigger: true
   - aggregate:
     - task: create-om-env
       file: pipeline-utilities/tasks/create-om-env.yml
@@ -121,9 +142,12 @@ jobs:
         - "*.zip"
         unpack: true
     - get: config-repo
-      passed:
-      - configure-healthwatch
+    - get: healthwatch-product
+      passed: [configure-healthwatch]
+      params:
+        globs: []
       trigger: true
+
   - aggregate:
     - task: create-om-env
       file: pipeline-utilities/tasks/create-om-env.yml

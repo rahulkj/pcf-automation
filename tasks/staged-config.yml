@@ -1,0 +1,38 @@
+# code_snippet staged-config start yaml
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+
+outputs:
+- name: generated-config # will contain the staged product config
+
+params:
+  PRODUCT_NAME:
+  # - Required
+  # - The name of the product config to be exported
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  SUBSTITUE_CREDENTIALS_WITH_PLACEHOLDERS: true
+  # - Replace credentials with interpolatable variable names
+  # - If set to false, **literal credentials** will be included in the output
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+
+    flag=$(if "$SUBSTITUE_CREDENTIALS_WITH_PLACEHOLDERS";
+           then echo '--include-placeholders';
+           else echo '--include-credentials';
+           fi
+          )
+
+    om --env env/"${ENV_FILE}" staged-config \
+    --product-name "$PRODUCT_NAME" \
+    "$flag" > generated-config/"$PRODUCT_NAME".yml
+# code_snippet staged-config end

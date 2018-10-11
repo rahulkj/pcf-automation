@@ -1,0 +1,24 @@
+# code_snippet upload-stemcell start yaml
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+- name: stemcell # contains the stemcell tarball
+# - The stemcell filename is important and must be preserved.
+#   if using the bosh.io concourse resource,
+#   set `params.preserve_filename: true` on your GET.
+
+params:
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+    p-automator upload-stemcell --auth-file env/"${ENV_FILE}" \
+    --stemcell stemcell/*.tgz
+# code_snippet upload-stemcell end

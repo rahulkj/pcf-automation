@@ -1,0 +1,34 @@
+# code_snippet import-installation start yaml
+---
+platform: linux
+
+inputs:
+- name: auth # contains the auth file with OpsMan credentials
+- name: env # contains the environment information about the OpsMan
+- name: installation # contains the installation to be imported
+
+params:
+  AUTH_CONFIG_FILE: auth.yml
+  # - Filepath of the authorization config YAML
+  # - The path is relative to root of the `auth` input
+  ENV_FILE: env.yml
+  # - Filepath of the environment config YAML
+  # - The path is relative to root of the `env` input
+  INSTALLATION_FILE: installation.zip
+  # - Optional
+  # - Filepath of the installation ZIP file
+  # - The path is relative to root of the `installation` input
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    set -eux
+    if [ -f installation/"$INSTALLATION_FILE" ]; then
+      p-automator import-installation \
+      --auth-file config/"${AUTH_CONFIG_FILE}" \
+      --env-file env/"${ENV_FILE}" \
+      --installation installation/"${INSTALLATION_FILE}"
+    fi
+# code_snippet import-installation end

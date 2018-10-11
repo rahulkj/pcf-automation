@@ -1,0 +1,72 @@
+# code_snippet upgrade-opsman start yaml
+---
+platform: linux
+
+inputs:
+- name: state # contains the state for the vm
+- name: config # contains the OpsMan configuration file
+- name: image # contains the image file to be installed
+- name: installation # contains the installation to be imported
+- name: env # contains the environment information for OpsMan
+- name: vars # variable files to be made available
+  optional: true
+- name: secrets
+  # secret files to be made available
+  # separate from vars, so they can be store securely
+  optional: true
+
+outputs:
+- name: generated-state #contains the updated state file
+
+
+params:
+  VARS_FILES:
+  # - Optional
+  # - Filepath to the Ops Manager vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` and `secrets` can be used.
+  AUTH_CONFIG_FILE: auth.yml
+  # - Filepath of the auth config YAML
+  # - The path is relative to root of the `auth` input
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  OPSMAN_CONFIG_FILE: opsman.yml
+  # - Optional
+  # - Filepath of the opsman config YAML
+  # - The path is relative to root of the `config` input
+  STATE_FILE: state.yml
+  # - Optional
+  # - Filepath of the state yaml file
+  # - The path is relative to root of the `state` input
+  INSTALLATION_FILE: installation.zip
+  # - Optional
+  # - Filepath of the installation ZIP file
+  # - The path is relative to root of the `installation` input
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+
+    vars_files_args=("")
+    for vf in ${VARS_FILES}
+    do
+      vars_files_args+=("--vars-file ${vf}")
+    done
+
+    cp "state/$STATE_FILE" "generated-state/$STATE_FILE"
+
+    # ${vars_files_args[@] needs to be globbed in order to split properly
+    # shellcheck disable=SC2068
+    p-automator upgrade-opsman \
+    --config config/"${OPSMAN_CONFIG_FILE}" \
+    --auth-file config/"${AUTH_CONFIG_FILE}" \
+    --env-file env/"${ENV_FILE}" \
+    --image-file "$(find image/*.{yml,ova,raw} | head -n1)"  \
+    --state-file "generated-state/$STATE_FILE" \
+    --installation installation/"$INSTALLATION_FILE" \
+    ${vars_files_args[@]}
+# code_snippet upgrade-opsman end

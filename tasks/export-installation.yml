@@ -1,0 +1,28 @@
+# code_snippet export-installation start yaml
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+
+outputs:
+- name: installation # will contain the exported installation
+
+params:
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  INSTALLATION_FILE: installation.zip
+  # - Optional
+  # - Filepath of the installation ZIP file
+  # - The path is relative to root of the `installation` output
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    set -eux
+    p-automator export-installation --auth-file env/"${ENV_FILE}" \
+    --output-file installation/"${INSTALLATION_FILE}"
+# code_snippet export-installation end

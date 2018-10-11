@@ -1,0 +1,13 @@
+# code_snippet test start yaml
+---
+platform: linux
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+    p-automator --help
+    echo "Successfully validated tasks and image!"
+# code_snippet test end

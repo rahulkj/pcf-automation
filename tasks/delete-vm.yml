@@ -1,0 +1,54 @@
+# code_snippet delete-vm start yaml
+---
+platform: linux
+
+inputs:
+- name: state # contains the state for the vm
+- name: config # contains the product configuration file
+- name: vars # variable files to be made available
+  optional: true
+- name: secrets
+  # secret files to be made available
+  # separate from vars, so they can be store securely
+  optional: true
+
+outputs:
+- name: generated-state #contains the updated state file
+
+params:
+  VARS_FILES:
+  # - Optional
+  # - Filepath to the Ops Manager vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` and `secrets` can be used.
+  STATE_FILE: state.yml
+  # - Optional
+  # - Filepath of the state yaml file
+  # - The path is relative to root of the `state` input
+  OPSMAN_CONFIG_FILE: opsman.yml
+  # - Optional
+  # - Filepath of the opsman config YAML
+  # - The path is relative to root of the `config` input
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+
+    vars_files_args=("")
+    for vf in ${VARS_FILES}
+    do
+      vars_files_args+=("--vars-file ${vf}")
+    done
+
+    # ${vars_files_args[@] needs to be globbed in order to split properly
+    # shellcheck disable=SC2068
+    p-automator delete-vm \
+    --state-file state/"$STATE_FILE" \
+    --config config/"$OPSMAN_CONFIG_FILE" \
+    ${vars_files_args[@]}
+
+    cp "state/$STATE_FILE" "generated-state/$STATE_FILE"
+# code_snippet delete-vm end

@@ -1,0 +1,26 @@
+# code_snippet configure-authentication start yaml
+---
+platform: linux
+
+inputs:
+- name: env # contains the env file with target OpsMan Information
+- name: config # contains the auth configuration
+
+params:
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+  AUTH_CONFIG_FILE: auth.yml
+  # - Optional
+  # - Filepath of the authorization config YAML
+  # - The path is relative to root of the `config` input
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+    om --env env/"${ENV_FILE}" configure-authentication \
+       --config config/"${AUTH_CONFIG_FILE}"
+# code_snippet configure-authentication end

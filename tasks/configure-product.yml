@@ -1,0 +1,59 @@
+# code_snippet configure-product start yaml
+---
+platform: linux
+
+inputs:
+- name: config # contains the product configuration file
+- name: env # contains the env file with target OpsMan Information
+- name: vars # variable files to be made available
+  optional: true
+- name: secrets
+  # secret files to be made available
+  # separate from vars, so they can be store securely
+  optional: true
+- name: ops-files # operations files to custom configure the product
+  optional: true
+
+params:
+  CONFIG_FILE:
+  # - Required
+  # - Filepath to the product configuration yaml file
+  # - The path is relative to the root of the `config` input
+  VARS_FILES:
+  # - Optional
+  # - Filepath to the product configuration vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` and `secrets` can be used.
+  OPS_FILES:
+  # - Optional
+  # - Filepath to the product configuration operations yaml files
+  # - The path is relative to root of the task build
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `env` input
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    set -eux
+
+    vars_files_args=("")
+    for vf in ${VARS_FILES}
+    do
+      vars_files_args+=("--vars-file ${vf}")
+    done
+
+    ops_files_args=("")
+    for of in ${OPS_FILES}
+    do
+      ops_files_args+=("--ops-file ${of}")
+    done
+
+    # ${vars_files_args[@] needs to be globbed in order to pass through properly
+    # ${ops_files_args[@] needs to be globbed in order to pass through properly
+    # shellcheck disable=SC2068
+    om --env env/"${ENV_FILE}" configure-product \
+       --config "config/${CONFIG_FILE}" ${vars_files_args[@]} ${ops_files_args[@]}
+# code_snippet configure-product end

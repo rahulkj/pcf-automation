@@ -45,8 +45,9 @@ run:
       vars_files_args+=("--vars-file ${vf}")
     done
 
+    generated_state_path="generated-state/$(basename "$STATE_FILE")"
     if [ -e "state/$STATE_FILE" ]; then
-      cp "state/$STATE_FILE" "generated-state/$STATE_FILE"
+      cp "state/$STATE_FILE" "$generated_state_path"
     fi
 
     export IMAGE_FILE
@@ -64,6 +65,6 @@ run:
     p-automator create-vm \
     --config config/"${OPSMAN_CONFIG_FILE}" \
     --image-file "${IMAGE_FILE}"  \
-    --state-file "generated-state/$STATE_FILE" \
+    --state-file "$generated_state_path" \
     ${vars_files_args[@]}
 # code_snippet create-vm end

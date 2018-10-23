@@ -3,17 +3,15 @@
 platform: linux
 
 inputs:
-- name: auth # contains the auth file with OpsMan credentials
 - name: env # contains the environment information about the OpsMan
 - name: installation # contains the installation to be imported
 
 params:
-  AUTH_CONFIG_FILE: auth.yml
-  # - Filepath of the authorization config YAML
-  # - The path is relative to root of the `auth` input
   ENV_FILE: env.yml
   # - Filepath of the environment config YAML
   # - The path is relative to root of the `env` input
+  # - The env file _must_ contain the `decryption-passphrase`
+  #   while it's optional for other tasks, this one requires it.
   INSTALLATION_FILE: installation.zip
   # - Optional
   # - Filepath of the installation ZIP file
@@ -25,10 +23,6 @@ run:
   - -c
   - |
     set -eux
-    if [ -f installation/"$INSTALLATION_FILE" ]; then
-      p-automator import-installation \
-      --auth-file config/"${AUTH_CONFIG_FILE}" \
-      --env-file env/"${ENV_FILE}" \
-      --installation installation/"${INSTALLATION_FILE}"
-    fi
+    om --env env/"${ENV_FILE}" import-installation \
+       --installation installation/"${INSTALLATION_FILE}"
 # code_snippet import-installation end

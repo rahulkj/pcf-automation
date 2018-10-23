@@ -9,5 +9,6 @@ run:
   - |
     set -eux
     p-automator --help
-    echo "Successfully validated tasks and image!"
+    om --help
+    { echo "Successfully validated tasks and image!"; } 2> /dev/null
 # code_snippet test end

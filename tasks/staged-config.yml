@@ -33,6 +33,6 @@ run:
           )
 
     om --env env/"${ENV_FILE}" staged-config \
-    --product-name "$PRODUCT_NAME" \
-    "$flag" > generated-config/"$PRODUCT_NAME".yml
+       --product-name "$PRODUCT_NAME" \
+       "$flag" > generated-config/"$PRODUCT_NAME".yml
 # code_snippet staged-config end

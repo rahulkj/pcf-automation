@@ -16,8 +16,8 @@ params:
   # - If empty, no config will be used; version and sha256 will not be checked
   # - Example config:
   # ---
-  # version: 1.2.3-build.4
-  # shasum: 6daededd8fb4c341d0cd437a669d732d2fde62cb89716498e6b16f34607a1498
+  # product-version: 1.2.3-build.4
+  # sha256: 6daededd8fb4c341d0cd437a669d732d2fde62cb89716498e6b16f34607a1498
   ENV_FILE: env.yml
   # - Filepath of the env config YAML
   # - The path is relative to root of the `env` input
@@ -30,15 +30,15 @@ run:
     set -eux
 
     if [ -z "$CONFIG_FILE" ]; then
-        p-automator upload-product --auth-file env/"${ENV_FILE}" \
-        --product product/*.pivotal
+        om --env env/"${ENV_FILE}" upload-product \
+           --product product/*.pivotal
     else
-      p-automator upload-product --auth-file env/"${ENV_FILE}" \
-      --product product/*.pivotal --config "config/$CONFIG_FILE"
+      om --env env/"${ENV_FILE}" upload-product \
+         --product product/*.pivotal --config "config/$CONFIG_FILE"
     fi
 
     om --env env/"${ENV_FILE}" stage-product \
-    --product-name "$(om tile-metadata --product-path product/*.pivotal --product-name)" \
-    --product-version "$(om tile-metadata --product-path product/*.pivotal --product-version)"
+       --product-name "$(om tile-metadata --product-path product/*.pivotal --product-name)" \
+       --product-version "$(om tile-metadata --product-path product/*.pivotal --product-version)"
 
 # code_snippet upload-and-stage-product end

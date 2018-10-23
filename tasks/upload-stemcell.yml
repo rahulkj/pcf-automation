@@ -19,6 +19,6 @@ run:
   - "-c"
   - |
     set -eux
-    p-automator upload-stemcell --auth-file env/"${ENV_FILE}" \
-    --stemcell stemcell/*.tgz
+    om --env env/"${ENV_FILE}" upload-stemcell \
+       --stemcell stemcell/*.tgz
 # code_snippet upload-stemcell end

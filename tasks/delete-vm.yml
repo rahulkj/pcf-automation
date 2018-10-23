@@ -43,12 +43,13 @@ run:
       vars_files_args+=("--vars-file ${vf}")
     done
 
+    generated_state_path="generated-state/$(basename "$STATE_FILE")"
+    cp "state/$STATE_FILE" "$generated_state_path"
+
     # ${vars_files_args[@] needs to be globbed in order to split properly
     # shellcheck disable=SC2068
     p-automator delete-vm \
-    --state-file state/"$STATE_FILE" \
+    --state-file "$generated_state_path" \
     --config config/"$OPSMAN_CONFIG_FILE" \
     ${vars_files_args[@]}
-
-    cp "state/$STATE_FILE" "generated-state/$STATE_FILE"
 # code_snippet delete-vm end

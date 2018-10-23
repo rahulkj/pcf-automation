@@ -23,6 +23,6 @@ run:
   - -c
   - |
     set -eux
-    p-automator export-installation --auth-file env/"${ENV_FILE}" \
-    --output-file installation/"${INSTALLATION_FILE}"
+    om --env env/"${ENV_FILE}" export-installation \
+       --output-file installation/"${INSTALLATION_FILE}"
 # code_snippet export-installation end

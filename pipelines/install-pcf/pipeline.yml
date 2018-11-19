@@ -1,0 +1,791 @@
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: govc
+  type: github-release
+  source:
+    user: vmware
+    repository: govmomi
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: om-cli
+  type: github-release
+  source:
+    user: pivotal-cf
+    repository: om
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: pivnet-cli
+  type: github-release
+  source:
+    user: pivotal-cf
+    repository: pivnet-cli
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: jq
+  type: github-release
+  source:
+    user: stedolan
+    repository: jq
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: tile-config-convertor
+  type: github-release
+  source:
+    user: rahul-kj
+    repository: tile-config-convertor
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: pipelines-repo
+  type: git
+  source:
+    uri: ((git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: platform-automation-image
+  type: docker-image
+  source:
+    repository: rjain/platform-automation
+
+- name: buildbox-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
+
+- name: ops-manager
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ops-manager
+    product_version: ((opsman_product_version))
+
+- name: pas-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: elastic-runtime
+    product_version: ((pas_product_version))
+
+- name: nsxt-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: vmware-nsx-t
+    product_version: ((nsxt_product_version))
+
+- name: concourse-trigger-gist
+  type: git
+  source:
+    uri: ((gist_url))
+    branch: master
+    username: ((git_username))
+    password: ((git_token))
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+jobs:
+- name: generate-ops-manager-config
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+    - get: govc
+      params:
+        globs:
+        - "*linux_amd64*"
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs:
+        - "*.ova"
+
+  - task: generate-config
+    file: pipelines-repo/tasks/generate-opsman-config/task.yml
+    params:
+      DEBUG: ((debug))
+
+- name: install-ops-manager
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+    - get: platform-automation-image
+    - get: buildbox-image
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs:
+        - "*.ova"
+
+  - task: create-opsman-import-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_output_file))
+      PARAM_NAME: ((ops_manager_settings))
+
+  - task: deploy-opsmanager-vm
+    image: platform-automation-image
+    file: pipelines-repo/tasks/create-vm.yml
+    input_mapping:
+      state: pipelines-repo
+      image: pivnet-product
+      config: output-folder
+
+  - task: commit-files-into-git
+    image: buildbox-image
+    file: pipelines-repo/tasks/commit-files-into-git/task.yml
+    input_mapping:
+      git-repo: pipelines-repo
+      src-dir: generated-state
+    params:
+      DEBUG: ((debug))
+      CI_USERNAME: ((ci_username))
+      CI_EMAIL_ADDRESS: ((ci_email_address))
+      GIT_COMMIT_MESSAGE: "Updated the state file"
+
+  - put: pipelines-repo
+    params:
+      repository: git-repo-updated
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: create-opsman-auth-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: auth
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-auth.yml
+      PARAM_NAME: ((ops_manager_auth))
+
+  - task: configure-authentication
+    image: platform-automation-image
+    file: pipelines-repo/tasks/configure-authentication.yml
+    input_mapping:
+      config: auth
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+      AUTH_CONFIG_FILE: opsman-auth.yml
+    attempts: 20
+
+  - task: bump-timestamp
+    image: buildbox-image
+    file: pipelines-repo/tasks/gist-update/task.yml
+    params:
+      CI_USERNAME: ((ci_username))
+      CI_EMAIL_ADDRESS: ((ci_email_address))
+
+  - put: concourse-trigger-gist
+    params: {repository: updated-concourse-trigger-gist}
+
+- name: configure-ops-director
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [install-ops-manager]
+    - get: platform-automation-image
+      passed: [install-ops-manager]
+    - get: buildbox-image
+      passed: [install-ops-manager]
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs: []
+    - get: concourse-trigger-gist
+      passed: [install-ops-manager]
+      trigger: true
+
+  - task: create-ops-director-config-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: config
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: director.yml
+      PARAM_NAME: ((ops_dir_configuration))
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: configure-ops-director
+    image: platform-automation-image
+    file: pipelines-repo/tasks/configure-director.yml
+    params:
+      ENV_FILE: opsman-env.yml
+      DIRECTOR_CONFIG_FILE: director.yml
+
+- name: deploy-director
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-ops-director]
+    - get: buildbox-image
+      passed: [configure-ops-director]
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs: []
+    - get: concourse-trigger-gist
+      passed: [configure-ops-director]
+      trigger: true
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: deploy-ops-director
+    image: platform-automation-image
+    file: pipelines-repo/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+
+- name: upload-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-ops-director]
+    - get: buildbox-image
+      passed: [configure-ops-director]
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: nsxt-product
+      params:
+        globs: [((nsxt_product_glob))]
+      trigger: true
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: upload-product
+    file: pipelines-repo/tasks/upload-product/task.yml
+    input_mapping:
+      product: nsxt-product
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+
+- name: upload-pas
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-ops-director]
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: buildbox-image
+      passed: [configure-ops-director]
+    - get: pas-product
+      params:
+        globs: [((pas_product_glob))]
+      trigger: true
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: upload-product
+    image: buildbox-image
+    file: pipelines-repo/tasks/upload-product/task.yml
+    input_mapping:
+      product: pas-product
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+
+  - task: download-stemcell
+    image: buildbox-image
+    file: pipelines-repo/tasks/download-stemcell/task.yml
+    input_mapping:
+      pivnet-product: pas-product
+    params:
+      DEBUG: ((debug))
+      PIVNET_API_TOKEN: ((pivnet_token))
+      IAAS_TYPE: ((iaas_type))
+      STEMCELL_TYPE: ((stemcell_type))
+
+  - task: upload-stemcell
+    image: platform-automation-image
+    file: pipelines-repo/tasks/upload-stemcell.yml
+    input_mapping:
+      stemcell: stemcells
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+
+- name: stage-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [upload-nsxt]
+    - get: platform-automation-image
+      passed: [upload-nsxt, deploy-director]
+    - get: buildbox-image
+      passed: [upload-nsxt, deploy-director]
+    - get: nsxt-product
+      params:
+        globs: [((nsxt_product_glob))]
+      trigger: true
+      passed: [upload-nsxt]
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [upload-nsxt]
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+      passed: [upload-nsxt]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+      passed: [upload-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: stage-product
+    image: buildbox-image
+    file: pipelines-repo/tasks/stage-product/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: opsman-env.yml
+      PRODUCT_IDENTIFIER: ((nsxt_product_identifier))
+      DEPENDENCY_PRODUCT_TILES: ((dependency_product_tiles))
+
+- name: generate-nsxt-config
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [stage-nsxt]
+    - get: pivnet-product
+      resource: nsxt-product
+      params:
+        globs: []
+      passed: [stage-nsxt]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [stage-nsxt]
+    - get: tile-config-convertor
+      params:
+        globs: ["*linux*"]
+    - get: buildbox-image
+      passed: [stage-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: generate-config
+    image: buildbox-image
+    file: pipelines-repo/tasks/generate-config/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: opsman-env.yml
+      PRODUCT_IDENTIFIER: ((nsxt_product_identifier))
+
+- name: configure-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [stage-nsxt]
+    - get: platform-automation-image
+      passed: [stage-nsxt]
+    - get: nsxt-product
+      params:
+        globs: []
+      trigger: true
+      passed: [stage-nsxt]
+    - get: buildbox-image
+      passed: [stage-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: create-nsxt-config-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: config
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: nsxt-config.yml
+      PARAM_NAME: ((nsxt-config))
+
+  - task: config-product
+    image: platform-automation-image
+    file: pipelines-repo/tasks/configure-product.yml
+    input_mapping:
+      config: config
+      env: env
+    params:
+      CONFIG_FILE: nsxt-config.yml
+      ENV_FILE: opsman-env.yml
+
+- name: stage-pas
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-nsxt]
+    - get: platform-automation-image
+      passed: [configure-nsxt]
+    - get: buildbox-image
+      passed: [configure-nsxt]
+    - get: pas-product
+      params:
+        globs: [((pas_product_glob))]
+      trigger: true
+      passed: [upload-pas]
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [upload-pas]
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+      passed: [upload-pas]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+      passed: [upload-pas]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: stage-product
+    image: buildbox-image
+    file: pipelines-repo/tasks/stage-product/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: opsman-env.yml
+      PRODUCT_IDENTIFIER: ((pas_product_identifier))
+      DEPENDENCY_PRODUCT_TILES: ((dependency_product_tiles))
+
+- name: generate-pas-config
+  plan:
+  - aggregate:
+    - get: buildbox-image
+      passed: [stage-pas]
+    - get: pipelines-repo
+      passed: [stage-pas]
+    - get: pivnet-product
+      resource: pas-product
+      params:
+        globs: []
+      passed: [stage-pas]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [stage-pas]
+    - get: tile-config-convertor
+      params:
+        globs: ["*linux*"]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: generate-config
+    image: buildbox-image
+    file: pipelines-repo/tasks/generate-config/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: opsman-env.yml
+      PRODUCT_IDENTIFIER: ((pas_product_identifier))
+
+- name: generate-certificates
+  plan:
+  - aggregate:
+    - get: buildbox-image
+      passed: [stage-pas]
+    - get: pipelines-repo
+      passed: [stage-pas]
+    - get: pivnet-product
+      resource: pas-product
+      params:
+        globs: []
+      passed: [stage-pas]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [stage-pas]
+    - get: tile-config-convertor
+      params:
+        globs: ["*linux*"]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: generate-certificates
+    image: buildbox-image
+    file: pipelines-repo/tasks/generate-certs/task.yml
+    input_mapping:
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: opsman-env.yml
+      DOMAINS: ((wildcard_domains))
+
+- name: configure-and-deploy-pas
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [stage-pas]
+    - get: platform-automation-image
+      passed: [stage-pas]
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [stage-pas]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: opsman-env.yml
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: create-pas-config-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: config
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: pas-config.yml
+      PARAM_NAME: ((pas-config))
+
+  - task: config-product
+    image: platform-automation-image
+    file: pipelines-repo/tasks/configure-product.yml
+    input_mapping:
+      config: config
+      env: env
+    params:
+      CONFIG_FILE: pas-config.yml
+      ENV_FILE: opsman-env.yml
+
+  - task: deploy-pas
+    image: platform-automation-image
+    file: pipelines-repo/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: opsman-env.yml
+
+## Remove this if you don't need it in your pipeline
+- name: delete-all
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+    - get: govc
+      params:
+        globs:
+        - "*linux_amd64*"
+    - get: om-cli
+      params:
+        globs:
+        - "*om-linux*"
+    - get: concourse-trigger-gist
+    - get: ops-manager
+      params:
+        globs: []
+
+  - task: delete-products
+    file: pipelines-repo/tasks/delete-products/task.yml
+    params:
+      DEBUG: ((debug))
+      OPS_MGR_HOST: ((ops_mgr_host))
+      OPS_MGR_USR: ((ops_mgr_usr))
+      OPS_MGR_PWD: ((ops_mgr_pwd))
+
+  - task: bump-timestamp
+    file: pipelines-repo/tasks/gist-update/task.yml
+    params:
+      DEBUG: ((debug))
+      CI_USERNAME: ((ci_username))
+      CI_EMAIL_ADDRESS: ((ci_email_address))
+
+  - task: delete-ops-manager
+    file: pipelines-repo/tasks/delete-opsman/task.yml
+    params:
+      DEBUG: ((debug))
+      OPS_MGR_IP: ((ops_mgr_ip))
+      GOVC_INSECURE: 1
+      GOVC_URL: ((vcenter_host))
+      GOVC_USERNAME: ((vcenter_usr))
+      GOVC_PASSWORD: ((vcenter_pwd))
+
+  - put: concourse-trigger-gist
+    params: {repository: updated-concourse-trigger-gist}
+
+  - put: email
+    params:
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"

@@ -1,0 +1,16 @@
+---
+platform: linux
+
+params:
+  DEBUG:
+  DOMAINS:
+  ENV_FILE: env.yml
+
+inputs:
+  - name: pipelines-repo
+  - name: om-cli
+  - name: jq
+  - name: env
+
+run:
+  path: pipelines-repo/tasks/generate-certs/task.sh

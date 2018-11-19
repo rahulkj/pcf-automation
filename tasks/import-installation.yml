@@ -22,6 +22,7 @@ run:
   args:
   - -c
   - |
+    p-automator -v
     set -eux
     om --env env/"${ENV_FILE}" import-installation \
        --installation installation/"${INSTALLATION_FILE}"

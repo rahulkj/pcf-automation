@@ -1,5 +1,0 @@
-# code_snippet auth-configuration start yaml
-target: ((ops_mgr_host))
-username: ((ops_mgr_user))
-password: ((ops_mgr_pwd))
-skip-ssl-validation: true # default false

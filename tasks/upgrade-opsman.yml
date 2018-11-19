@@ -46,6 +46,7 @@ run:
   args:
   - "-c"
   - |
+    p-automator -v
     set -eux
 
     vars_files_args=("")

@@ -1,0 +1,18 @@
+---
+
+platform: linux
+
+params:
+  DEBUG:
+  ENV_FILE:
+  PRODUCT_NAME:
+
+inputs:
+  - name: pipelines-repo
+  - name: om-cli
+  - name: jq
+  - name: tile-config-convertor
+  - name: env
+
+run:
+  path: pipelines-repo/tasks/generate-config/task.sh

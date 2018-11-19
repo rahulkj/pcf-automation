@@ -1,0 +1,48 @@
+# code_snippet download-product start yaml
+---
+platform: linux
+
+inputs:
+- name: config # contains download-file config file
+- name: vars
+  optional: true
+
+outputs:
+- name: downloaded-product
+- name: downloaded-stemcell
+
+caches:
+- path: downloaded-files
+
+params:
+  CONFIG_FILE: download-config.yml
+  # - Filepath to the product configuration yaml file
+  # - The path is relative to the root of the `config` input
+  VARS_FILES:
+  # - Optional
+  # - Filepath to the product configuration vars yaml file
+  # - The path is relative to root of the task build,
+  #   so `vars` can be used.
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    p-automator -v
+    set -eux
+
+    om download-product \
+       --config config/"${CONFIG_FILE}" \
+       --output-directory downloaded-files
+
+    product_file=$(om interpolate --config downloaded-files/download-file.json --path /product)
+    stemcell_file=$(om interpolate --config downloaded-files/download-file.json --path /stemcell?)
+
+    cp "$product_file" downloaded-product
+
+    if [ "$stemcell_file" != "null" ]; then
+      cp "$stemcell_file" downloaded-stemcell
+    fi
+
+# code_snippet download-product end

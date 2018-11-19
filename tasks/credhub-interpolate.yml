@@ -1,0 +1,47 @@
+# code_snippet credhub-interpolate start yaml
+---
+platform: linux
+
+inputs:
+- name: files
+# contains YAML files with extension `.yml`
+# each one of these files will have their values interpolated from credhub
+# For some example, run: `credhub interpolate --help` (minimum version >= 2.1.0 required)
+
+outputs:
+- name: interpolated-files
+#contains all the *.yml files from `files/` input but after interpolation
+
+# all params are required to be filled out
+params:
+  # credentials to talk to credhub server
+  CREDHUB_CA_CERT:
+  CREDHUB_CLIENT:
+  CREDHUB_SECRET:
+  CREDHUB_SERVER:
+
+  # prefix flag used by credhub interpolate
+  PREFIX:
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    p-automator -v
+    set -eux
+
+    env
+    credhub --version
+
+    if [ -z "$PREFIX" ]; then
+      echo "Please specify a PREFIX. It is required."
+      exit 1
+    fi
+
+    for file in files/*.yml; do
+      echo "interpolating $file"
+      credhub interpolate --prefix "$PREFIX" --file "$file" > interpolated-files/"$(basename "$file")"
+    done
+
+# code_snippet credhub-interpolate end

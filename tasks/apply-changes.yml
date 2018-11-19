@@ -15,6 +15,7 @@ run:
   args:
   - "-c"
   - |
+    p-automator -v
     set -eux
     om --env env/"${ENV_FILE}" apply-changes
 # code_snippet apply-changes end

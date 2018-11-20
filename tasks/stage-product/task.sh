@@ -24,7 +24,7 @@ if [[ (! -z "$DEPENDENCY_PRODUCT_TILES") && ("null" != "$DEPENDENCY_PRODUCT_TILE
   done
 fi
 
-AVAILABLE_PRODUCTS=$($OM_CMD -t https://$OPS_MGR_HOST -u $OPS_MGR_USR -p $OPS_MGR_PWD -k available-products -f json)
+AVAILABLE_PRODUCTS=$($CMD --env env/"${ENV_FILE}" available-products -f json)
 
 PRODUCT_NAME=$(echo "$AVAILABLE_PRODUCTS" | $JQ_CMD -r --arg deployment_name $PRODUCT_NAME '.[] | select(.name==$deployment_name) | .name')
 PRODUCT_VERSION=$(echo "$AVAILABLE_PRODUCTS" | $JQ_CMD -r --arg deployment_name $PRODUCT_NAME '.[] | select(.name==$deployment_name) | .version')

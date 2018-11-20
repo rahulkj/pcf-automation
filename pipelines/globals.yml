@@ -20,6 +20,8 @@ ops_manager_env: |
   username: ((ops_mgr_usr))
   password: ((ops_mgr_pwd))
 
+opsman_env_filename: opsman-env.yml
+
 smtp_address: ((smtp_address))
 smtp_port: ((smtp_port))
 smtp_username: ((smtp_username))

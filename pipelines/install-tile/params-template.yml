@@ -1,0 +1,11 @@
+product_slug:
+product_version:
+product_glob:
+product_identifier:
+
+iaas_type:
+stemcell_type:
+
+dependency_product_tiles: p-bosh,cf
+
+product_config: |

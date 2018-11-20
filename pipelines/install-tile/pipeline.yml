@@ -93,7 +93,7 @@ jobs:
     params:
       globs: []
 
-- name: upload-product
+- name: upload-and-stage-product
   serial: true
   plan:
   - aggregate:
@@ -129,8 +129,8 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: upload-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/upload-product/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/upload-and-stage-product.yml
     input_mapping:
       product: product
       env: env
@@ -157,69 +157,16 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_filename))
 
-- name: stage-product
-  serial: true
-  plan:
-  - aggregate:
-    - get: pipelines-repo
-      passed: [upload-product]
-    - get: platform-automation-image
-      passed: [upload-product]
-    - get: buildbox-image
-      passed: [upload-product]
-    - get: product
-      params:
-        globs: [((product_glob))]
-      trigger: true
-      passed: [upload-product]
-    - get: jq
-      params:
-        globs:
-        - "*linux64*"
-      passed: [upload-product]
-    - get: pivnet-cli
-      params:
-        globs:
-        - "*linux-amd64*"
-      passed: [upload-product]
-    - get: om-cli
-      params:
-        globs:
-        - "*-linux"
-      passed: [upload-product]
-
-  - task: create-opsman-env-file
-    image: buildbox-image
-    file: pipelines-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
-
-  - task: stage-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/stage-product/task.yml
-    input_mapping:
-      pivnet-product: product
-      env: env
-    params:
-      DEBUG: ((debug))
-      ENV_FILE: ((opsman_env_filename))
-      PRODUCT_NAME: ((product_identifier))
-      DEPENDENCY_PRODUCT_TILES: ((dependency_product_tiles))
-
 - name: generate-config
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: pivnet-product
       resource: product
       params:
         globs: []
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: om-cli
       params:
         globs:
@@ -228,12 +175,12 @@ jobs:
       params:
         globs:
         - "*linux64*"
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]
     - get: buildbox-image
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
 
   - task: create-opsman-env-file
     image: buildbox-image
@@ -261,16 +208,16 @@ jobs:
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: platform-automation-image
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: buildbox-image
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
     - get: product
       params:
         globs: []
       trigger: true
-      passed: [stage-product]
+      passed: [upload-and-stage-product]
 
   - task: create-opsman-env-file
     image: buildbox-image

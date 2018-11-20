@@ -9,6 +9,9 @@ fi
 chmod +x om-cli/om-linux
 CMD=./om-cli/om-linux
 
+chmod +x ./jq/jq-linux64
+JQ_CMD=./jq/jq-linux64
+
 if [[ (! -z "$DEPENDENCY_PRODUCT_TILES") && ("null" != "$DEPENDENCY_PRODUCT_TILES") ]]; then
   STAGED_PRODUCTS=$($CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/staged/products)
 

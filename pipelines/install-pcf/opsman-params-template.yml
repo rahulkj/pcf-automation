@@ -1,0 +1,33 @@
+opsman_product_version: ^2\.3\..*$
+
+ops_manager_settings: |
+  opsman-configuration:
+    vsphere:
+      vcenter:
+        url: ((vcenter_host))
+        username: ((vcenter_usr))
+        password: ((vcenter_pwd))
+        datastore: PCF_STORAGE
+        datacenter: HOMELAB
+        resource_pool: /HOMELAB/host/PCF_CLUSTER/Resources/MGMT_RP
+        folder:
+        insecure: 1
+      disk_type: thick                          # example: thin|thick
+      private_ip: ((ops_mgr_ip))
+      dns: 10.0.0.21
+      ntp: 10.0.0.22                     # example: ntp.ubuntu.com
+      ssh_password: ((ops_mgr_ssh_pwd))
+      hostname: ((ops_mgr_host))
+      network: INFRASTRUCTURE                 # vcenter network to deploy to
+      netmask: 255.255.255.192
+      gateway: 192.168.10.1
+      vm_name: OpsManager
+
+ops_manager_auth: |
+  username: ((ops_mgr_usr))
+  password: ((ops_mgr_pwd))
+  decryption-passphrase: ((ops_mgr_decryption_pwd))
+
+opsman_env_filename: opsman-env.yml
+
+opsman_auth_filename: opsman-auth.yml

@@ -1,0 +1,56 @@
+nsxt_product_version: ^2\.3\..*$
+nsxt_product_identifier: VMware-NSX-T
+nsxt_product_glob: "*.pivotal"
+
+nsxt-config: |
+  product-name: VMware-NSX-T
+
+  product-properties:
+  .properties.bottom_firewall_section_marker:                                                          # OPTIONAL
+    value:
+  .properties.container_ip_blocks:
+    value:
+    - name: pcf-ip-block
+      cidr:
+  .properties.enable_snat:
+    value: true
+  .properties.external_ip_pools:                                                                       # OPTIONAL
+    value:
+    - name: external_snat_ip_pool 
+      cidr: <nil>
+      allocation_ranges: <nil>
+  .properties.foundation_name:
+    value: pcf
+  .properties.log_dropped_traffic:
+    value: true
+  .properties.ncp_debug_log:
+    value: true
+  .properties.nsx_api_ca_cert:                                                                         # OPTIONAL
+    value: |
+      -----BEGIN CERTIFICATE-----
+      -----END CERTIFICATE-----
+  .properties.nsx_api_managers:
+    value: nsx.example.io
+  .properties.nsx_auth:
+    value: simple
+  .properties.nsx_auth.client_cert.nsx_api_client_cert:
+    value:
+      private_key_pem: |
+      cert_pem: |
+  .properties.nsx_auth.simple.nsx_api_password:
+    value:
+      secret:
+  .properties.nsx_auth.simple.nsx_api_user:
+    value:
+  .properties.nsx_node_agent_debug_log:
+    value: true
+  .properties.overlay_tz:                                                                              # OPTIONAL
+    value:
+  .properties.subnet_prefix:
+    value: 24
+  .properties.tier0_router:
+    value:
+  .properties.top_firewall_section_marker:                                                             # OPTIONAL
+    value:
+
+nsxt_dependency_product_tiles: p-bosh

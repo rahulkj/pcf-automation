@@ -1,0 +1,22 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: {repository: rjain/buildbox}
+
+params:
+  DEBUG:
+  OPS_MGR_IP:
+  GOVC_INSECURE:
+  GOVC_URL:
+  GOVC_USERNAME:
+  GOVC_PASSWORD:
+
+inputs:
+  - name: pipelines-repo
+  - name: govc
+
+run:
+  path: pipelines-repo/tasks/delete-opsman/task.sh

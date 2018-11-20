@@ -11,6 +11,15 @@ resource_types:
     repository: pcfseceng/email-resource
 
 resources:
+- name: schedule
+  type: time
+  source:
+    interval: 30m
+    start: "12:00 AM"
+    stop: "11:59 PM"
+    location: America/Los_Angeles
+    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+
 - name: om-cli
   type: github-release
   source:
@@ -76,6 +85,14 @@ resources:
     to: [((to_addresses))]
 
 jobs:
+- name: scheduler
+  plan:
+  - get: schedule
+    trigger: true
+  - get: product
+    params:
+      globs: []
+
 - name: upload-product
   serial: true
   plan:
@@ -86,6 +103,7 @@ jobs:
     - get: product
       params:
         globs: [((product_glob))]
+      passed: [scheduler]
       trigger: true
     - get: jq
       params:

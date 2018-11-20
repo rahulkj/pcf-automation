@@ -13,6 +13,7 @@ inputs:
 - name: om-cli
 - name: pivnet-product
 - name: env
+- name: jq
 
 run:
   path: pipelines-repo/tasks/stage-product/task.sh

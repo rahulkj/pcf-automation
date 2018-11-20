@@ -4,6 +4,7 @@ resource_types:
   source:
     repository: pivotalcf/pivnet-resource
     tag: latest-final
+
 - name: email
   type: docker-image
   source:
@@ -83,14 +84,6 @@ resources:
     api_token: ((pivnet_token))
     product_slug: vmware-nsx-t
     product_version: ((nsxt_product_version))
-
-- name: concourse-trigger-gist
-  type: git
-  source:
-    uri: ((gist_url))
-    branch: master
-    username: ((git_username))
-    password: ((git_token))
 
 - name: email
   type: email
@@ -198,16 +191,6 @@ jobs:
       AUTH_CONFIG_FILE: opsman-auth.yml
     attempts: 20
 
-  - task: bump-timestamp
-    image: buildbox-image
-    file: pipelines-repo/tasks/gist-update/task.yml
-    params:
-      CI_USERNAME: ((ci_username))
-      CI_EMAIL_ADDRESS: ((ci_email_address))
-
-  - put: concourse-trigger-gist
-    params: {repository: updated-concourse-trigger-gist}
-
 - name: configure-ops-director
   plan:
   - aggregate:
@@ -221,8 +204,6 @@ jobs:
       resource: ops-manager
       params:
         globs: []
-    - get: concourse-trigger-gist
-      passed: [install-ops-manager]
       trigger: true
 
   - task: create-ops-director-config-file
@@ -265,8 +246,6 @@ jobs:
       resource: ops-manager
       params:
         globs: []
-    - get: concourse-trigger-gist
-      passed: [configure-ops-director]
       trigger: true
 
   - task: create-opsman-env-file
@@ -325,6 +304,7 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: upload-product
+    image: buildbox-image
     file: pipelines-repo/tasks/upload-product/task.yml
     input_mapping:
       product: nsxt-product
@@ -403,7 +383,7 @@ jobs:
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [upload-nsxt]
+      # passed: [upload-nsxt]
     - get: platform-automation-image
       passed: [upload-nsxt, deploy-director]
     - get: buildbox-image
@@ -448,7 +428,7 @@ jobs:
     params:
       DEBUG: ((debug))
       ENV_FILE: opsman-env.yml
-      PRODUCT_IDENTIFIER: ((nsxt_product_identifier))
+      PRODUCT_NAME: ((nsxt_product_identifier))
       DEPENDENCY_PRODUCT_TILES: ((dependency_product_tiles))
 
 - name: generate-nsxt-config
@@ -495,7 +475,7 @@ jobs:
     params:
       DEBUG: ((debug))
       ENV_FILE: opsman-env.yml
-      PRODUCT_IDENTIFIER: ((nsxt_product_identifier))
+      PRODUCT_NAME: ((nsxt_product_identifier))
 
 - name: configure-nsxt
   serial: true
@@ -588,12 +568,12 @@ jobs:
     image: buildbox-image
     file: pipelines-repo/tasks/stage-product/task.yml
     input_mapping:
-      pivnet-product: nsxt-product
+      pivnet-product: pas-product
       env: env
     params:
       DEBUG: ((debug))
       ENV_FILE: opsman-env.yml
-      PRODUCT_IDENTIFIER: ((pas_product_identifier))
+      PRODUCT_NAME: ((pas_product_identifier))
       DEPENDENCY_PRODUCT_TILES: ((dependency_product_tiles))
 
 - name: generate-pas-config
@@ -640,7 +620,7 @@ jobs:
     params:
       DEBUG: ((debug))
       ENV_FILE: opsman-env.yml
-      PRODUCT_IDENTIFIER: ((pas_product_identifier))
+      PRODUCT_NAME: ((pas_product_identifier))
 
 - name: generate-certificates
   plan:
@@ -694,6 +674,8 @@ jobs:
     - get: pipelines-repo
       passed: [stage-pas]
     - get: platform-automation-image
+      passed: [stage-pas]
+    - get: buildbox-image
       passed: [stage-pas]
     - get: pas-product
       params:
@@ -752,7 +734,6 @@ jobs:
       params:
         globs:
         - "*om-linux*"
-    - get: concourse-trigger-gist
     - get: ops-manager
       params:
         globs: []
@@ -765,13 +746,6 @@ jobs:
       OPS_MGR_USR: ((ops_mgr_usr))
       OPS_MGR_PWD: ((ops_mgr_pwd))
 
-  - task: bump-timestamp
-    file: pipelines-repo/tasks/gist-update/task.yml
-    params:
-      DEBUG: ((debug))
-      CI_USERNAME: ((ci_username))
-      CI_EMAIL_ADDRESS: ((ci_email_address))
-
   - task: delete-ops-manager
     file: pipelines-repo/tasks/delete-opsman/task.yml
     params:
@@ -781,9 +755,6 @@ jobs:
       GOVC_URL: ((vcenter_host))
       GOVC_USERNAME: ((vcenter_usr))
       GOVC_PASSWORD: ((vcenter_pwd))
-
-  - put: concourse-trigger-gist
-    params: {repository: updated-concourse-trigger-gist}
 
   - put: email
     params:

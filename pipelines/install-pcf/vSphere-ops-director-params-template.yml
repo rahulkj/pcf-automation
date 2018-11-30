@@ -142,7 +142,7 @@ ops_dir_configuration: |
         id: large.cpu
       instances: 4
 
-  vmextensions-configuration:
+  vmextensions-configuration:                                                   # if deploying with NSX-T tile, else remove this
   - name: diego-brain-extension
     cloud_properties:
       nsxt:

@@ -78,6 +78,13 @@ resources:
     product_slug: elastic-runtime
     product_version: ((pas_product_version))
 
+- name: nsxt-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: vmware-nsx-t
+    product_version: ((nsxt_product_version))
+
 - name: email
   type: email
   source:
@@ -259,6 +266,52 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_filename))
 
+- name: upload-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-ops-director]
+    - get: buildbox-image
+      passed: [configure-ops-director]
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: nsxt-product
+      params:
+        globs: [((nsxt_product_glob))]
+      trigger: true
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: upload-product
+    image: buildbox-image
+    file: pipelines-repo/tasks/upload-product/task.yml
+    input_mapping:
+      product: nsxt-product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_filename))
+
 - name: upload-pas
   serial: true
   plan:
@@ -325,16 +378,161 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_filename))
 
+- name: stage-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      # passed: [upload-nsxt]
+    - get: platform-automation-image
+      passed: [upload-nsxt, deploy-director]
+    - get: buildbox-image
+      passed: [upload-nsxt, deploy-director]
+    - get: nsxt-product
+      params:
+        globs: [((nsxt_product_glob))]
+      trigger: true
+      passed: [upload-nsxt]
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [upload-nsxt]
+    - get: pivnet-cli
+      params:
+        globs:
+        - "*linux-amd64*"
+      passed: [upload-nsxt]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+      passed: [upload-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: stage-product
+    image: buildbox-image
+    file: pipelines-repo/tasks/stage-product/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: ((opsman_env_filename))
+      PRODUCT_NAME: ((nsxt_product_identifier))
+      DEPENDENCY_PRODUCT_TILES: ((nsxt_dependency_product_tiles))
+
+- name: generate-nsxt-config
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [stage-nsxt]
+    - get: pivnet-product
+      resource: nsxt-product
+      params:
+        globs: []
+      passed: [stage-nsxt]
+    - get: om-cli
+      params:
+        globs:
+        - "*-linux"
+    - get: jq
+      params:
+        globs:
+        - "*linux64*"
+      passed: [stage-nsxt]
+    - get: tile-config-convertor
+      params:
+        globs: ["*linux*"]
+    - get: buildbox-image
+      passed: [stage-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: generate-config
+    image: buildbox-image
+    file: pipelines-repo/tasks/generate-config/task.yml
+    input_mapping:
+      pivnet-product: nsxt-product
+      env: env
+    params:
+      DEBUG: ((debug))
+      ENV_FILE: ((opsman_env_filename))
+      PRODUCT_NAME: ((nsxt_product_identifier))
+
+- name: configure-nsxt
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [stage-nsxt]
+    - get: platform-automation-image
+      passed: [stage-nsxt]
+    - get: nsxt-product
+      params:
+        globs: []
+      trigger: true
+      passed: [stage-nsxt]
+    - get: buildbox-image
+      passed: [stage-nsxt]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
+
+  - task: create-nsxt-config-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: config
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: nsxt-config.yml
+      PARAM_NAME: ((nsxt-config))
+
+  - task: config-product
+    image: platform-automation-image
+    file: pipelines-repo/tasks/configure-product.yml
+    input_mapping:
+      config: config
+      env: env
+    params:
+      CONFIG_FILE: nsxt-config.yml
+      ENV_FILE: ((opsman_env_filename))
+
 - name: stage-pas
   serial: true
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [upload-pas]
+      passed: [configure-nsxt]
     - get: platform-automation-image
-      passed: [upload-pas]
+      passed: [configure-nsxt]
     - get: buildbox-image
-      passed: [upload-pas]
+      passed: [configure-nsxt]
     - get: pas-product
       params:
         globs: [((pas_product_glob))]

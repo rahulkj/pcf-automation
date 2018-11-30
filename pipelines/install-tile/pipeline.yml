@@ -14,7 +14,7 @@ resources:
 - name: schedule
   type: time
   source:
-    interval: 30m
+    interval: 24h
     start: "12:00 AM"
     stop: "11:59 PM"
     location: America/Los_Angeles
@@ -128,7 +128,7 @@ jobs:
       OUTPUT_FILE_NAME: ((opsman_env_filename))
       PARAM_NAME: ((ops_manager_env))
 
-  - task: upload-product
+  - task: upload-and-stage-product
     image: platform-automation-image
     file: pipelines-repo/tasks/upload-and-stage-product.yml
     input_mapping:

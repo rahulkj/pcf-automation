@@ -7,7 +7,7 @@ params:
   PARAM_NAME:
 
 outputs:
-  - name: output-folder
+- name: output-folder
 
 run:
   path: bash

@@ -109,7 +109,7 @@ jobs:
       resource: ops-manager
       params:
         globs:
-        - "*.ova"
+        - ((opsman_glob))
 
   - task: generate-config
     file: pipelines-repo/tasks/generate-opsman-config/task.yml
@@ -126,7 +126,7 @@ jobs:
       resource: ops-manager
       params:
         globs:
-        - "*.ova"
+        - ((opsman_glob))
 
   - task: create-opsman-import-file
     image: buildbox-image

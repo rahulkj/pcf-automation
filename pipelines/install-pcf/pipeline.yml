@@ -11,13 +11,6 @@ resource_types:
     repository: pcfseceng/email-resource
 
 resources:
-- name: govc
-  type: github-release
-  source:
-    user: vmware
-    repository: govmomi
-    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
-
 - name: om-cli
   type: github-release
   source:
@@ -90,25 +83,6 @@ resources:
     to: [((to_addresses))]
 
 jobs:
-- name: generate-ops-manager-config
-  plan:
-  - aggregate:
-    - get: pipelines-repo
-    - get: govc
-      params:
-        globs:
-        - "*linux_amd64*"
-    - get: pivnet-product
-      resource: ops-manager
-      params:
-        globs:
-        - "*.ova"
-
-  - task: generate-config
-    file: pipelines-repo/tasks/generate-opsman-config/task.yml
-    params:
-      DEBUG: ((debug))
-
 - name: install-ops-manager
   plan:
   - aggregate:
@@ -119,7 +93,7 @@ jobs:
       resource: ops-manager
       params:
         globs:
-        - "*.ova"
+        - ((opsman_glob))
 
   - task: create-opsman-import-file
     image: buildbox-image
@@ -522,43 +496,3 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_filename))
-
-## Remove this if you don't need it in your pipeline
-- name: delete-all
-  plan:
-  - aggregate:
-    - get: pipelines-repo
-    - get: govc
-      params:
-        globs:
-        - "*linux_amd64*"
-    - get: om-cli
-      params:
-        globs:
-        - "*om-linux*"
-    - get: ops-manager
-      params:
-        globs: []
-
-  - task: delete-products
-    file: pipelines-repo/tasks/delete-products/task.yml
-    params:
-      DEBUG: ((debug))
-      OPS_MGR_HOST: ((ops_mgr_host))
-      OPS_MGR_USR: ((ops_mgr_usr))
-      OPS_MGR_PWD: ((ops_mgr_pwd))
-
-  - task: delete-ops-manager
-    file: pipelines-repo/tasks/delete-opsman/task.yml
-    params:
-      DEBUG: ((debug))
-      OPS_MGR_IP: ((ops_mgr_ip))
-      GOVC_INSECURE: 1
-      GOVC_URL: ((vcenter_host))
-      GOVC_USERNAME: ((vcenter_usr))
-      GOVC_PASSWORD: ((vcenter_pwd))
-
-  - put: email
-    params:
-      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
-      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"

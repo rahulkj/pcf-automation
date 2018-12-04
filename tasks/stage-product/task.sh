@@ -27,9 +27,7 @@ if [[ (! -z "$DEPENDENCY_PRODUCT_TILES") && ("null" != "$DEPENDENCY_PRODUCT_TILE
   done
 fi
 
-AVAILABLE_PRODUCTS=$($CMD --env env/"${ENV_FILE}" available-products -f json)
-
-PRODUCT_NAME=$(echo "$AVAILABLE_PRODUCTS" | $JQ_CMD -r --arg deployment_name $PRODUCT_NAME '.[] | select(.name==$deployment_name) | .name')
-PRODUCT_VERSION=$(echo "$AVAILABLE_PRODUCTS" | $JQ_CMD -r --arg deployment_name $PRODUCT_NAME '.[] | select(.name==$deployment_name) | .version')
+PRODUCT_NAME=$($CMD tile-metadata --product-path pivnet-product/*.pivotal --product-name)
+PRODUCT_VERSION=$($CMD tile-metadata --product-path pivnet-product/*.pivotal --product-version)
 
 $CMD --env env/"${ENV_FILE}" stage-product -p $PRODUCT_NAME -v $PRODUCT_VERSION

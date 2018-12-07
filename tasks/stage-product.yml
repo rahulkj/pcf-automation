@@ -3,22 +3,18 @@
 # See our documentation for a detailed discussion of our semver API.
 # See www.semver.org for an explanation of semantic versioning.
 
-# code_snippet configure-authentication start yaml
+# code_snippet stage-product start yaml
 ---
 platform: linux
 
 inputs:
+- name: product # contains the product file to be uploaded and staged
 - name: env # contains the env file with target OpsMan Information
-- name: config # contains the auth configuration
 
 params:
   ENV_FILE: env.yml
   # - Filepath of the env config YAML
   # - The path is relative to root of the `env` input
-  AUTH_CONFIG_FILE: auth.yml
-  # - Optional
-  # - Filepath of the authorization config YAML
-  # - The path is relative to root of the `config` input
 
 run:
   path: bash
@@ -27,6 +23,9 @@ run:
   - |
     p-automator -v
     set -eux
-    om --env env/"${ENV_FILE}" configure-authentication \
-       --config config/"${AUTH_CONFIG_FILE}"
-# code_snippet configure-authentication end
+
+    om --env env/"${ENV_FILE}" stage-product \
+       --product-name "$(om tile-metadata --product-path product/*.pivotal --product-name)" \
+       --product-version "$(om tile-metadata --product-path product/*.pivotal --product-version)"
+
+  # code_snippet stage-product end

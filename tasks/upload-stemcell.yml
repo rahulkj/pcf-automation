@@ -1,3 +1,8 @@
+# The inputs, outputs, params, filename, and filepath
+# of this task file are part of its semantically versioned API.
+# See our documentation for a detailed discussion of our semver API.
+# See www.semver.org for an explanation of semantic versioning.
+
 # code_snippet upload-stemcell start yaml
 ---
 platform: linux
@@ -13,6 +18,11 @@ params:
   ENV_FILE: env.yml
   # - Filepath of the env config YAML
   # - The path is relative to root of the `env` input
+  FLOATING_STEMCELL: true
+  # - Optional
+  # - Assigns the stemcell to all compatible products
+  # - If false, a user is required to run the assign-stemcell task
+
 run:
   path: bash
   args:
@@ -21,5 +31,6 @@ run:
     p-automator -v
     set -eux
     om --env env/"${ENV_FILE}" upload-stemcell \
+       --floating="$FLOATING_STEMCELL" \
        --stemcell stemcell/*.tgz
 # code_snippet upload-stemcell end

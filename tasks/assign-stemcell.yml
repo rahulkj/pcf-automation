@@ -3,22 +3,26 @@
 # See our documentation for a detailed discussion of our semver API.
 # See www.semver.org for an explanation of semantic versioning.
 
-# code_snippet configure-authentication start yaml
+# code_snippet assign-stemcell start yaml
 ---
 platform: linux
 
 inputs:
 - name: env # contains the env file with target OpsMan Information
-- name: config # contains the auth configuration
+- name: config # contains the configuration file for assign-stemcell command
+  # - Can consume the output of `download-product` task directly
+  # - Example config:
+  # ---
+  # product: cf
+  # stemcell: 3468.86
 
 params:
   ENV_FILE: env.yml
   # - Filepath of the env config YAML
   # - The path is relative to root of the `env` input
-  AUTH_CONFIG_FILE: auth.yml
-  # - Optional
-  # - Filepath of the authorization config YAML
-  # - The path is relative to root of the `config` input
+  CONFIG_FILE: config.yml
+  # - Filepath of the env config YAML
+  # - The path is relative to root of the `assign-stemcell-config` input
 
 run:
   path: bash
@@ -27,6 +31,6 @@ run:
   - |
     p-automator -v
     set -eux
-    om --env env/"${ENV_FILE}" configure-authentication \
-       --config config/"${AUTH_CONFIG_FILE}"
-# code_snippet configure-authentication end
+    om --env env/"${ENV_FILE}" assign-stemcell \
+       --config config/"$CONFIG_FILE"
+# code_snippet assign-stemcell end

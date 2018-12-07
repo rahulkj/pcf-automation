@@ -1,15 +1,25 @@
+# The inputs, outputs, params, filename, and filepath
+# of this task file are part of its semantically versioned API.
+# See our documentation for a detailed discussion of our semver API.
+# See www.semver.org for an explanation of semantic versioning.
+
 # code_snippet download-product start yaml
 ---
 platform: linux
 
 inputs:
 - name: config # contains download-file config file
-- name: vars
+- name: vars # variable files to be made available
+  optional: true
+- name: secrets
+  # secret files to be made available
+  # separate from vars, so they can be store securely
   optional: true
 
 outputs:
 - name: downloaded-product
 - name: downloaded-stemcell
+- name: assign-stemcell-config
 
 caches:
 - path: downloaded-files
@@ -18,11 +28,12 @@ params:
   CONFIG_FILE: download-config.yml
   # - Filepath to the product configuration yaml file
   # - The path is relative to the root of the `config` input
+
   VARS_FILES:
   # - Optional
   # - Filepath to the product configuration vars yaml file
   # - The path is relative to root of the task build,
-  #   so `vars` can be used.
+  #   so `vars` and `secrets` can be used.
 
 run:
   path: bash
@@ -32,17 +43,38 @@ run:
     p-automator -v
     set -eux
 
+    vars_files_args=("")
+    for vf in ${VARS_FILES}
+    do
+      vars_files_args+=("--vars-file ${vf}")
+    done
+
+    # ${vars_files_args[@] needs to be globbed in order to pass through properly
+     # shellcheck disable=SC2068
     om download-product \
-       --config config/"${CONFIG_FILE}" \
+       --config config/"${CONFIG_FILE}" ${vars_files_args[@]} \
        --output-directory downloaded-files
 
-    product_file=$(om interpolate --config downloaded-files/download-file.json --path /product)
-    stemcell_file=$(om interpolate --config downloaded-files/download-file.json --path /stemcell?)
+    product_file=$(om interpolate --config downloaded-files/download-file.json --path /product_path)
+    stemcell_file=$(om interpolate --config downloaded-files/download-file.json --path /stemcell_path?)
 
     cp "$product_file" downloaded-product
 
     if [ "$stemcell_file" != "null" ]; then
       cp "$stemcell_file" downloaded-stemcell
     fi
+
+    # code_snippet assign-stemcell-support start bash
+    echo "Creating a config file for assign-stemcell..."
+    echo "product: $(om interpolate \
+                       --config downloaded-files/download-file.json \
+                       --path /product_slug)" \
+                       > assign-stemcell-config/config.yml
+    echo "stemcell: $(om interpolate \
+                        --config downloaded-files/download-file.json \
+                        --path /stemcell_version?)" \
+                        >> assign-stemcell-config/config.yml
+    echo "Finished creating config file for assign-stemcell."
+    # code_snippet assign-stemcell-support end
 
 # code_snippet download-product end

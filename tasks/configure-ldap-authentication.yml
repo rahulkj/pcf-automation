@@ -3,7 +3,7 @@
 # See our documentation for a detailed discussion of our semver API.
 # See www.semver.org for an explanation of semantic versioning.
 
-# code_snippet configure-authentication start yaml
+# code_snippet configure-ldap-authentication start yaml
 ---
 platform: linux
 
@@ -27,6 +27,6 @@ run:
   - |
     p-automator -v
     set -eux
-    om --env env/"${ENV_FILE}" configure-authentication \
-       --config config/"${AUTH_CONFIG_FILE}"
-# code_snippet configure-authentication end
+    om --env env/"${ENV_FILE}" configure-ldap-authentication \
+    --config config/"${AUTH_CONFIG_FILE}"
+# code_snippet configure-ldap-authentication end

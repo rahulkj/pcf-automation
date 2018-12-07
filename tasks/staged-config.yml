@@ -1,3 +1,8 @@
+# The inputs, outputs, params, filename, and filepath
+# of this task file are part of its semantically versioned API.
+# See our documentation for a detailed discussion of our semver API.
+# See www.semver.org for an explanation of semantic versioning.
+
 # code_snippet staged-config start yaml
 ---
 platform: linux
@@ -15,7 +20,7 @@ params:
   ENV_FILE: env.yml
   # - Filepath of the env config YAML
   # - The path is relative to root of the `env` input
-  SUBSTITUE_CREDENTIALS_WITH_PLACEHOLDERS: true
+  SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS: true
   # - Replace credentials with interpolatable variable names
   # - If set to false, **literal credentials** will be included in the output
 
@@ -27,7 +32,7 @@ run:
     p-automator -v
     set -eux
 
-    flag=$(if "$SUBSTITUE_CREDENTIALS_WITH_PLACEHOLDERS";
+    flag=$(if "SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS";
            then echo '--include-placeholders';
            else echo '--include-credentials';
            fi

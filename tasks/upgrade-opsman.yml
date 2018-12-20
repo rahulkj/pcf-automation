@@ -51,6 +51,7 @@ run:
   args:
   - "-c"
   - |
+    cat /var/version && echo ""
     p-automator -v
     set -eux
 

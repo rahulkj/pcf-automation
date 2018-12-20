@@ -32,7 +32,7 @@ run:
   args:
   - "-c"
   - |
-    p-automator -v
+    cat /var/version && echo ""
     set -eux
 
     if [ -z "$CONFIG_FILE" ]; then

@@ -48,12 +48,16 @@ run:
   args:
     - "-c"
     - |
+      cat /var/version && echo ""
       set -eu
+      git config --global user.email "$GIT_AUTHOR_EMAIL"
+      git config --global user.name "$GIT_AUTHOR_NAME"
+
       git clone repository repository-commit
 
       cp file-source/"$FILE_SOURCE_PATH" repository-commit/"$FILE_DESTINATION_PATH"
       cd repository-commit
       git add -A
-      git commit -m "$COMMIT_MESSAGE" || true
+      git commit -m "$COMMIT_MESSAGE" --allow-empty
 
 # code_snippet make-git-commit end

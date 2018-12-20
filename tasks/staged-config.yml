@@ -29,7 +29,7 @@ run:
   args:
   - "-c"
   - |
-    p-automator -v
+    cat /var/version && echo ""
     set -eux
 
     flag=$(if "SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS";

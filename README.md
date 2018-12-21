@@ -14,7 +14,7 @@ This repository provides the pipelines for the products listed in the following 
 | --- | --- | --- |
 | [OM + OD + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF](./pipelines/install-pcf)
 | [OM + OD + NSX-T + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF with NSX-T](./pipelines/install-pcf/with-nsxt)
-| [Install Tile] | x.x.x | [Install Tiles](./pipelines/install-tile)
+| [Install Tile] | x.x.x | [Install Tile](./pipelines/install-tile)
 | [Install Tile without Stemcell] | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
 
 ---
@@ -22,6 +22,16 @@ This repository provides the pipelines for the products listed in the following 
 
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml -l ./pipelines/tiles/healthwatch/params.yml
+>	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml -l ./pipelines/globals.yml -l ./pipelines/tiles/healthwatch/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p healthwatch
 ```
+
+---
+### Docker Images
+* Download the [Platform Automation Docker Image](https://network.pivotal.io/products/platform-automation)
+* Install [Docker](https://hub.docker.com/search/?type=edition&offering=community) on your machine
+* Run `docker import platform-automation-image-x.x.x.tgz <COMPANY-ORG>/platform-automation-image`
+* `docker login`
+* `docker push <COMPANY-ORG>/platform-automation-image`
+
+You can now update the [globals.yml](./pipelines/globals.yml) and update the variable `platform_automation_image_repository` to point to your docker registry

@@ -59,7 +59,7 @@ resources:
 - name: platform-automation-image
   type: docker-image
   source:
-    repository: rjain/platform-automation
+    repository: ((platform_automation_image_repository))
 
 - name: buildbox-image
   type: docker-image

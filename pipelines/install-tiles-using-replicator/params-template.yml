@@ -1,0 +1,12 @@
+product_slug:
+product_version:
+product_glob:
+product_identifier:
+
+iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
+stemcell_type: xenial                         # xenial|trusty
+replicated_name:
+
+dependency_product_tiles: p-bosh,cf
+
+product_config: |

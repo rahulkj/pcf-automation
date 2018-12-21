@@ -14,8 +14,9 @@ This repository provides the pipelines for the products listed in the following 
 | --- | --- | --- |
 | [OM + OD + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF](./pipelines/install-pcf)
 | [OM + OD + NSX-T + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF with NSX-T](./pipelines/install-pcf/with-nsxt)
-| [Install Tile] | x.x.x | [Install Tile](./pipelines/install-tile)
-| [Install Tile without Stemcell] | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
+| Install Tile | x.x.x | [Install Tile](./pipelines/install-tile)
+| Install Tile without Stemcell | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
+| Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tile-with-replicator)
 
 ---
 ### Following is an example on how to `fly` a pipeline:

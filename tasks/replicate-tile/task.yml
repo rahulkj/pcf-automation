@@ -5,8 +5,6 @@ platform: linux
 params:
   DEBUG:
   REPLICATED_NAME:
-  PRODUCT_NAME:
-  DEPENDENCY_PRODUCT_TILES:
 
 inputs:
 - name: pipelines-repo

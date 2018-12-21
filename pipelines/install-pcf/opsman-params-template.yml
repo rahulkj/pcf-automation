@@ -29,4 +29,10 @@ ops_manager_auth: |
   password: ((ops_mgr_pwd))
   decryption-passphrase: ((ops_mgr_decryption_pwd))
 
+opsman_env_filename: opsman-env.yml
+
 opsman_auth_filename: opsman-auth.yml
+
+state_file_name: state.yml
+
+state_file_destination: state-files

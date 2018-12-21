@@ -143,22 +143,25 @@ jobs:
       state: pipelines-repo
       image: pivnet-product
       config: output-folder
+    params:
+      STATE_FILE: ((state_file_name))
 
   - task: commit-files-into-git
-    image: buildbox-image
-    file: pipelines-repo/tasks/commit-files-into-git/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/make-git-commit.yml
     input_mapping:
-      git-repo: pipelines-repo
-      src-dir: generated-state
+      repository: pipelines-repo
+      file-source: generated-state
     params:
-      DEBUG: ((debug))
-      CI_USERNAME: ((ci_username))
-      CI_EMAIL_ADDRESS: ((ci_email_address))
-      GIT_COMMIT_MESSAGE: "Updated the state file"
+      FILE_SOURCE_PATH: ((state_file_name))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_file_name))
+      GIT_AUTHOR_NAME: ((ci_username))
+      GIT_AUTHOR_EMAIL: ((ci_email_address))
+      COMMIT_MESSAGE: "Updated state file after creating the OpsManager VM"
 
   - put: pipelines-repo
     params:
-      repository: git-repo-updated
+      repository: repository-commit
 
   - task: create-opsman-env-file
     image: buildbox-image
@@ -305,8 +308,8 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: upload-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/upload-product/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/upload-product.yml
     input_mapping:
       product: nsxt-product
       env: env
@@ -351,8 +354,8 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: upload-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/upload-product/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/upload-product.yml
     input_mapping:
       product: pas-product
       env: env
@@ -421,16 +424,13 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: stage-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/stage-product/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/stage-product.yml
     input_mapping:
-      pivnet-product: nsxt-product
+      product: nsxt-product
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_filename))
-      PRODUCT_NAME: ((nsxt_product_identifier))
-      DEPENDENCY_PRODUCT_TILES: ((nsxt_dependency_product_tiles))
 
 - name: generate-nsxt-config
   plan:
@@ -566,16 +566,13 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: stage-product
-    image: buildbox-image
-    file: pipelines-repo/tasks/stage-product/task.yml
+    image: platform-automation-image
+    file: pipelines-repo/tasks/stage-product.yml
     input_mapping:
-      pivnet-product: pas-product
+      product: pas-product
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_filename))
-      PRODUCT_NAME: ((pas_product_identifier))
-      DEPENDENCY_PRODUCT_TILES: ((pas_dependency_product_tiles))
 
 - name: generate-pas-config
   plan:
@@ -727,35 +724,65 @@ jobs:
   plan:
   - aggregate:
     - get: pipelines-repo
-    - get: govc
-      params:
-        globs:
-        - "*linux_amd64*"
-    - get: om-cli
-      params:
-        globs:
-        - "*om-linux*"
+    - get: buildbox-image
+    - get: platform-automation-image
     - get: ops-manager
       params:
         globs: []
 
-  - task: delete-products
-    file: pipelines-repo/tasks/delete-products/task.yml
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
     params:
       DEBUG: ((debug))
-      OPS_MGR_HOST: ((ops_mgr_host))
-      OPS_MGR_USR: ((ops_mgr_usr))
-      OPS_MGR_PWD: ((ops_mgr_pwd))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
 
-  - task: delete-ops-manager
-    file: pipelines-repo/tasks/delete-opsman/task.yml
+  - task: create-opsman-import-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: config
     params:
       DEBUG: ((debug))
-      OPS_MGR_IP: ((ops_mgr_ip))
-      GOVC_INSECURE: 1
-      GOVC_URL: ((vcenter_host))
-      GOVC_USERNAME: ((vcenter_usr))
-      GOVC_PASSWORD: ((vcenter_pwd))
+      OUTPUT_FILE_NAME: opsman.yml
+      PARAM_NAME: ((ops_manager_settings))
+
+  - task: delete-products
+    image: platform-automation-image
+    file: pipelines-repo/tasks/delete-installation.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_filename))
+
+  - task: delete-opsmanager-vm
+    image: platform-automation-image
+    file: pipelines-repo/tasks/delete-vm.yml
+    input_mapping:
+      state: pipelines-repo
+      config: config
+    params:
+      STATE_FILE: ((state_file_name))
+
+  - task: commit-files-into-git
+    image: platform-automation-image
+    file: pipelines-repo/tasks/make-git-commit.yml
+    input_mapping:
+      repository: pipelines-repo
+      file-source: generated-state
+    params:
+      FILE_SOURCE_PATH: ((state_file_name))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_file_name))
+      GIT_AUTHOR_NAME: ((ci_username))
+      GIT_AUTHOR_EMAIL: ((ci_email_address))
+      COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
+
+  - put: pipelines-repo
+    params:
+      repository: repository-commit
 
   - put: email
     params:

@@ -16,7 +16,7 @@ nsxt-config: |
     value: true
   .properties.external_ip_pools:                                                                       # OPTIONAL
     value:
-    - name: external_snat_ip_pool 
+    - name: external_snat_ip_pool
       cidr: <nil>
       allocation_ranges: <nil>
   .properties.foundation_name:
@@ -52,5 +52,3 @@ nsxt-config: |
     value:
   .properties.top_firewall_section_marker:                                                             # OPTIONAL
     value:
-
-nsxt_dependency_product_tiles: p-bosh

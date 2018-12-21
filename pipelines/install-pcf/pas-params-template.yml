@@ -651,12 +651,6 @@ pas-config: |
         secret:
 
   resource-config:
-    consul_server:
-      instances: 3
-      instance_type:
-        id: micro
-      persistent_disk:
-        size_mb: "1024"
     nats:
       instances: 2
       instance_type:
@@ -748,8 +742,6 @@ pas-config: |
 
   errand-config:
     smoke_tests:
-      post-deploy-state: false
+      post-deploy-state: true
     test-autoscaling:
-      post-deploy-state: false
-
-pas_dependency_product_tiles: p-bosh
+      post-deploy-state: true

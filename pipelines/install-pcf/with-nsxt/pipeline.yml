@@ -765,7 +765,7 @@ jobs:
       state: pipelines-repo
       config: config
     params:
-      STATE_FILE: ((state_file_name))
+      STATE_FILE: ((state_file_destination))/((state_file_name))
 
   - task: commit-files-into-git
     image: platform-automation-image

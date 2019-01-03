@@ -6,11 +6,12 @@ else
   set -e
 fi
 
-chmod +x replicator/replicator-linux
-CMD=./replicator/replicator-linux
+REPLICATOR_CLI=$(find replicator/ -name "*linux")
+chmod +x $REPLICATOR_CLI
+CMD=./$REPLICATOR_CLI
 
-INPUT_FILE=`find pivnet-product/ -name "*.pivotal"`
-FILE_NAME=`echo $INPUT_FILE | cut -d '/' -f2`
+INPUT_FILE=$(find pivnet-product/ -name "*.pivotal")
+FILE_NAME=$(echo $INPUT_FILE | cut -d '/' -f2)
 OUTPUT_FILE=output-folder/$FILE_NAME
 
 if [[ ! -z "$REPLICATED_NAME" ]]; then

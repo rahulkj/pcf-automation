@@ -1,11 +1,13 @@
 product_slug:
 product_version:
 product_glob:
-product_identifier:
+replicator_glob: "*.tgz"
+replicated_name:
+product_identifier:                           # if you are replicating the tile, then identifier will be like identifier-replicated_name,
+                                              # ex: p-rabbitmq-zone1, where zone1 is the replicated_name value
 
 iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
 stemcell_type: xenial                         # xenial|trusty
-replicated_name:
 
 dependency_product_tiles: p-bosh,cf
 

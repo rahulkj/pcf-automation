@@ -34,13 +34,6 @@ resources:
     repository: pivnet-cli
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: replicator
-  type: github-release
-  source:
-    user: pivotal-cf
-    repository: replicator
-    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
-
 - name: jq
   type: github-release
   source:
@@ -74,6 +67,13 @@ resources:
     repository: rjain/buildbox
 
 - name: product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ((product_slug))
+    product_version: ((product_version))
+
+- name: replicator
   type: pivnet
   source:
     api_token: ((pivnet_token))
@@ -122,14 +122,15 @@ jobs:
         - "*linux-amd64*"
     - get: replicator
       params:
-        globs:
-        - "*linux*"
+        globs: [((replicator_glob))]
+        unpack: true
     - get: om-cli
       params:
         globs:
         - "*-linux"
 
   - task: replicate-tile
+    image: buildbox-image
     file: pipelines-repo/tasks/replicate-tile/task.yml
     input_mapping:
       pivnet-product: product
@@ -182,12 +183,12 @@ jobs:
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: pivnet-product
       resource: product
       params:
         globs: []
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: om-cli
       params:
         globs:
@@ -196,12 +197,12 @@ jobs:
       params:
         globs:
         - "*linux64*"
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]
     - get: buildbox-image
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
 
   - task: create-opsman-env-file
     image: buildbox-image
@@ -224,21 +225,21 @@ jobs:
       ENV_FILE: ((opsman_env_filename))
       PRODUCT_NAME: ((product_identifier))
 
-- name: configure-and-deploy
+- name: configure-product
   serial: true
   plan:
   - aggregate:
     - get: pipelines-repo
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: platform-automation-image
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: buildbox-image
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
     - get: product
       params:
         globs: []
       trigger: true
-      passed: [upload-and-stage-product]
+      passed: [replicate-upload-and-stage-product]
 
   - task: create-opsman-env-file
     image: buildbox-image
@@ -269,6 +270,32 @@ jobs:
     params:
       CONFIG_FILE: product-config.yml
       ENV_FILE: ((opsman_env_filename))
+
+- name: deploy-product
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-product]
+    - get: platform-automation-image
+      passed: [configure-product]
+    - get: buildbox-image
+      passed: [configure-product]
+    - get: product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-product]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
 
   - task: deploy-product
     image: platform-automation-image

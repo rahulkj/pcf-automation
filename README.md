@@ -45,3 +45,14 @@ Install Healthwatch example:
 * `docker push <COMPANY-ORG>/platform-automation-image`
 
 You can now update the [globals.yml](./pipelines/globals.yml) and update the variable `platform_automation_image_repository` to point to your docker registry
+
+---
+
+### Some tricks
+
+For using certificates via credhub, in the pipelines, then,
+- store the **RAW** certificate in a file, ex: `backup_private_key.pem`
+- login into `credhub`
+- Execute the command `credhub set -n /concourse/main/backup_private_key -t password -v "$(awk '$1=$1' ORS='\\\\n' backup_private_key.pem | awk '{printf("\"\\\"%s\\\"\"\n", $0);}')"`
+
+Now you can use, the variable `backup_private_key` in all the pipelines, that need the backup key.

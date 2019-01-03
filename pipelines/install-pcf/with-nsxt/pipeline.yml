@@ -665,7 +665,7 @@ jobs:
       ENV_FILE: ((opsman_env_filename))
       DOMAINS: ((wildcard_domains))
 
-- name: configure-and-deploy-pas
+- name: configure-pas
   serial: true
   plan:
   - aggregate:
@@ -710,6 +710,32 @@ jobs:
     params:
       CONFIG_FILE: pas-config.yml
       ENV_FILE: ((opsman_env_filename))
+
+- name: deploy-pas
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-pas]
+    - get: platform-automation-image
+      passed: [configure-pas]
+    - get: buildbox-image
+      passed: [configure-pas]
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-pas]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
 
   - task: deploy-pas
     image: platform-automation-image

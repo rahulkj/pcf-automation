@@ -203,7 +203,7 @@ jobs:
       ENV_FILE: ((opsman_env_filename))
       PRODUCT_NAME: ((product_identifier))
 
-- name: configure-and-deploy
+- name: configure-product
   serial: true
   plan:
   - aggregate:
@@ -248,6 +248,32 @@ jobs:
     params:
       CONFIG_FILE: product-config.yml
       ENV_FILE: ((opsman_env_filename))
+
+- name: deploy-product
+  serial: true
+  plan:
+  - aggregate:
+    - get: pipelines-repo
+      passed: [configure-product]
+    - get: platform-automation-image
+      passed: [configure-product]
+    - get: buildbox-image
+      passed: [configure-product]
+    - get: product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-product]
+
+  - task: create-opsman-env-file
+    image: buildbox-image
+    file: pipelines-repo/tasks/create-yml-file/task.yml
+    output_mapping:
+      output-folder: env
+    params:
+      DEBUG: ((debug))
+      OUTPUT_FILE_NAME: ((opsman_env_filename))
+      PARAM_NAME: ((ops_manager_env))
 
   - task: deploy-product
     image: platform-automation-image

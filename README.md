@@ -12,7 +12,7 @@ This repository provides the pipelines for the products listed in the following 
 
 | PIVOTAL PRODUCT NAME | VERSION | PIPELINE PARAMS LOCATION |
 | --- | --- | --- |
-| [OM + OD](https://network.pivotal.io/products/ops-manager) [PAS](https://network.pivotal.io/products/elastic-runtime) | 2.4.x | [Install PCF](./pipelines/install-pcf)
+| [OM + OD](https://network.pivotal.io/products/ops-manager) + [PAS](https://network.pivotal.io/products/elastic-runtime) | 2.4.x | [Install PCF](./pipelines/install-pcf)
 | [OM + OD](https://network.pivotal.io/products/ops-manager) + [NSX-T](https://network.pivotal.io/products/vmware-nsx-t/) + [PAS](https://network.pivotal.io/products/elastic-runtime) | 2.4.x | [Install PCF with NSX-T](./pipelines/install-pcf/with-nsxt)
 | OM upgrade | 2.4.x | [OpsManager Upgrade](./pipelines/upgrade-opsman)
 | Install Tile | x.x.x | [Install Tile](./pipelines/install-tile)

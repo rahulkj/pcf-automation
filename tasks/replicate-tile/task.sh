@@ -21,3 +21,6 @@ else
   echo "Replication of the tile is not required " $REPLICATOR_NAME
   mv $INPUT_FILE $OUTPUT_FILE
 fi
+
+cp pivnet-product/metadata.* output-folder/
+cp pivnet-product/version output-folder/

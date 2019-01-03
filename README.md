@@ -18,6 +18,7 @@ This repository provides the pipelines for the products listed in the following 
 | Install Tile | x.x.x | [Install Tile](./pipelines/install-tile)
 | Install Tile without Stemcell | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
 | Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tile-with-replicator)
+| Replicate PAS for windows and Install | x.x.x | [Replicate PAS for windows and Install](./pipelines/install-windows-tile)
 
 ---
 ### Following is an example on how to `fly` a pipeline:

@@ -12,13 +12,13 @@ This repository provides the pipelines for the products listed in the following 
 
 | PIVOTAL PRODUCT NAME | VERSION | PIPELINE PARAMS LOCATION |
 | --- | --- | --- |
-| [OM + OD + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF](./pipelines/install-pcf)
-| [OM + OD + NSX-T + PAS](https://network.pivotal.io/products/ops-manager) | 2.4.x | [Install PCF with NSX-T](./pipelines/install-pcf/with-nsxt)
+| [OM + OD](https://network.pivotal.io/products/ops-manager) [PAS](https://network.pivotal.io/products/elastic-runtime) | 2.4.x | [Install PCF](./pipelines/install-pcf)
+| [OM + OD](https://network.pivotal.io/products/ops-manager) + [NSX-T](https://network.pivotal.io/products/vmware-nsx-t/) + [PAS](https://network.pivotal.io/products/elastic-runtime) | 2.4.x | [Install PCF with NSX-T](./pipelines/install-pcf/with-nsxt)
 | OM upgrade | 2.4.x | [OpsManager Upgrade](./pipelines/upgrade-opsman)
 | Install Tile | x.x.x | [Install Tile](./pipelines/install-tile)
 | Install Tile without Stemcell | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
 | Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tile-with-replicator)
-| Replicate PAS for windows and Install | x.x.x | [Replicate PAS for windows and Install](./pipelines/install-windows-tile)
+| Replicate [PAS for windows](https://network.pivotal.io/products/pas-windows) and Install | x.x.x | [Replicate PAS for windows and Install](./pipelines/install-windows-tile)
 
 ---
 ### Following is an example on how to `fly` a pipeline:

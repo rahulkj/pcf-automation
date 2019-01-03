@@ -10,7 +10,7 @@ chmod +x replicator/replicator-linux
 CMD=./replicator/replicator-linux
 
 INPUT_FILE=`find pivnet-product/ -name "*.pivotal"`
-FILE_NAME=`echo $INPUT_FILE | cut -d '/' -f3`
+FILE_NAME=`echo $INPUT_FILE | cut -d '/' -f2`
 OUTPUT_FILE=output-folder/$FILE_NAME
 
 if [[ ! -z "$REPLICATED_NAME" ]]; then

@@ -26,7 +26,7 @@ This repository provides the pipelines for the products listed in the following 
 Install PCF with NSX-T example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p install-pcf -c ./pipelines/install-pcf/with-nsxt/pipeline.yml -l ./pipelines/install-pcf/vSphere-ops-director-params.yml -l ./pipelines/install-pcf/nsxt-params.yml -l ./pipelines/install-pcf/opsman-params.yml -l ./pipelines/install-pcf/pas-params.yml -l ./pipelines/globals.yml
+>	fly -t concourse-[ENV] set-pipeline -p install-pcf -c ./pipelines/install-pcf/with-nsxt/pipeline.yml -l ./pipelines/install-pcf/vSphere-ops-director-params.yml -l ./pipelines/install-pcf/with-nsxt/nsxt-params.yml -l ./pipelines/install-pcf/opsman-params.yml -l ./pipelines/install-pcf/pas-params.yml -l ./pipelines/globals.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p install-pcf
 ```
 

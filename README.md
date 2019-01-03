@@ -17,7 +17,7 @@ This repository provides the pipelines for the products listed in the following 
 | OM upgrade | 2.4.x | [OpsManager Upgrade](./pipelines/upgrade-opsman)
 | Install Tile | x.x.x | [Install Tile](./pipelines/install-tile)
 | Install Tile without Stemcell | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
-| Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tile-with-replicator)
+| Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tiles-using-replicator)
 | Replicate [PAS for windows](https://network.pivotal.io/products/pas-windows) and Install | x.x.x | [Replicate PAS for windows and Install](./pipelines/install-windows-tile)
 
 ---

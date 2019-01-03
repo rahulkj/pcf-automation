@@ -1,0 +1,17 @@
+---
+
+platform: linux
+
+params:
+  DEBUG:
+
+inputs:
+- name: pipelines-repo
+- name: pivnet-product
+- name: winfs-injector
+
+outputs:
+- name: output-folder
+
+run:
+  path: pipelines-repo/tasks/inject-winfs/task.sh

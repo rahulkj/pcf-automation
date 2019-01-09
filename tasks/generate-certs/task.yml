@@ -7,10 +7,10 @@ params:
   ENV_FILE: env.yml
 
 inputs:
-  - name: pipelines-repo
+  - name: git-repo
   - name: om-cli
   - name: jq
   - name: env
 
 run:
-  path: pipelines-repo/tasks/generate-certs/task.sh
+  path: git-repo/tasks/generate-certs/task.sh

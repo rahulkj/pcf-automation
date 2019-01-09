@@ -12,7 +12,7 @@ chmod +x $PIVNET_CLI
 chmod +x ./jq/jq-linux64
 JQ_CMD=./jq/jq-linux64
 
-SC_DETAILS=`cat ./pivnet-product/metadata.json | $JQ_CMD -r '[.Dependencies[] | select(.Release.Product.Name | contains("Stemcells"))][0]'`
+SC_DETAILS=`cat ./product/metadata.json | $JQ_CMD -r '[.Dependencies[] | select(.Release.Product.Name | contains("Stemcells"))][0]'`
 
 SC_VERSION=$(echo "$SC_DETAILS" | $JQ_CMD -r '.Release.Version')
 PRODUCT_SLUG=$(echo "$SC_DETAILS" | $JQ_CMD -r '.Release.Product.Slug')

@@ -10,7 +10,7 @@ REPLICATOR_CLI=$(find replicator/ -name "*linux")
 chmod +x $REPLICATOR_CLI
 CMD=./$REPLICATOR_CLI
 
-INPUT_FILE=$(find pivnet-product/ -name "*.pivotal")
+INPUT_FILE=$(find product/ -name "*.pivotal")
 FILE_NAME=$(echo $INPUT_FILE | cut -d '/' -f2)
 OUTPUT_FILE=output-folder/$FILE_NAME
 
@@ -22,5 +22,5 @@ else
   mv $INPUT_FILE $OUTPUT_FILE
 fi
 
-cp pivnet-product/metadata.* output-folder/
-cp pivnet-product/version output-folder/
+cp product/metadata.* output-folder/
+cp product/version output-folder/

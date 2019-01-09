@@ -7,12 +7,12 @@ params:
   REPLICATED_NAME:
 
 inputs:
-- name: pipelines-repo
-- name: pivnet-product
+- name: git-repo
+- name: product
 - name: replicator
 
 outputs:
 - name: output-folder
 
 run:
-  path: pipelines-repo/tasks/replicate-tile/task.sh
+  path: git-repo/tasks/replicate-tile/task.sh

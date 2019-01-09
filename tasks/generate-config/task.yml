@@ -8,11 +8,11 @@ params:
   PRODUCT_NAME:
 
 inputs:
-  - name: pipelines-repo
+  - name: git-repo
   - name: om-cli
   - name: jq
   - name: tile-config-convertor
   - name: env
 
 run:
-  path: pipelines-repo/tasks/generate-config/task.sh
+  path: git-repo/tasks/generate-config/task.sh

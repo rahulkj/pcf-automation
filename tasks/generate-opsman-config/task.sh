@@ -10,7 +10,7 @@ gunzip ./govc/govc_linux_amd64.gz
 chmod +x ./govc/govc_linux_amd64
 GOVC_CMD=./govc/govc_linux_amd64
 
-FILE_PATH=`find ./pivnet-product/ -name *.ova`
+FILE_PATH=`find ./product/ -name *.ova`
 
 $GOVC_CMD import.spec $FILE_PATH > import-spec.json
 

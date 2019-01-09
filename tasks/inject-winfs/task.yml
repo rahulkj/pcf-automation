@@ -6,12 +6,12 @@ params:
   DEBUG:
 
 inputs:
-- name: pipelines-repo
-- name: pivnet-product
+- name: git-repo
+- name: product
 - name: winfs-injector
 
 outputs:
 - name: output-folder
 
 run:
-  path: pipelines-repo/tasks/inject-winfs/task.sh
+  path: git-repo/tasks/inject-winfs/task.sh

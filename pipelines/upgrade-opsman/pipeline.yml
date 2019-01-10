@@ -36,6 +36,14 @@ resources:
     product_slug: ops-manager
     product_version: ((opsman_product_version))
 
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
 - name: email
   type: email
   source:
@@ -60,6 +68,10 @@ jobs:
       params:
         globs:
         - ((opsman_glob))
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
 
   - task: create-opsman-import-file
     image: buildbox-image
@@ -93,7 +105,7 @@ jobs:
 
   - task: export-installation
     image: platform-automation-image
-    file: git-repo/tasks/export-installation.yml
+    file: platform-automation-tasks/tasks/export-installation.yml
     input_mapping:
       env: env
     params:
@@ -101,7 +113,7 @@ jobs:
 
   - task: upgrade-opsmanager
     image: platform-automation-image
-    file: git-repo/tasks/upgrade-opsman.yml
+    file: platform-automation-tasks/tasks/upgrade-opsman.yml
     input_mapping:
       config: config
       env: env
@@ -115,7 +127,7 @@ jobs:
 
   - task: commit-files-into-git
     image: platform-automation-image
-    file: git-repo/tasks/make-git-commit.yml
+    file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
       repository: git-repo
       file-source: generated-state
@@ -132,7 +144,7 @@ jobs:
 
   - task: apply-changes
     image: platform-automation-image
-    file: git-repo/tasks/apply-changes.yml
+    file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
       env: env
     params:

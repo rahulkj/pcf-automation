@@ -52,6 +52,14 @@ resources:
   source:
     repository: ((platform_automation_image_repository))
 
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
 - name: buildbox-image
   type: docker-image
   source:
@@ -88,6 +96,10 @@ jobs:
   - aggregate:
     - get: git-repo
     - get: platform-automation-image
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
     - get: buildbox-image
     - get: pivnet-product
       resource: ops-manager
@@ -105,7 +117,7 @@ jobs:
 
   - task: deploy-opsmanager-vm
     image: platform-automation-image
-    file: git-repo/tasks/create-vm.yml
+    file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
       state: git-repo
       image: pivnet-product
@@ -113,7 +125,7 @@ jobs:
 
   - task: commit-files-into-git
     image: platform-automation-image
-    file: git-repo/tasks/make-git-commit.yml
+    file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
       repository: git-repo
       file-source: generated-state
@@ -150,7 +162,7 @@ jobs:
 
   - task: configure-authentication
     image: platform-automation-image
-    file: git-repo/tasks/configure-authentication.yml
+    file: platform-automation-tasks/tasks/configure-authentication.yml
     input_mapping:
       config: auth
       env: env
@@ -165,6 +177,11 @@ jobs:
     - get: git-repo
       passed: [install-ops-manager]
     - get: platform-automation-image
+      passed: [install-ops-manager]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [install-ops-manager]
     - get: buildbox-image
       passed: [install-ops-manager]
@@ -196,7 +213,7 @@ jobs:
 
   - task: configure-ops-director
     image: platform-automation-image
-    file: git-repo/tasks/configure-director.yml
+    file: platform-automation-tasks/tasks/configure-director.yml
     params:
       ENV_FILE: ((opsman_env_filename))
       DIRECTOR_CONFIG_FILE: director.yml
@@ -209,6 +226,11 @@ jobs:
     - get: buildbox-image
       passed: [configure-ops-director]
     - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [configure-ops-director]
     - get: pivnet-product
       resource: ops-manager
@@ -228,7 +250,7 @@ jobs:
 
   - task: deploy-ops-director
     image: platform-automation-image
-    file: git-repo/tasks/apply-changes.yml
+    file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
       env: env
     params:
@@ -241,6 +263,11 @@ jobs:
     - get: git-repo
       passed: [configure-ops-director]
     - get: platform-automation-image
+      passed: [configure-ops-director]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [configure-ops-director]
     - get: buildbox-image
       passed: [configure-ops-director]
@@ -273,7 +300,7 @@ jobs:
 
   - task: upload-product
     image: platform-automation-image
-    file: git-repo/tasks/upload-product.yml
+    file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
       product: pas-product
       env: env
@@ -293,7 +320,7 @@ jobs:
 
   - task: upload-stemcell
     image: platform-automation-image
-    file: git-repo/tasks/upload-stemcell.yml
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       stemcell: stemcells
       env: env
@@ -307,6 +334,11 @@ jobs:
     - get: git-repo
       passed: [upload-pas]
     - get: platform-automation-image
+      passed: [upload-pas]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [upload-pas]
     - get: buildbox-image
       passed: [upload-pas]
@@ -343,7 +375,7 @@ jobs:
 
   - task: stage-product
     image: platform-automation-image
-    file: git-repo/tasks/stage-product.yml
+    file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
       product: pas-product
       env: env
@@ -448,6 +480,11 @@ jobs:
       passed: [stage-pas]
     - get: platform-automation-image
       passed: [stage-pas]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [stage-pas]
     - get: buildbox-image
       passed: [stage-pas]
     - get: pas-product
@@ -478,7 +515,7 @@ jobs:
 
   - task: config-product
     image: platform-automation-image
-    file: git-repo/tasks/configure-product.yml
+    file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
       config: config
       env: env
@@ -493,6 +530,11 @@ jobs:
     - get: git-repo
       passed: [configure-pas]
     - get: platform-automation-image
+      passed: [configure-pas]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [configure-pas]
     - get: buildbox-image
       passed: [configure-pas]
@@ -514,7 +556,7 @@ jobs:
 
   - task: deploy-pas
     image: platform-automation-image
-    file: git-repo/tasks/apply-changes.yml
+    file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
       env: env
     params:
@@ -527,6 +569,10 @@ jobs:
     - get: git-repo
     - get: buildbox-image
     - get: platform-automation-image
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
     - get: ops-manager
       params:
         globs: []

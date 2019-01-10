@@ -94,6 +94,14 @@ resources:
     product_slug: ((stemcell_slug))
     product_version: ((stemcell_version))
 
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
 - name: email
   type: email
   source:
@@ -121,6 +129,10 @@ jobs:
     - get: git-repo
     - get: buildbox-image
     - get: platform-automation-image
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
     - get: product
       params:
         globs: [((product_glob))]
@@ -180,7 +192,7 @@ jobs:
 
   - task: upload-and-stage-product
     image: platform-automation-image
-    file: git-repo/tasks/upload-and-stage-product.yml
+    file: platform-automation-tasks/tasks/upload-and-stage-product.yml
     input_mapping:
       product: injected-folder
       env: env
@@ -189,7 +201,7 @@ jobs:
 
   - task: upload-stemcell
     image: platform-automation-image
-    file: git-repo/tasks/upload-stemcell.yml
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
     input_mapping:
       env: env
     params:
@@ -246,6 +258,11 @@ jobs:
       passed: [replicate-inject-upload-and-stage-product]
     - get: platform-automation-image
       passed: [replicate-inject-upload-and-stage-product]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [replicate-inject-upload-and-stage-product]
     - get: buildbox-image
       passed: [replicate-inject-upload-and-stage-product]
     - get: product
@@ -276,7 +293,7 @@ jobs:
 
   - task: config-product
     image: platform-automation-image
-    file: git-repo/tasks/configure-product.yml
+    file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
       config: config
       env: env
@@ -291,6 +308,11 @@ jobs:
     - get: git-repo
       passed: [configure-product]
     - get: platform-automation-image
+      passed: [configure-product]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
       passed: [configure-product]
     - get: buildbox-image
       passed: [configure-product]
@@ -312,7 +334,7 @@ jobs:
 
   - task: deploy-product
     image: platform-automation-image
-    file: git-repo/tasks/apply-changes.yml
+    file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
       env: env
     params:

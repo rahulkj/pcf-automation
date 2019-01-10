@@ -28,13 +28,24 @@ params:
   # prefix flag used by credhub interpolate
   PREFIX:
 
+  # path the contains the files to read from
+  # this is a space separated list of directories
+  # the paths are all evaluated relative to files/
+  INTERPOLATION_PATH: '.'
+
 run:
   path: bash
   args:
   - "-c"
   - |
     cat /var/version && echo ""
-    set -eux
+    set -euo pipefail
+
+    # NOTE: The credhub cli does not ignore empty/null environment variables.
+    # https://github.com/cloudfoundry-incubator/credhub-cli/issues/68
+    if [ -z "$CREDHUB_CA_CERT" ]; then
+      unset CREDHUB_CA_CERT
+    fi
 
     credhub --version
 
@@ -43,9 +54,12 @@ run:
       exit 1
     fi
 
-    for file in files/*.yml; do
-      echo "interpolating $file"
-      credhub interpolate --prefix "$PREFIX" --file "$file" > interpolated-files/"$(basename "$file")"
+    files=$(cd files && find "$INTERPOLATION_PATH" -type f -name '*.yml' -follow)
+
+    for file in $files; do
+      echo "interpolating files/$file"
+      mkdir -p interpolated-files/"$(dirname "$file")"
+      credhub interpolate --prefix "$PREFIX" --file files/"$file" > interpolated-files/"$file"
     done
 
 # code_snippet credhub-interpolate end

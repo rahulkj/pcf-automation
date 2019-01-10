@@ -32,7 +32,7 @@ run:
     cat /var/version && echo ""
     set -eux
 
-    flag=$(if "SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS";
+    flag=$(if "$SUBSTITUTE_CREDENTIALS_WITH_PLACEHOLDERS";
            then echo '--include-placeholders';
            else echo '--include-credentials';
            fi

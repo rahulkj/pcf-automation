@@ -6,6 +6,8 @@ PCF product tiles Concourse Pipelines:
 
 ---
 
+**Before you start, make sure you have access to [Platform Automation](https://network.pivotal.io/products/platform-automation) on PivNet, else reach out to your PA/SA to gain access to the release.**
+
 ### Pipelines available in this repository are:
 
 This repository provides the pipelines for the products listed in the following table.

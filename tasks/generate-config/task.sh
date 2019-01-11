@@ -52,6 +52,7 @@ function echoNetworkTemplate() {
 }
 
 function applyChangesConfig() {
+  ERRANDS=$(echo "$ERRANDS" | $JQ_CMD -r '.errands[] | select(.post_deploy==true) | .name')
   APPLY_CHANGES_CONFIG_YML=apply_changes_config.yml
 
   echo 'apply_changes_config: |' >> "$APPLY_CHANGES_CONFIG_YML"

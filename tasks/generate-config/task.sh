@@ -45,7 +45,6 @@ function cleanAndEchoErrands() {
 function echoNetworkTemplate() {
   OUTPUT=$1
 
-  echo "$ERRANDS" >> $INPUT
   $TCC_CMD -g network-azs -o $OUTPUT
 
   cat $OUTPUT

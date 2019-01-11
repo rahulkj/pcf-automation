@@ -16,6 +16,7 @@ function cleanAndEchoProperties {
   echo "$PROPERTIES" >> $INPUT
   $TCC_CMD -g properties -i $INPUT -o $OUTPUT
 
+  sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
   echo ""
 }
@@ -27,6 +28,7 @@ function cleanAndEchoResources() {
   echo "$RESOURCES" >> $INPUT
   $TCC_CMD -g resources -i $INPUT -o $OUTPUT
 
+  sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
   echo ""
 }
@@ -38,6 +40,7 @@ function cleanAndEchoErrands() {
   echo "$ERRANDS" >> $INPUT
   $TCC_CMD -g errands -i $INPUT -o $OUTPUT
 
+  sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
   echo ""
 }
@@ -47,6 +50,7 @@ function echoNetworkTemplate() {
 
   $TCC_CMD -g network-azs -o $OUTPUT
 
+  sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
   echo ""
 }
@@ -88,7 +92,8 @@ RESOURCES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/resources)
 ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands)
 
 ## Cleanup all the stuff, and echo on the console
-echo "product-name: $PRODUCT_NAME"
+echo "product-config: | \n"
+echo "  product-name: $PRODUCT_NAME"
 echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml"
 cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml"
 cleanAndEchoResources "$PRODUCT_NAME-resources.json" "$PRODUCT_NAME-resources.yml"

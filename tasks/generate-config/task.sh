@@ -16,7 +16,6 @@ function cleanAndEchoProperties {
   echo "$PROPERTIES" >> $INPUT
   $TCC_CMD -g properties -i $INPUT -o $OUTPUT
 
-  echo "# Properties for $PRODUCT_NAME are:"
   cat $OUTPUT
   echo ""
 }
@@ -28,22 +27,28 @@ function cleanAndEchoResources() {
   echo "$RESOURCES" >> $INPUT
   $TCC_CMD -g resources -i $INPUT -o $OUTPUT
 
-  echo "# Resources for $PRODUCT_NAME are:"
   cat $OUTPUT
   echo ""
 }
 
 function cleanAndEchoErrands() {
-  echo "# Errands for $PRODUCT_NAME are:"
-  ERRANDS_LIST=""
-  for errand in $ERRANDS; do
-    if [[ -z "$ERRANDS_LIST" ]]; then
-      ERRANDS_LIST=$errand
-    else
-      ERRANDS_LIST+=,$errand
-    fi
-  done
-  echo $ERRANDS_LIST
+  INPUT=$1
+  OUTPUT=$2
+
+  echo "$ERRANDS" >> $INPUT
+  $TCC_CMD -g errands -i $INPUT -o $OUTPUT
+
+  cat $OUTPUT
+  echo ""
+}
+
+function echoNetworkTemplate() {
+  OUTPUT=$1
+
+  echo "$ERRANDS" >> $INPUT
+  $TCC_CMD -g network-azs -o $OUTPUT
+
+  cat $OUTPUT
   echo ""
 }
 
@@ -67,21 +72,6 @@ function applyChangesConfig() {
   echo ""
 }
 
-function echoNetworkTemplate() {
-  echo "# Networks and AZs Template is:"
-  echo "network-properties:
-  network:
-    name:
-  service_network:
-    name:
-  other_availability_zones:
-    - name:
-    - name:
-  singleton_availability_zone:
-    name:"
-  echo ""
-}
-
 CURL_CMD="$OM_CMD --env env/"${ENV_FILE}" curl -s -p"
 
 PRODUCTS=$($CURL_CMD /api/v0/staged/products)
@@ -95,14 +85,14 @@ PROPERTIES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/properties)
 RESOURCES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/resources)
 
 ## Download the errands
-ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands | $JQ_CMD -r '.errands[] | select(.post_deploy==true) | .name')
+ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands)
 
 ## Cleanup all the stuff, and echo on the console
 echo "product-name: $PRODUCT_NAME"
-echoNetworkTemplate
+echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml"
 cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml"
 cleanAndEchoResources "$PRODUCT_NAME-resources.json" "$PRODUCT_NAME-resources.yml"
-cleanAndEchoErrands
+cleanAndEchoErrands "$PRODUCT_NAME-errands.json" "$PRODUCT_NAME-errands.yml"
 applyChangesConfig
 
 

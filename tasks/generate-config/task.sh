@@ -92,7 +92,7 @@ RESOURCES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/resources)
 ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands)
 
 ## Cleanup all the stuff, and echo on the console
-echo "product-config: |"
+echo "product_config: |"
 echo "  product-name: $PRODUCT_NAME"
 echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml"
 cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml"

@@ -24,14 +24,14 @@ ops_manager_settings: |
       gateway: 192.168.10.1
       vm_name: OpsManager
 
-ops_mgr_vars: |
+ops_manager_auth: |
   username: ((ops_mgr_usr))
   password: ((ops_mgr_pwd))
   decryption-passphrase: ((ops_mgr_decryption_pwd))
 
 opsman_env_filename: opsman-env.yml
 
-ops_mgr_vars_filename: opsman-vars.yml
+opsman_auth_filename: opsman-auth.yml
 
 state_file_name: state.yml
 

@@ -40,14 +40,10 @@ Install Healthwatch example:
 ```
 
 ---
-### Docker Images
-* Download the [Platform Automation Docker Image](https://network.pivotal.io/products/platform-automation)
-* Install [Docker](https://hub.docker.com/search/?type=edition&offering=community) on your machine
-* Run `docker import platform-automation-image-x.x.x.tgz <COMPANY-ORG>/platform-automation-image`
-* `docker login`
-* `docker push <COMPANY-ORG>/platform-automation-image`
+### Configuration
 
-You can now update the [globals.yml](./pipelines/globals.yml) and update the variable `platform_automation_image_repository` to point to your docker registry
+- For OpsManager/Ops Director configuration, refer to http://docs.pivotal.io/pcf-automation/latest/reference/inputs-outputs.html
+- For product configuration, you can generate the config after the staging is complete, and you can trigger the `generate-config` job. Capture the output and tweak it as needed. Finally, `fly` the pipeline and you can proceed with the `config-product` job
 
 ---
 

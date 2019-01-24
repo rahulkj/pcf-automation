@@ -12,7 +12,6 @@ git_username: ((git_username)) # [R] Your github username
 debug: false
 
 platform_automation_version: ^1\.1\..*$
-platform_automation_image_repository: rjain/platform-automation
 
 ci_username: ((ci_username))                  # [R] Username used to push to your gist_url
 ci_email_address: ((ci_email_address))        # [R] Email used to push to your gist_url

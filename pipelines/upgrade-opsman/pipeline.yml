@@ -20,14 +20,12 @@ resources:
     password: ((git_token))
 
 - name: platform-automation-image
-  type: docker-image
+  type: pivnet
   source:
-    repository: ((platform_automation_image_repository))
-
-- name: buildbox-image
-  type: docker-image
-  source:
-    repository: rjain/buildbox
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
 
 - name: ops-manager
   type: pivnet
@@ -61,7 +59,9 @@ jobs:
   - aggregate:
     - get: git-repo
     - get: platform-automation-image
-    - get: buildbox-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: pivnet-product
       resource: ops-manager
       trigger: true
@@ -74,7 +74,7 @@ jobs:
         unpack: true
 
   - task: create-opsman-import-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: config
@@ -84,7 +84,7 @@ jobs:
       PARAM_NAME: ((ops_manager_settings))
 
   - task: create-opsman-env-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: env
@@ -94,14 +94,14 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: create-opsman-vars-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: vars
     params:
       DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((ops_mgr_vars_filename))
-      PARAM_NAME: ((ops_mgr_vars))
+      OUTPUT_FILE_NAME: ((opsman_auth_filename))
+      PARAM_NAME: ((ops_manager_auth))
 
   - task: export-installation
     image: platform-automation-image

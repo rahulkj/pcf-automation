@@ -57,14 +57,12 @@ resources:
     password: ((git_token))
 
 - name: platform-automation-image
-  type: docker-image
+  type: pivnet
   source:
-    repository: ((platform_automation_image_repository))
-
-- name: buildbox-image
-  type: docker-image
-  source:
-    repository: rjain/buildbox
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
 
 - name: product
   type: pivnet
@@ -106,8 +104,10 @@ jobs:
   plan:
   - aggregate:
     - get: git-repo
-    - get: buildbox-image
     - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
@@ -131,7 +131,7 @@ jobs:
         - "*-linux"
 
   - task: create-opsman-env-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: env
@@ -152,6 +152,11 @@ jobs:
 - name: generate-config
   plan:
   - aggregate:
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+      passed: [upload-and-stage-product]
     - get: git-repo
       passed: [upload-and-stage-product]
     - get: pivnet-product
@@ -171,11 +176,9 @@ jobs:
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]
-    - get: buildbox-image
-      passed: [upload-and-stage-product]
 
   - task: create-opsman-env-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: env
@@ -185,7 +188,7 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: generate-config
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/generate-config/task.yml
     input_mapping:
       env: env
@@ -202,12 +205,13 @@ jobs:
       passed: [upload-and-stage-product]
     - get: platform-automation-image
       passed: [upload-and-stage-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [upload-and-stage-product]
-    - get: buildbox-image
       passed: [upload-and-stage-product]
     - get: product
       params:
@@ -216,7 +220,7 @@ jobs:
       passed: [upload-and-stage-product]
 
   - task: create-opsman-env-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: env
@@ -226,7 +230,7 @@ jobs:
       PARAM_NAME: ((ops_manager_env))
 
   - task: create-product-config-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: config
@@ -253,12 +257,13 @@ jobs:
       passed: [configure-product]
     - get: platform-automation-image
       passed: [configure-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-product]
-    - get: buildbox-image
       passed: [configure-product]
     - get: product
       params:
@@ -267,7 +272,7 @@ jobs:
       passed: [configure-product]
 
   - task: create-opsman-env-file
-    image: buildbox-image
+    image: platform-automation-image
     file: git-repo/tasks/create-yml-file/task.yml
     output_mapping:
       output-folder: env

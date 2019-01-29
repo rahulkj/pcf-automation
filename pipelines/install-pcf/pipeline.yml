@@ -191,6 +191,7 @@ jobs:
       params:
         globs: []
       trigger: true
+      passed: [install-ops-manager]
 
   - task: create-ops-director-config-file
     image: platform-automation-image
@@ -239,6 +240,7 @@ jobs:
       params:
         globs: []
       trigger: true
+      passed: [configure-ops-director]
 
   - task: create-opsman-env-file
     image: platform-automation-image

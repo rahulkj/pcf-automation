@@ -124,6 +124,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_filename))
       STATE_FILE: ((state_file_destination))/((state_file_name))
+      VARS_FILES: vars/((opsman_auth_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image

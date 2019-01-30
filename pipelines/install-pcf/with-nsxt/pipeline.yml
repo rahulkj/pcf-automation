@@ -319,18 +319,6 @@ jobs:
       params:
         globs: [((nsxt_product_glob))]
       trigger: true
-    - get: jq
-      params:
-        globs:
-        - "*linux64*"
-    - get: pivnet-cli
-      params:
-        globs:
-        - "*linux-amd64*"
-    - get: om-cli
-      params:
-        globs:
-        - "*-linux"
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -444,21 +432,6 @@ jobs:
         globs: [((nsxt_product_glob))]
       trigger: true
       passed: [upload-nsxt]
-    - get: jq
-      params:
-        globs:
-        - "*linux64*"
-      passed: [upload-nsxt]
-    - get: pivnet-cli
-      params:
-        globs:
-        - "*linux-amd64*"
-      passed: [upload-nsxt]
-    - get: om-cli
-      params:
-        globs:
-        - "*-linux"
-      passed: [upload-nsxt]
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -502,7 +475,6 @@ jobs:
       params:
         globs:
         - "*linux64*"
-      passed: [stage-nsxt]
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]
@@ -600,21 +572,6 @@ jobs:
         globs: [((pas_product_glob))]
       trigger: true
       passed: [upload-pas]
-    - get: jq
-      params:
-        globs:
-        - "*linux64*"
-      passed: [upload-pas]
-    - get: pivnet-cli
-      params:
-        globs:
-        - "*linux-amd64*"
-      passed: [upload-pas]
-    - get: om-cli
-      params:
-        globs:
-        - "*-linux"
-      passed: [upload-pas]
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -658,7 +615,6 @@ jobs:
       params:
         globs:
         - "*linux64*"
-      passed: [stage-pas]
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]
@@ -706,7 +662,6 @@ jobs:
       params:
         globs:
         - "*linux64*"
-      passed: [stage-pas]
     - get: tile-config-convertor
       params:
         globs: ["*linux*"]

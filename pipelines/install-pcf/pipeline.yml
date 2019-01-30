@@ -524,7 +524,7 @@ jobs:
     params:
       DEBUG: ((debug))
       OUTPUT_FILE_NAME: pas-config.yml
-      PARAM_NAME: ((pas-config))
+      PARAM_NAME: ((pas_config))
 
   - task: config-product
     image: platform-automation-image

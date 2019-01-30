@@ -1,4 +1,4 @@
-opsman_product_version: ^2\.3\..*$
+opsman_product_version: ^2\.4\..*$
 opsman_glob: "*.ova"
 
 ops_manager_settings: |

@@ -1,4 +1,4 @@
-pas_product_version: ^2\.3\..*$
+pas_product_version: ^2\.4\..*$
 pas_product_identifier: cf
 pas_product_glob: "cf-*.pivotal"
 
@@ -12,17 +12,18 @@ wildcard_domains: |
     - "*.login.sys.example.io"
     - "*.uaa.sys.example.io"
 
-pas-config: |
+pas_config: |
   product-name: cf
-
   network-properties:
     network:
-      name: DEPLOYMENT
+      name:
+    service-network:
+      name:
     other_availability_zones:
-      - name: AZ-1
-      - name: AZ-2
+    - name:
+    - name:
     singleton_availability_zone:
-      name: AZ-1
+      name:
 
   product-properties:
     .cloud_controller.allow_app_ssh_access:
@@ -80,8 +81,8 @@ pas-config: |
       value: true
     .mysql.cluster_probe_timeout:                                                                        # OPTIONAL
       value:
-    .mysql.max_connections:                                                                              # OPTIONAL
-      value:
+    .mysql.max_connections:
+      value: 3500
     .mysql.prevent_node_auto_rejoin:
       value: false
     .mysql.remote_admin_access:
@@ -98,8 +99,6 @@ pas-config: |
       value: 30
     .mysql_proxy.startup_delay:
       value: 0
-    .mysql_proxy.static_ips:                                                                             # OPTIONAL
-      value:
     .nfs_server.blobstore_internal_access_rules:
       value: allow 10.0.0.0/8;,allow 172.16.0.0/12;,allow 192.168.0.0/16;
     .properties.autoscale_api_disable_connection_pooling:
@@ -140,6 +139,8 @@ pas-config: |
       value: 60
     .properties.cloud_controller_default_stack:
       value: default
+    .properties.cloud_controller_temporary_disable_deployments:
+      value: false
     .properties.container_networking:
       value: enable
     .properties.container_networking_interface_plugin:
@@ -184,17 +185,27 @@ pas-config: |
       value:
     .properties.credhub_key_encryption_passwords:
       value:
-      - name: TestKey
+      - primary: true
+        name:
         provider: internal
         key:
           secret:
-        primary: true
+    .properties.diego_database_max_open_connections:
+      value: 100
     .properties.diego_log_timestamp_format:
       value: rfc3339
+    .properties.enable_cf_metric_name:
+      value: false
     .properties.enable_log_cache:
       value: true
+    .properties.enable_smb_volume_driver:
+      value: false
+    .properties.enable_tls_to_internal_pxc:
+      value: false
+    .properties.experimental_dynamic_egress_enforcement:
+      value: false
     .properties.garden_disk_cleanup:
-      value: threshold
+      value: reserved
     .properties.gorouter_ssl_ciphers:
       value: ECDHE-RSA-AES128-GCM-SHA256:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
     .properties.haproxy_client_cert_validation:
@@ -215,8 +226,16 @@ pas-config: |
       value: 16384
     .properties.haproxy_ssl_ciphers:
       value: DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384
+    .properties.locket_database_max_open_connections:
+      value: 200
     .properties.logger_endpoint_port:                                                                    # OPTIONAL
       value:
+    .properties.metric_registrar_blacklisted_tags:
+      value: deployment,job,index,id
+    .properties.metric_registrar_enabled:
+      value: false
+    .properties.metric_registrar_scrape_interval_in_seconds:
+      value: 35
     .properties.mysql_activity_logging:
       value: enable
     .properties.mysql_activity_logging.enable.audit_logging_events:
@@ -227,6 +246,10 @@ pas-config: |
         certificate:
           private_key_pem:
           cert_pem:
+    .properties.networkpolicyserver_database_max_open_connections:
+      value: 200
+    .properties.networkpolicyserverinternal_database_max_open_connections:
+      value: 200
     .properties.nfs_volume_driver:
       value: enable
     .properties.nfs_volume_driver.enable.ldap_ca_cert:                                                   # OPTIONAL
@@ -247,7 +270,7 @@ pas-config: |
     .properties.push_apps_manager_app_poll_interval:
       value: 10
     .properties.push_apps_manager_company_name:                                                          # OPTIONAL
-      value: HOMELAB
+      value:
     .properties.push_apps_manager_currency_lookup:
       value: { "usd": "$", "eur": "€" }
     .properties.push_apps_manager_display_plan_prices:
@@ -278,10 +301,10 @@ pas-config: |
       value:
     .properties.push_apps_manager_nav_links:
       value:
-      - href: /marketplace
-        name: Marketplace
+      - name: Marketplace
+        href: /marketplace
       - name: Docs
-        href: https://docs.pivotal.io/pivotalcf/2-1/pas/intro.html
+        href: https://docs.pivotal.io/pivotalcf/2-4/pas/intro.html
       - name: Tools
         href: /tools
     .properties.push_apps_manager_poll_interval:
@@ -321,7 +344,9 @@ pas-config: |
     .properties.secure_service_instance_credentials:
       value: false
     .properties.security_acknowledgement:
-      value: X
+      value:
+    .properties.silk_database_max_open_connections:
+      value: 200
     .properties.smoke_tests:
       value: on_demand
     .properties.smoke_tests.specified.apps_domain:
@@ -331,7 +356,7 @@ pas-config: |
     .properties.smoke_tests.specified.space_name:
       value:
     .properties.smtp_address:                                                                            # OPTIONAL
-      value: smtp.sendgrid.net
+      value:
     .properties.smtp_auth_mechanism:
       value: plain
     .properties.smtp_crammd5_secret:                                                                     # OPTIONAL
@@ -345,7 +370,7 @@ pas-config: |
     .properties.smtp_from:                                                                               # OPTIONAL
       value:
     .properties.smtp_port:                                                                               # OPTIONAL
-      value:
+      value: 587
     .properties.syslog_drop_debug:
       value: true
     .properties.syslog_host:                                                                             # OPTIONAL
@@ -473,10 +498,17 @@ pas-config: |
         secret:
     .properties.system_database.external.autoscale_username:
       value:
+    .properties.system_database.external.ca_cert:                                                        # OPTIONAL
+      value:
     .properties.system_database.external.ccdb_password:
       value:
         secret:
     .properties.system_database.external.ccdb_username:
+      value:
+    .properties.system_database.external.credhub_password:                                               # OPTIONAL
+      value:
+        secret:
+    .properties.system_database.external.credhub_username:                                               # OPTIONAL
       value:
     .properties.system_database.external.diego_password:
       value:
@@ -517,6 +549,11 @@ pas-config: |
         secret:
     .properties.system_database.external.silk_username:
       value:
+    .properties.system_database.external.uaa_password:                                                   # OPTIONAL
+      value:
+        secret:
+    .properties.system_database.external.uaa_username:                                                   # OPTIONAL
+      value:
     .properties.tcp_routing:
       value: disable
     .properties.tcp_routing.enable.reservable_ports:
@@ -544,17 +581,17 @@ pas-config: |
     .properties.uaa.ldap.email_domains:                                                                  # OPTIONAL
       value:
     .properties.uaa.ldap.first_name_attribute:                                                           # OPTIONAL
-      value:
+      value: givenName
     .properties.uaa.ldap.group_search_base:                                                              # OPTIONAL
       value:
     .properties.uaa.ldap.group_search_filter:
       value: member={0}
     .properties.uaa.ldap.last_name_attribute:                                                            # OPTIONAL
-      value:
+      value: sn
     .properties.uaa.ldap.ldap_referrals:
       value: follow
     .properties.uaa.ldap.mail_attribute_name:
-      value:
+      value: mail
     .properties.uaa.ldap.search_base:
       value:
     .properties.uaa.ldap.search_filter:
@@ -591,6 +628,8 @@ pas-config: |
       value:
     .properties.uaa_database:
       value: internal_mysql
+    .properties.uaa_database.external.ca_cert:                                                           # OPTIONAL
+      value:
     .properties.uaa_database.external.host:
       value:
     .properties.uaa_database.external.port:
@@ -627,9 +666,9 @@ pas-config: |
     .tcp_router.static_ips:                                                                              # OPTIONAL
       value:
     .uaa.apps_manager_access_token_lifetime:
-      value: 1209600
+      value: 3600
     .uaa.apps_manager_refresh_token_lifetime:
-      value: 1209600
+      value: 3600
     .uaa.cf_cli_access_token_lifetime:
       value: 7200
     .uaa.cf_cli_refresh_token_lifetime:
@@ -658,7 +697,7 @@ pas-config: |
     nfs_server:
       instances: 1
       instance_type:
-        id: medium.mem
+        id: medium
       persistent_disk:
         size_mb: "102400"
     mysql_proxy:
@@ -689,10 +728,6 @@ pas-config: |
       instances: 2
       instance_type:
         id: medium.disk
-    ha_proxy:
-      instances: 1
-      instance_type:
-        id: micro
     router:
       instances: 3
       instance_type:
@@ -739,9 +774,39 @@ pas-config: |
         id: micro
       persistent_disk:
         size_mb: "1024"
+    credhub:
+      instances: 2
+      instance_type:
+        id: large
 
   errand-config:
     smoke_tests:
+      post-deploy-state: false
+      pre-delete-state: default
+    push-usage-service:
       post-deploy-state: true
+      pre-delete-state: default
+    push-apps-manager:
+      post-deploy-state: true
+      pre-delete-state: default
+    deploy-notifications:
+      post-deploy-state: true
+      pre-delete-state: default
+    deploy-notifications-ui:
+      post-deploy-state: true
+      pre-delete-state: default
+    deploy-autoscaler:
+      post-deploy-state: true
+      pre-delete-state: default
     test-autoscaling:
+      post-deploy-state: false
+      pre-delete-state: default
+    metric_registrar_smoke_test:
+      post-deploy-state: false
+      pre-delete-state: default
+    nfsbrokerpush:
       post-deploy-state: true
+      pre-delete-state: default
+    smbbrokerpush:
+      post-deploy-state: false
+      pre-delete-state: default

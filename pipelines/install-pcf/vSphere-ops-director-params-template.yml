@@ -1,77 +1,82 @@
 ops_dir_configuration: |
-  iaas-configuration:
-    name: Site-1
-    vcenter_host: ((vcenter_host))
-    vcenter_username: ((vcenter_usr))
-    vcenter_password: ((vcenter_pwd))
-    datacenter:
-    disk_type: thick
-    ephemeral_datastores_string:
-    persistent_datastores_string:
-    bosh_vm_folder: pcf-vms
-    bosh_template_folder: pcf-templates
-    bosh_disk_path: pcf-disks
-    nsx_networking_enabled: true
-    nsx_mode: nsx-t
-    nsx_address: ((nsxt_host))
-    nsx_username: ((nsxt_username))
-    nsx_password: ((nsxt_password))
-    nsx_ca_certificate: |
-      -----BEGIN CERTIFICATE-----
-      ....
-      -----END CERTIFICATE-----
+  properties-configuration:
+    iaas-configuration:
+      name: Site-1
+      vcenter_host: ((vcenter_host))
+      vcenter_username: ((vcenter_usr))
+      vcenter_password: ((vcenter_pwd))
+      datacenter:
+      disk_type: thick
+      ephemeral_datastores_string:
+      persistent_datastores_string:
+      bosh_vm_folder: pcf-vms
+      bosh_template_folder: pcf-templates
+      bosh_disk_path: pcf-disks
+      nsx_networking_enabled: true
+      nsx_mode: nsx-t
+      nsx_address: ((nsxt_host))
+      nsx_username: ((nsxt_username))
+      nsx_password: ((nsxt_password))
+      nsx_ca_certificate: |
+        -----BEGIN CERTIFICATE-----
+        ....
+        -----END CERTIFICATE-----
 
-  director-configuration:
-    ntp_servers_string:
-    resurrector_enabled: true
-    metrics_ip: ""
-    opentsdb_ip: ""
-    post_deploy_enabled: true
-    bosh_recreate_on_next_deploy: false
-    bosh_recreate_persistent_disks_on_next_deploy: false
-    retry_bosh_deploys: false
-    keep_unreachable_vms: false
-    director_configuration_allow_legacy_agents: true
-    max_threads: 8
-    director_worker_count: 5
-    director_hostname: ""
-    hm_emailer_options:
-      enabled: false
-      host:
-      port:
-      domain:
-      from:
-      recipients:
-      smtp_user:
-      smtp_password:
-      tls: true
-    hm_pager_duty_options:
-      enabled: false
-      service_key: ""
-      http_proxy: ""
-    blobstore_type: local
-    database_type: internal
-    syslog_configuration:
-      enabled: false
-      address:
-      port:
-      transport_protocol: tcp
-      tls_enabled: false
-      permitted_peer: ""
-      ssl_ca_certificate: ""
-    s3_blobstore_options:
-      endpoint: ""
-      bucket_name: ""
-      access_key: ""
-      secret_key: ""
-      signature_version: ""
-    external_database_options:
-      host: ""
-      port: ""
-      user: ""
-      password: ""
-      database: ""
+    director-configuration:
+      ntp_servers_string:
+      resurrector_enabled: true
+      metrics_ip: ""
+      opentsdb_ip: ""
+      post_deploy_enabled: true
+      bosh_recreate_on_next_deploy: false
+      bosh_recreate_persistent_disks_on_next_deploy: false
+      retry_bosh_deploys: false
+      keep_unreachable_vms: false
+      director_configuration_allow_legacy_agents: true
+      max_threads: 8
+      director_worker_count: 5
+      director_hostname: ""
+      hm_emailer_options:
+        enabled: false
+        host:
+        port:
+        domain:
+        from:
+        recipients:
+        smtp_user:
+        smtp_password:
+        tls: true
+      hm_pager_duty_options:
+        enabled: false
+        service_key: ""
+        http_proxy: ""
+      blobstore_type: local
+      database_type: internal
+      syslog_configuration:
+        enabled: false
+        address:
+        port:
+        transport_protocol: tcp
+        tls_enabled: false
+        permitted_peer: ""
+        ssl_ca_certificate: ""
+      s3_blobstore_options:
+        endpoint: ""
+        bucket_name: ""
+        access_key: ""
+        secret_key: ""
+        signature_version: ""
+      external_database_options:
+        host: ""
+        port: ""
+        user: ""
+        password: ""
+        database: ""
 
+    security-configuration:
+      generate_vm_passwords: true
+      trusted_certificates:
+        
   az-configuration:
   - name: AZ1
     clusters:
@@ -126,10 +131,6 @@ ops_dir_configuration: |
       name: INFRASTRUCTURE
     singleton_availability_zone:
       name: AZ1
-
-  security-configuration:
-    generate_vm_passwords: true
-    trusted_certificates:
 
   resource-configuration:
     director:

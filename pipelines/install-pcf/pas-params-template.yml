@@ -5,13 +5,6 @@ pas_product_glob: "cf-*.pivotal"
 iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
 stemcell_type: xenial                         # xenial|trusty
 
-wildcard_domains: |
-  domains:
-    - "*.sys.example.io"
-    - "*.cfapps.example.io"
-    - "*.login.sys.example.io"
-    - "*.uaa.sys.example.io"
-
 pas_config: |
   product-name: cf
   network-properties:

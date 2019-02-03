@@ -420,53 +420,6 @@ jobs:
       ENV_FILE: ((opsman_env_filename))
       PRODUCT_NAME: ((pas_product_identifier))
 
-- name: generate-certificates
-  plan:
-  - aggregate:
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-      passed: [stage-pas]
-    - get: git-repo
-      passed: [stage-pas]
-    - get: pivnet-product
-      resource: pas-product
-      params:
-        globs: []
-      passed: [stage-pas]
-    - get: om-cli
-      params:
-        globs:
-        - "*-linux"
-    - get: jq
-      params:
-        globs:
-        - "*linux64*"
-    - get: tile-config-convertor
-      params:
-        globs: ["*linux*"]
-
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
-
-  - task: generate-certificates
-    image: platform-automation-image
-    file: git-repo/tasks/generate-certs/task.yml
-    input_mapping:
-      env: env
-    params:
-      DEBUG: ((debug))
-      ENV_FILE: ((opsman_env_filename))
-      DOMAINS: ((wildcard_domains))
-
 - name: configure-pas
   serial: true
   plan:

@@ -1,6 +1,6 @@
 ops_dir_configuration: |
   properties-configuration:
-    iaas-configuration:
+    iaas_configuration:
       name: Site-1
       vcenter_host: ((vcenter_host))
       vcenter_username: ((vcenter_usr))
@@ -22,7 +22,7 @@ ops_dir_configuration: |
         ....
         -----END CERTIFICATE-----
 
-    director-configuration:
+    director_configuration:
       ntp_servers_string:
       resurrector_enabled: true
       metrics_ip: ""
@@ -73,10 +73,10 @@ ops_dir_configuration: |
         password: ""
         database: ""
 
-    security-configuration:
+    security_configuration:
       generate_vm_passwords: true
       trusted_certificates:
-        
+
   az-configuration:
   - name: AZ1
     clusters:

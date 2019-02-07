@@ -52,6 +52,6 @@ Install Healthwatch example:
 For using certificates via credhub, in the pipelines, then,
 - store the **RAW** certificate in a file, ex: `backup_private_key.pem`
 - login into `credhub`
-- Execute the command `credhub set -n /concourse/main/backup_private_key -t password -v "$(awk '$1=$1' ORS='\\\\n' backup_private_key.pem | awk '{printf("\"\\\"%s\\\"\"\n", $0);}')"`
+- Execute the command `credhub set -n /concourse/main/backup_private_key -t value -v "$(awk '$1=$1' ORS='\\\\n' backup_private_key.pem | awk '{printf("\"\\\"%s\\\"\"\n", $0);}')"`
 
 Now you can use, the variable `backup_private_key` in all the pipelines, that need the backup key.

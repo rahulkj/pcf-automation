@@ -88,6 +88,20 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
+create-yml: &create-yml
+  image: platform-automation-image
+  file: git-repo/tasks/create-yml-file/task.yml
+
+create-opsman-env: &create-opsman-env
+  image: platform-automation-image
+  file: git-repo/tasks/create-yml-file/task.yml
+  output_mapping:
+    output-folder: env
+  params:
+    DEBUG: ((debug))
+    OUTPUT_FILE_NAME: ((opsman_env_filename))
+    PARAM_NAME: ((ops_manager_env))
+
 jobs:
 - name: install-ops-manager
   plan:
@@ -108,16 +122,14 @@ jobs:
         - ((opsman_glob))
 
   - task: create-opsman-import-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
+    <<: *create-yml
     params:
       DEBUG: ((debug))
       OUTPUT_FILE_NAME: opsman.yml
       PARAM_NAME: ((ops_manager_settings))
 
   - task: deploy-opsmanager-vm
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/create-vm.yml
+    <<: *create-yml
     input_mapping:
       state: git-repo
       image: pivnet-product
@@ -141,18 +153,10 @@ jobs:
       repository: repository-commit
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: create-opsman-auth-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
+    <<: *create-yml
     output_mapping:
       output-folder: auth
     params:
@@ -194,8 +198,7 @@ jobs:
       passed: [install-ops-manager]
 
   - task: create-ops-director-config-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
+    <<: *create-yml
     output_mapping:
       output-folder: config
     params:
@@ -204,14 +207,7 @@ jobs:
       PARAM_NAME: ((ops_dir_configuration))
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: configure-ops-director
     image: platform-automation-image
@@ -243,14 +239,7 @@ jobs:
       passed: [configure-ops-director]
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: deploy-ops-director
     image: platform-automation-image
@@ -294,14 +283,7 @@ jobs:
         - "*-linux"
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: upload-product
     image: platform-automation-image
@@ -355,14 +337,7 @@ jobs:
       passed: [upload-pas]
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: stage-product
     image: platform-automation-image
@@ -401,14 +376,7 @@ jobs:
         globs: ["*linux*"]
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: generate-config
     image: platform-automation-image
@@ -443,18 +411,10 @@ jobs:
       passed: [stage-pas]
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: create-pas-config-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
+    <<: *create-yml
     output_mapping:
       output-folder: config
     params:
@@ -495,14 +455,7 @@ jobs:
       passed: [configure-pas]
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: deploy-pas
     image: platform-automation-image
@@ -530,18 +483,10 @@ jobs:
         globs: []
 
   - task: create-opsman-env-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
-    output_mapping:
-      output-folder: env
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_env_filename))
-      PARAM_NAME: ((ops_manager_env))
+    <<: *create-opsman-env
 
   - task: create-opsman-import-file
-    image: platform-automation-image
-    file: git-repo/tasks/create-yml-file/task.yml
+    <<: *create-yml
     output_mapping:
       output-folder: config
     params:

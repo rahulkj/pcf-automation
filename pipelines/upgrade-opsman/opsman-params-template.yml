@@ -24,14 +24,14 @@ ops_manager_settings: |
       gateway: 192.168.10.1
       vm_name: OpsManager
 
-ops_manager_auth: |
+ops_manager_env: |
+  target: https://((ops_mgr_host))
+  skip-ssl-validation: true
   username: ((ops_mgr_usr))
   password: ((ops_mgr_pwd))
   decryption-passphrase: ((ops_mgr_decryption_pwd))
 
 opsman_env_filename: opsman-env.yml
-
-opsman_auth_filename: opsman-auth.yml
 
 state_file_name: state.yml
 

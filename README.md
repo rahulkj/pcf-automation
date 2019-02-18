@@ -32,11 +32,18 @@ Install PCF with NSX-T example:
 >	fly -t concourse-[ENV] unpause-pipeline -p install-pcf
 ```
 
-Install Healthwatch example:
+Install Healthwatch example (Applicable for any tile):
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
 >	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml -l ./pipelines/globals.yml -l ./pipelines/tiles/healthwatch/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p healthwatch
+```
+
+Upgrade OpsManager example:
+```
+>	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
+>	fly -t concourse-[ENV] set-pipeline -p upgrade-opsman -c ./pipelines/upgrade-opsman/pipeline.yml -l ./pipelines/globals.yml -l ./pipelines/upgrade-opsman/opsman-params.yml
+>	fly -t concourse-[ENV] unpause-pipeline -p upgrade-opsman
 ```
 
 ---

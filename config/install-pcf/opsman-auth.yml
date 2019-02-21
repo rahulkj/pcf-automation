@@ -1,0 +1,3 @@
+  username: ((ops_mgr_usr))
+  password: ((ops_mgr_pwd))
+  decryption-passphrase: ((ops_mgr_decryption_pwd))

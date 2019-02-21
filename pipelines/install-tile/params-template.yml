@@ -1,9 +1,12 @@
 product_slug:
-product_version:
-product_glob:
-product_identifier:
+product_version: ^1\.0\..*$
+product_glob: "*.pivotal"
+product_identifier: 
 
-iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
-stemcell_type: xenial                         # xenial|trusty
+iaas_type: vsphere-esxi
+stemcell_type: xenial
 
-product_config: |
+credhub_prefix: concourse/homelab
+
+product_config_path: config/<product-name>
+product_config_filename: config.yml

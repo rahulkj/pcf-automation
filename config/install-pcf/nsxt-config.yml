@@ -1,0 +1,37 @@
+product-name: VMware-NSX-T
+
+product-properties:
+  .properties.container_ip_blocks:
+    value:
+    - name:
+      cidr:
+  .properties.enable_snat:
+    value: true
+  .properties.external_ip_pools:
+    value:
+    - name:
+  .properties.foundation_name:
+    value:
+  .properties.log_dropped_traffic:
+    value: true
+  .properties.ncp_debug_log:
+    value: true
+  .properties.nsx_api_ca_cert:
+    value: ((nsx_manager.certificate))
+  .properties.nsx_api_managers:
+    value: ((nsxt_host))
+  .properties.nsx_auth:
+    value: simple
+  .properties.nsx_auth.simple.nsx_api_password:
+    value:
+      secret: ((nsxt_password))
+  .properties.nsx_auth.simple.nsx_api_user:
+    value: ((nsxt_username))
+  .properties.nsx_node_agent_debug_log:
+    value: true
+  .properties.overlay_tz:
+    value:
+  .properties.subnet_prefix:
+    value: 24
+  .properties.tier0_router:
+    value: 

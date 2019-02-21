@@ -1,0 +1,205 @@
+product-name: cf
+
+network-properties:
+  network:
+    name: DEPLOYMENT
+  other_availability_zones:
+    - name: AZ-1
+    - name: AZ-2
+  singleton_availability_zone:
+    name: AZ-1
+
+product-properties:
+  .cloud_controller.apps_domain:
+    value:
+  .cloud_controller.system_domain:
+    value:
+  .diego_brain.static_ips:
+    value:
+  .ha_proxy.skip_cert_verify:
+    value: true
+  .mysql_monitor.recipient_email:
+    value:
+  .properties.container_networking_interface_plugin:
+    value: external
+  .properties.credhub_key_encryption_passwords:
+    value:
+    - name: ((credhub_key_encryption_name))
+      provider: internal
+      key:
+        secret: ((credhub_key_encryption_secret))
+      primary: ((credhub_key_encryption_is_primary))
+  .properties.networking_poe_ssl_certs:
+    value:
+    - certificate:
+        private_key_pem: ((wild_card_certificates.private_key))
+        cert_pem: ((wild_card_certificates.certificate))
+      name: GENERATED-CERTS
+  .properties.haproxy_forward_tls:
+    value: disable
+  .properties.push_apps_manager_company_name:
+    value:
+  .properties.routing_tls_termination:
+    value: router
+  .properties.security_acknowledgement:
+    value: X
+  .properties.smtp_address:
+    value: ((smtp_address))
+  .properties.smtp_credentials:
+    value:
+      identity: ((smtp_username))
+      password: ((smtp_password))
+  .properties.smtp_enable_starttls_auto:
+    value: true
+  .properties.smtp_from:
+    value:
+  .properties.smtp_port:
+    value: ((smtp_port))
+  .properties.syslog_drop_debug:
+    value: true
+  .properties.syslog_host:
+    value:
+  .properties.syslog_metrics_to_syslog_enabled:
+    value: true
+  .properties.syslog_port:
+    value: 5514
+  .properties.syslog_protocol:
+    value: relp
+  .properties.system_blobstore:
+    value: internal
+  .properties.uaa:
+    value: ldap
+  .properties.uaa.ldap.credentials:
+    value:
+      identity: ((uaa_ldap_identity))
+      password: ((uaa_ldap_password))
+  .properties.uaa.ldap.first_name_attribute:
+    value: givenName
+  .properties.uaa.ldap.group_search_base:
+    value:
+  .properties.uaa.ldap.group_search_filter:
+    value: member={0}
+  .properties.uaa.ldap.last_name_attribute:
+    value: sn
+  .properties.uaa.ldap.ldap_referrals:
+    value: follow
+  .properties.uaa.ldap.mail_attribute_name:
+    value: mail
+  .properties.uaa.ldap.search_base:
+    value:
+  .properties.uaa.ldap.search_filter:
+    value: mail={0}
+  .properties.uaa.ldap.url:
+    value: ((uaa_ldap_url))
+  .router.static_ips:
+    value:
+  .tcp_router.static_ips:
+    value:
+  .uaa.service_provider_key_credentials:
+    value:
+      private_key_pem: ((wild_card_certificates.private_key))
+      cert_pem: ((wild_card_certificates.certificate))
+
+resource-config:
+  nats:
+    instances: 1
+    instance_type:
+      id: micro
+  nfs_server:
+    instances: 1
+    instance_type:
+      id: medium.mem
+    persistent_disk:
+      size_mb: automatic
+  mysql_proxy:
+    instances: 1
+    instance_type:
+      id: micro
+  mysql:
+    instances: 1
+    instance_type:
+      id: large.disk
+    persistent_disk:
+      size_mb: automatic
+  backup_restore:
+    instances: 1
+    instance_type:
+      id: micro
+    persistent_disk:
+      size_mb: automatic
+  diego_database:
+    instances: 1
+    instance_type:
+      id: micro
+  uaa:
+    instances: 1
+    instance_type:
+      id: medium.disk
+  cloud_controller:
+    instances: 1
+    instance_type:
+      id: medium.disk
+  ha_proxy:
+    instances: 0
+    instance_type:
+      id: micro
+  router:
+    instances: 1
+    instance_type:
+      id: micro
+    additional_vm_extensions: ["router-extension"]
+  mysql_monitor:
+    instances: 1
+    instance_type:
+      id: micro
+  clock_global:
+    instances: 1
+    instance_type:
+      id: medium.disk
+  cloud_controller_worker:
+    instances: 1
+    instance_type:
+      id: micro
+  diego_brain:
+    instances: 1
+    instance_type:
+      id: small
+    additional_vm_extensions: ["diego-brain-extension"]
+  diego_cell:
+    instances: 3
+    instance_type:
+      id: xlarge.disk
+  loggregator_trafficcontroller:
+    instances: 1
+    instance_type:
+      id: micro
+  syslog_adapter:
+    instances: 1
+    instance_type:
+      id: micro
+  syslog_scheduler:
+    instances: 1
+    instance_type:
+      id: micro
+  doppler:
+    instances: 1
+    instance_type:
+      id: medium.mem
+  tcp_router:
+    instances: 0
+    instance_type:
+      id: micro
+    persistent_disk:
+      size_mb: automatic
+  credhub:
+    instances: 1
+    instance_type:
+      id: large
+    persistent_disk:
+      size_mb: automatic
+
+errand-config:
+  smoke_tests:
+    post-deploy-state: false
+  test-autoscaling:
+    post-deploy-state: false

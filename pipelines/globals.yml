@@ -5,7 +5,8 @@ pivnet_token: ((pivnet_token))
 
 # The token used to download the repos from GitHub for the pipelines
 git_token: ((git_token))
-git_url: https://github.com/rahul-kj/pcf-automation # [R] Pipelines github repo
+secrets_git_url: https://github.com/rahulkj/secrets # [R] Pipelines github repo
+automation_git_url: https://github.com/rahul-kj/pcf-automation # [R] Pipelines github repo
 git_branch: master
 git_username: ((git_username)) # [R] Your github username
 
@@ -16,17 +17,12 @@ platform_automation_version: ^2\.1\..*$
 ci_username: ((ci_username))                  # [R] Username used to push to your gist_url
 ci_email_address: ((ci_email_address))        # [R] Email used to push to your gist_url
 
-ops_manager_env: |
-  target: https://((ops_mgr_host))
-  skip-ssl-validation: true
-  username: ((ops_mgr_usr))
-  password: ((ops_mgr_pwd))
-
-opsman_env_filename: opsman-env.yml
-
 smtp_address: ((smtp_address))
 smtp_port: ((smtp_port))
 smtp_username: ((smtp_username))
 smtp_password: ((smtp_password))
 from_address: ((from_address))
 to_addresses: ((to_addresses))
+
+opsman_env_path: config/opsman-env
+opsman_env_filename: env.yml

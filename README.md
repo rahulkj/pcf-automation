@@ -28,30 +28,48 @@ This repository provides the pipelines for the products listed in the following 
 Install PCF with NSX-T example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p install-pcf -c ./pipelines/install-pcf/with-nsxt/pipeline.yml -l ./pipelines/install-pcf/vSphere-ops-director-params.yml -l ./pipelines/install-pcf/with-nsxt/nsxt-params.yml -l ./pipelines/install-pcf/opsman-params.yml -l ./pipelines/install-pcf/pas-params.yml -l ./pipelines/globals.yml
+>	fly -t concourse-[ENV] set-pipeline -p install-pcf -c ./pipelines/install-pcf/with-nsxt/pipeline.yml \
+      -l ./pipelines/install-pcf/params.yml \
+      -l ./pipelines/globals.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p install-pcf
 ```
 
 Install Healthwatch example (Applicable for any tile):
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml -l ./pipelines/globals.yml -l ./pipelines/tiles/healthwatch/params.yml
+>	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml \
+      -l ./pipelines/globals.yml \
+      -l ./pipelines/tiles/healthwatch/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p healthwatch
 ```
 
 Upgrade OpsManager example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p upgrade-opsman -c ./pipelines/upgrade-opsman/pipeline.yml -l ./pipelines/globals.yml -l ./pipelines/upgrade-opsman/opsman-params.yml
+>	fly -t concourse-[ENV] set-pipeline -p upgrade-opsman -c ./pipelines/upgrade-opsman/pipeline.yml \
+      -l ./pipelines/globals.yml \
+      -l ./pipelines/upgrade-opsman/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p upgrade-opsman
 ```
+
+---
+### Store your secrets
+
+- Ensure you have all the secrets stored in credhub. Also include the following to your list:
+  - credhub_server_ca
+  - credhub_client
+  - credhub_client_secret
+  - credhub_server
+
+^^^ will be needed to fetch the secrets from credhub to interpolate the env.yml and config's
 
 ---
 ### Configuration
 
 - For OpsManager/Ops Director configuration, refer to http://docs.pivotal.io/pcf-automation/latest/reference/inputs-outputs.html
-- For product configuration, you can generate the config after the staging is complete, and you can trigger the `generate-config` job. Capture the output and tweak it as needed. Finally, `fly` the pipeline and you can proceed with the `config-product` job
-
+- For product configuration, you can generate the config after the staging is complete, and you can trigger the `generate-config` job. Capture the output and tweak it as needed.
+- Create a new folder for this product, for ex: in your `secrets_git_url` repo, create a folder `config/product`, and create a file called `config.yml` and paste the above contents into it. Take a look at [config](./config) folder
+- Finally, re-run the `config-product` job
 ---
 
 ### Some tricks

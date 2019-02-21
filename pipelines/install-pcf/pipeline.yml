@@ -39,10 +39,18 @@ resources:
     repository: tile-config-convertor
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: git-repo
+- name: secrets-repo
   type: git
   source:
-    uri: ((git_url))
+    uri: ((secrets_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -88,25 +96,41 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
-create-yml: &create-yml
+credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
-
-create-opsman-env: &create-opsman-env
-  image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
   output_mapping:
-    output-folder: env
+    interpolated-files: env
   params:
-    DEBUG: ((debug))
-    OUTPUT_FILE_NAME: ((opsman_env_filename))
-    PARAM_NAME: ((ops_manager_env))
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((opsman_env_path))
+
+credhub-interpolate: &credhub-interpolate-config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
+  output_mapping:
+    interpolated-files: config
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((product_config_path))
 
 jobs:
 - name: install-ops-manager
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -121,64 +145,55 @@ jobs:
         globs:
         - ((opsman_glob))
 
-  - task: create-opsman-import-file
-    <<: *create-yml
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: opsman.yml
-      PARAM_NAME: ((ops_manager_settings))
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
+
+  - task: credhub-interpolate-env
+    <<: *credhub-interpolate-env
 
   - task: deploy-opsmanager-vm
-    <<: *create-yml
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
       state: git-repo
       image: pivnet-product
-      config: output-folder
+      config: config
+    params:
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
     file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
-      repository: git-repo
+      repository: secrets-repo
       file-source: generated-state
     params:
-      FILE_SOURCE_PATH: ((state_file_name))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_file_name))
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
       GIT_AUTHOR_NAME: ((ci_username))
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after creating the OpsManager VM"
-
-  - put: git-repo
-    params:
-      repository: repository-commit
-
-  - task: create-opsman-env-file
-    <<: *create-opsman-env
-
-  - task: create-opsman-auth-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: auth
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: ((opsman_auth_filename))
-      PARAM_NAME: ((ops_manager_auth))
 
   - task: configure-authentication
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-authentication.yml
     input_mapping:
-      config: auth
+      config: config
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
-      AUTH_CONFIG_FILE: ((opsman_auth_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      AUTH_CONFIG_FILE: ((product_config_path))/((opsman_auth_filename))
     attempts: 20
+
+  - put: secrets-repo
+    params:
+      repository: repository-commit
 
 - name: configure-ops-director
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [install-ops-manager]
     - get: platform-automation-image
       passed: [install-ops-manager]
@@ -197,29 +212,23 @@ jobs:
       trigger: true
       passed: [install-ops-manager]
 
-  - task: create-ops-director-config-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: config
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: director.yml
-      PARAM_NAME: ((ops_dir_configuration))
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: configure-ops-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     params:
-      ENV_FILE: ((opsman_env_filename))
-      DIRECTOR_CONFIG_FILE: director.yml
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
 
 - name: deploy-director
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [configure-ops-director]
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -238,7 +247,7 @@ jobs:
       trigger: true
       passed: [configure-ops-director]
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: deploy-ops-director
@@ -247,14 +256,15 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: upload-pas
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [configure-ops-director]
+    - get: automation-repo
     - get: platform-automation-image
       passed: [configure-ops-director]
       params:
@@ -282,7 +292,7 @@ jobs:
         globs:
         - "*-linux"
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: upload-product
@@ -292,11 +302,11 @@ jobs:
       product: pas-product
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - task: download-stemcell
     image: platform-automation-image
-    file: git-repo/tasks/download-stemcell/task.yml
+    file: automation-repo/tasks/download-stemcell/task.yml
     input_mapping:
       product: pas-product
     params:
@@ -312,13 +322,13 @@ jobs:
       stemcell: stemcells
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: stage-pas
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [upload-pas]
     - get: platform-automation-image
       passed: [upload-pas]
@@ -336,7 +346,7 @@ jobs:
       trigger: true
       passed: [upload-pas]
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: stage-product
@@ -346,7 +356,7 @@ jobs:
       product: pas-product
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: generate-pas-config
   plan:
@@ -356,8 +366,10 @@ jobs:
         globs: ["*.tgz"]
         unpack: true
       passed: [stage-pas]
-    - get: git-repo
+    - get: secrets-repo
       passed: [stage-pas]
+    - get: automation-repo
+      passed: [upload-pas]
     - get: pivnet-product
       resource: pas-product
       params:
@@ -375,24 +387,24 @@ jobs:
       params:
         globs: ["*linux*"]
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: generate-config
     image: platform-automation-image
-    file: git-repo/tasks/generate-config/task.yml
+    file: automation-repo/tasks/generate-config/task.yml
     input_mapping:
       env: env
     params:
       DEBUG: ((debug))
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((pas_product_identifier))
 
 - name: configure-pas
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [stage-pas]
     - get: platform-automation-image
       passed: [stage-pas]
@@ -410,17 +422,11 @@ jobs:
       trigger: true
       passed: [stage-pas]
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
-  - task: create-pas-config-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: config
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: pas-config.yml
-      PARAM_NAME: ((pas_config))
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
 
   - task: config-product
     image: platform-automation-image
@@ -429,14 +435,14 @@ jobs:
       config: config
       env: env
     params:
-      CONFIG_FILE: pas-config.yml
-      ENV_FILE: ((opsman_env_filename))
+      CONFIG_FILE: ((product_config_path))/((pas_config_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: deploy-pas
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [configure-pas]
     - get: platform-automation-image
       passed: [configure-pas]
@@ -454,7 +460,7 @@ jobs:
       trigger: true
       passed: [configure-pas]
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
   - task: deploy-pas
@@ -463,13 +469,13 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 ## Remove this if you don't need it in your pipeline
 - name: delete-all
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -482,49 +488,44 @@ jobs:
       params:
         globs: []
 
-  - task: create-opsman-env-file
+  - task: credhub-interpolate-env
     <<: *create-opsman-env
 
-  - task: create-opsman-import-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: config
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: opsman.yml
-      PARAM_NAME: ((ops_manager_settings))
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
 
   - task: delete-products
     image: platform-automation-image
-    file: git-repo/tasks/delete-installation.yml
+    file: secrets-repo/tasks/delete-installation.yml
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - task: delete-opsmanager-vm
     image: platform-automation-image
-    file: git-repo/tasks/delete-vm.yml
+    file: secrets-repo/tasks/delete-vm.yml
     input_mapping:
-      state: git-repo
+      state: secrets-repo
       config: config
     params:
-      STATE_FILE: ((state_file_destination))/((state_file_name))
+      STATE_FILE: ((state_file_destination))/((state_filename))
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
-    file: git-repo/tasks/make-git-commit.yml
+    file: secrets-repo/tasks/make-git-commit.yml
     input_mapping:
-      repository: git-repo
+      repository: secrets-repo
       file-source: generated-state
     params:
-      FILE_SOURCE_PATH: ((state_file_name))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_file_name))
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
       GIT_AUTHOR_NAME: ((ci_username))
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
 
-  - put: git-repo
+  - put: secrets-repo
     params:
       repository: repository-commit
 

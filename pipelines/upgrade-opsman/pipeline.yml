@@ -11,10 +11,10 @@ resource_types:
     repository: pcfseceng/email-resource
 
 resources:
-- name: git-repo
+- name: secrets-repo
   type: git
   source:
-    uri: ((git_url))
+    uri: ((secrets_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -53,25 +53,41 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
-create-yml: &create-yml
+credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
-
-create-opsman-env: &create-opsman-env
-  image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
   output_mapping:
-    output-folder: env
+    interpolated-files: env
   params:
-    DEBUG: ((debug))
-    OUTPUT_FILE_NAME: ((opsman_env_filename))
-    PARAM_NAME: ((ops_manager_env))
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((opsman_env_path))
+
+credhub-interpolate: &credhub-interpolate-config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
+  output_mapping:
+    interpolated-files: config
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((product_config_path))
 
 jobs:
 - name: upgrade-ops-manager
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -87,17 +103,11 @@ jobs:
         globs: ["*.zip"]
         unpack: true
 
-  - task: create-opsman-import-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: config
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: opsman.yml
-      PARAM_NAME: ((ops_manager_settings))
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
 
-  - task: create-opsman-env-file
-    <<: *create-opsman-env
+  - task: credhub-interpolate-env
+    <<: *credhub-interpolate-env
 
   - task: export-installation
     image: platform-automation-image
@@ -105,7 +115,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - task: upgrade-opsmanager
     image: platform-automation-image
@@ -114,26 +124,27 @@ jobs:
       config: config
       env: env
       image: pivnet-product
-      state: git-repo
+      state: secrets-repo
       installation: installation
     params:
-      ENV_FILE: ((opsman_env_filename))
-      STATE_FILE: ((state_file_destination))/((state_file_name))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((product_config_filename))
+      STATE_FILE: ((state_file_destination))/((state_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
     file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
-      repository: git-repo
+      repository: secrets-repo
       file-source: generated-state
     params:
-      FILE_SOURCE_PATH: ((state_file_name))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_file_name))
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
       GIT_AUTHOR_NAME: ((ci_username))
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
 
-  - put: git-repo
+  - put: secrets-repo
     params:
       repository: repository-commit
 
@@ -143,7 +154,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - put: email
     params:

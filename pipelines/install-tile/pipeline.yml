@@ -48,10 +48,18 @@ resources:
     repository: tile-config-convertor
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: git-repo
+- name: secrets-repo
   type: git
   source:
-    uri: ((git_url))
+    uri: ((secrets_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -90,19 +98,35 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
-create-yml: &create-yml
+credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
-
-create-opsman-env: &create-opsman-env
-  image: platform-automation-image
-  file: git-repo/tasks/create-yml-file/task.yml
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
   output_mapping:
-    output-folder: env
+    interpolated-files: env
   params:
-    DEBUG: ((debug))
-    OUTPUT_FILE_NAME: ((opsman_env_filename))
-    PARAM_NAME: ((ops_manager_env))
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((opsman_env_path))
+
+credhub-interpolate: &credhub-interpolate-config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: secrets-repo
+  output_mapping:
+    interpolated-files: config
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((product_config_path))
 
 jobs:
 - name: scheduler
@@ -117,7 +141,8 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
+    - get: automation-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -145,7 +170,7 @@ jobs:
         - "*-linux"
 
   - task: create-opsman-env-file
-    <<: *create-opsman-env
+    <<: *credhub-interpolate-env
 
   - task: upload-and-stage-product
     image: platform-automation-image
@@ -154,11 +179,11 @@ jobs:
       product: product
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - task: download-stemcell
     image: platform-automation-image
-    file: git-repo/tasks/download-stemcell/task.yml
+    file: automation-repo/tasks/download-stemcell/task.yml
     input_mapping:
       product: product
     params:
@@ -174,7 +199,7 @@ jobs:
       stemcell: stemcells
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: generate-config
   plan:
@@ -184,7 +209,9 @@ jobs:
         globs: ["*.tgz"]
         unpack: true
       passed: [upload-and-stage-product]
-    - get: git-repo
+    - get: automation-repo
+      passed: [upload-and-stage-product]
+    - get: secrets-repo
       passed: [upload-and-stage-product]
     - get: pivnet-product
       resource: product
@@ -205,23 +232,23 @@ jobs:
         globs: ["*linux*"]
 
   - task: create-opsman-env-file
-    <<: *create-opsman-env
+    <<: *credhub-interpolate-env
 
   - task: generate-config
     image: platform-automation-image
-    file: git-repo/tasks/generate-config/task.yml
+    file: automation-repo/tasks/generate-config/task.yml
     input_mapping:
       env: env
     params:
       DEBUG: ((debug))
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))
       PRODUCT_NAME: ((product_identifier))
 
 - name: configure-product
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [upload-and-stage-product]
     - get: platform-automation-image
       passed: [upload-and-stage-product]
@@ -240,16 +267,10 @@ jobs:
       passed: [upload-and-stage-product]
 
   - task: create-opsman-env-file
-    <<: *create-opsman-env
+    <<: *credhub-interpolate-env
 
   - task: create-product-config-file
-    <<: *create-yml
-    output_mapping:
-      output-folder: config
-    params:
-      DEBUG: ((debug))
-      OUTPUT_FILE_NAME: product-config.yml
-      PARAM_NAME: ((product_config))
+    <<: *credhub-interpolate-config
 
   - task: config-product
     image: platform-automation-image
@@ -258,14 +279,14 @@ jobs:
       config: config
       env: env
     params:
-      CONFIG_FILE: product-config.yml
-      ENV_FILE: ((opsman_env_filename))
+      CONFIG_FILE: ((product_config_path))/((product_config_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: deploy-product
   serial: true
   plan:
   - aggregate:
-    - get: git-repo
+    - get: secrets-repo
       passed: [configure-product]
     - get: platform-automation-image
       passed: [configure-product]
@@ -284,7 +305,7 @@ jobs:
       passed: [configure-product]
 
   - task: create-opsman-env-file
-    <<: *create-opsman-env
+    <<: *credhub-interpolate-env
 
   - task: deploy-product
     image: platform-automation-image
@@ -292,7 +313,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_filename))
+      ENV_FILE: ((opsman_env_path))/env.yml
 
   - put: email
     params:

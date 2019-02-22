@@ -126,6 +126,11 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_SERVER: ((credhub_server))
     INTERPOLATION_PATH: ((product_config_path))
 
+cli-params: &cli-params
+  params:
+    globs:
+    - "*linux*64*"
+
 jobs:
 - name: install-ops-manager
   plan:
@@ -280,17 +285,11 @@ jobs:
         globs: [((pas_product_glob))]
       trigger: true
     - get: jq
-      params:
-        globs:
-        - "*linux64*"
+      <<: *cli-params
     - get: pivnet-cli
-      params:
-        globs:
-        - "*linux-amd64*"
+      <<: *cli-params
     - get: om-cli
-      params:
-        globs:
-        - "*-linux"
+      <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *create-opsman-env
@@ -376,16 +375,11 @@ jobs:
         globs: []
       passed: [stage-pas]
     - get: om-cli
-      params:
-        globs:
-        - "*-linux"
+      <<: *cli-params
     - get: jq
-      params:
-        globs:
-        - "*linux64*"
+      <<: *cli-params
     - get: tile-config-convertor
-      params:
-        globs: ["*linux*"]
+      <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *create-opsman-env

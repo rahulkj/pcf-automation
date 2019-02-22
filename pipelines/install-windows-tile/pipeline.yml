@@ -149,6 +149,11 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_SERVER: ((credhub_server))
     INTERPOLATION_PATH: ((product_config_path))
 
+cli-params: &cli-params
+  params:
+    globs:
+    - "*linux*64*"
+
 jobs:
 - name: scheduler
   plan:
@@ -188,14 +193,11 @@ jobs:
         globs: [((winfs_injector_glob))]
         unpack: true
     - get: jq
-      params:
-        globs: ["*linux64*"]
+      <<: *cli-params
     - get: pivnet-cli
-      params:
-        globs: ["*linux-amd64*"]
+      <<: *cli-params
     - get: om-cli
-      params:
-        globs: ["*-linux"]
+      <<: *cli-params
 
   - task: replicate-tile
     image: platform-automation-image
@@ -255,15 +257,12 @@ jobs:
         globs: []
       passed: [replicate-inject-upload-and-stage-product]
     - get: om-cli
-      params:
-        globs: ["*-linux"]
+      <<: *cli-params
     - get: jq
-      params:
-        globs: ["*linux64*"]
+      <<: *cli-params
       passed: [replicate-inject-upload-and-stage-product]
     - get: tile-config-convertor
-      params:
-        globs: ["*linux*"]
+      <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

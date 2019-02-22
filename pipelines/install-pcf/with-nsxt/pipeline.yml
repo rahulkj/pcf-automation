@@ -608,14 +608,14 @@ jobs:
       CONFIG_FILE: ((product_config_path))/((pas_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-- name: deploy-pas
+- name: deploy
   serial: true
   plan:
   - aggregate:
     - get: secrets-repo
       passed: [configure-pas]
     - get: platform-automation-image
-      passed: [configure-pas]
+      passed: [configure-pas, configure-nsxt]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -623,12 +623,17 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-pas]
+      passed: [configure-pas, configure-nsxt]
     - get: pas-product
       params:
         globs: []
       trigger: true
       passed: [configure-pas]
+    - get: nsxt-product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-nsxt]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

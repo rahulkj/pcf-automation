@@ -41,7 +41,7 @@ product-properties:
   .properties.opsman:
     value: enable
   .properties.opsman.enable.url:
-    value: https://((ops_mgr_host))
+    value: https://((opsman_host))
   .properties.syslog_selector:
     value: "No"
 

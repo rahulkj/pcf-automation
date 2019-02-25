@@ -10,11 +10,11 @@ opsman-configuration:
       folder:
       insecure: 1
     disk_type: thick                          # example: thin|thick
-    private_ip: ((ops_mgr_ip))
+    private_ip: ((opsman_ip))
     dns: 10.0.0.21
     ntp: 10.0.0.22                     # example: ntp.ubuntu.com
-    ssh_password: ((ops_mgr_ssh_pwd))
-    hostname: ((ops_mgr_host))
+    ssh_password: ((opsman_ssh_pwd))
+    hostname: ((opsman_host))
     network: INFRASTRUCTURE                 # vcenter network to deploy to
     netmask: 255.255.255.192
     gateway: 192.168.10.1

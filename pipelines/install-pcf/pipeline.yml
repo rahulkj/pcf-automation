@@ -160,7 +160,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
-      state: git-repo
+      state: secrets-repo
       image: pivnet-product
       config: config
     params:

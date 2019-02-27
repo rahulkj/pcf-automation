@@ -176,7 +176,9 @@ jobs:
         globs: [((replicator_glob))]
         unpack: true
     - get: om-cli
-      <<: *cli-params
+      params:
+        globs:
+        - "*linux*"
 
   - task: replicate-tile
     image: platform-automation-image
@@ -233,7 +235,7 @@ jobs:
       passed: [replicate-upload-and-stage-product]
     - get: platform-automation-tasks
       params:
-        globs: ["*.tgz"]
+        globs: ["*.zip"]
         unpack: true
       passed: [replicate-upload-and-stage-product]
     - get: secrets-repo
@@ -244,7 +246,9 @@ jobs:
         globs: []
       passed: [replicate-upload-and-stage-product]
     - get: om-cli
-      <<: *cli-params
+      params:
+        globs:
+        - "*linux*"
     - get: jq
       <<: *cli-params
       passed: [replicate-upload-and-stage-product]
@@ -258,6 +262,7 @@ jobs:
     image: platform-automation-image
     file: automation-repo/tasks/generate-config/task.yml
     input_mapping:
+      git-repo: automation-repo
       env: env
     params:
       DEBUG: ((debug))

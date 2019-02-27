@@ -166,7 +166,9 @@ jobs:
     - get: pivnet-cli
       <<: *cli-params
     - get: om-cli
-      <<: *cli-params
+      params:
+        globs:
+        - "*linux*"
 
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
@@ -210,7 +212,7 @@ jobs:
       passed: [upload-and-stage-product]
     - get: platform-automation-tasks
       params:
-        globs: ["*.tgz"]
+        globs: ["*.zip"]
         unpack: true
       passed: [upload-and-stage-product]
     - get: automation-repo
@@ -221,7 +223,9 @@ jobs:
         globs: []
       passed: [upload-and-stage-product]
     - get: om-cli
-      <<: *cli-params
+      params:
+        globs:
+        - "*linux*"
     - get: jq
       <<: *cli-params
     - get: tile-config-convertor
@@ -234,6 +238,7 @@ jobs:
     image: platform-automation-image
     file: automation-repo/tasks/generate-config/task.yml
     input_mapping:
+      git-repo: automation-repo
       env: env
     params:
       DEBUG: ((debug))

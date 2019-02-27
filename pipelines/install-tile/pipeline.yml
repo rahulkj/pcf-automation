@@ -314,7 +314,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/env.yml
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
   - put: email
     params:

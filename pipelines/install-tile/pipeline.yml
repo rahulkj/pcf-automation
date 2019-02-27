@@ -242,7 +242,7 @@ jobs:
       env: env
     params:
       DEBUG: ((debug))
-      ENV_FILE: ((opsman_env_path))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((product_identifier))
 
 - name: configure-product

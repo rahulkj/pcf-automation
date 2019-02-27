@@ -434,6 +434,11 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+      passed: [stage-nsxt]
     - get: secrets-repo
       passed: [stage-nsxt]
     - get: automation-repo
@@ -542,6 +547,11 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+      passed: [stage-pas]
     - get: secrets-repo
       passed: [stage-pas]
     - get: automation-repo

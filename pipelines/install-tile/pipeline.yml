@@ -208,6 +208,11 @@ jobs:
         globs: ["*.tgz"]
         unpack: true
       passed: [upload-and-stage-product]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+      passed: [upload-and-stage-product]
     - get: automation-repo
       passed: [upload-and-stage-product]
     - get: secrets-repo

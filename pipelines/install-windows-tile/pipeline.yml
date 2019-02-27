@@ -249,6 +249,11 @@ jobs:
         globs: ["*.tgz"]
         unpack: true
       passed: [replicate-inject-upload-and-stage-product]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+      passed: [replicate-inject-upload-and-stage-product]
     - get: secrets-repo
       passed: [replicate-inject-upload-and-stage-product]
     - get: pivnet-product

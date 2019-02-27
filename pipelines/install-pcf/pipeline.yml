@@ -365,7 +365,7 @@ jobs:
         globs: ["*.tgz"]
         unpack: true
       passed: [stage-pas]
-    - get: platform-automation-image
+    - get: platform-automation-tasks
       params:
         globs: ["*.tgz"]
         unpack: true

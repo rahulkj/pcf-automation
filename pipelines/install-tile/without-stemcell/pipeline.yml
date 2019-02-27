@@ -182,6 +182,7 @@ jobs:
 - name: generate-config
   plan:
   - aggregate:
+    - get: secrets-repo
     - get: automation-repo
     - get: platform-automation-image
       params:

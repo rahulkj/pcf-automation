@@ -328,7 +328,6 @@ jobs:
   plan:
   - aggregate:
     - get: secrets-repo
-      passed: [upload-pas]
     - get: platform-automation-image
       passed: [upload-pas]
       params:
@@ -371,9 +370,7 @@ jobs:
         unpack: true
       passed: [stage-pas]
     - get: secrets-repo
-      passed: [stage-pas]
     - get: automation-repo
-      passed: [upload-pas]
     - get: pivnet-product
       resource: pas-product
       params:

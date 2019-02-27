@@ -553,7 +553,6 @@ jobs:
         unpack: true
       passed: [stage-pas]
     - get: secrets-repo
-      passed: [stage-pas]
     - get: automation-repo
     - get: pivnet-product
       resource: pas-product

@@ -214,9 +214,7 @@ jobs:
         unpack: true
       passed: [upload-and-stage-product]
     - get: automation-repo
-      passed: [upload-and-stage-product]
     - get: secrets-repo
-      passed: [upload-and-stage-product]
     - get: pivnet-product
       resource: product
       params:

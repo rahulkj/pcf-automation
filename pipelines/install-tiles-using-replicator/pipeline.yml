@@ -225,6 +225,7 @@ jobs:
   plan:
   - aggregate:
     - get: automation-repo
+    - get: secrets-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]

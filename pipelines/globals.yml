@@ -26,3 +26,8 @@ to_addresses: ((to_addresses))
 
 opsman_env_path: config/opsman-env
 opsman_env_filename: env.yml
+
+credhub_ca_cert: ((credhub_server_ca.certificate))
+credhub_client: ((credhub_client))
+credhub_secret: ((credhub_client_secret))
+credhub_server: ((credhub_server))

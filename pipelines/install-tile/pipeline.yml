@@ -107,7 +107,7 @@ credhub-interpolate: &credhub-interpolate-env
     interpolated-files: env
   params:
     PREFIX: ((credhub_prefix))
-    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
@@ -122,7 +122,7 @@ credhub-interpolate: &credhub-interpolate-config
     interpolated-files: config
   params:
     PREFIX: ((credhub_prefix))
-    CREDHUB_CA_CERT: ((credhub_server_ca.certificate))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))

@@ -199,7 +199,6 @@ jobs:
   plan:
   - aggregate:
     - get: secrets-repo
-      passed: [install-ops-manager]
     - get: platform-automation-image
       passed: [install-ops-manager]
       params:
@@ -268,7 +267,6 @@ jobs:
   plan:
   - aggregate:
     - get: secrets-repo
-      passed: [configure-ops-director]
     - get: automation-repo
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -406,7 +404,6 @@ jobs:
   plan:
   - aggregate:
     - get: secrets-repo
-      passed: [stage-pas]
     - get: platform-automation-image
       passed: [stage-pas]
       params:
@@ -497,7 +494,7 @@ jobs:
 
   - task: delete-products
     image: platform-automation-image
-    file: secrets-repo/tasks/delete-installation.yml
+    file: platform-automation-tasks/tasks/delete-installation.yml
     input_mapping:
       env: env
     params:
@@ -505,7 +502,7 @@ jobs:
 
   - task: delete-opsmanager-vm
     image: platform-automation-image
-    file: secrets-repo/tasks/delete-vm.yml
+    file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
       state: secrets-repo
       config: config
@@ -515,7 +512,7 @@ jobs:
 
   - task: commit-files-into-git
     image: platform-automation-image
-    file: secrets-repo/tasks/make-git-commit.yml
+    file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
       repository: secrets-repo
       file-source: generated-state

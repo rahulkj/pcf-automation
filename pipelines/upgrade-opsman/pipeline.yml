@@ -11,10 +11,10 @@ resource_types:
     repository: pcfseceng/email-resource
 
 resources:
-- name: secrets-repo
+- name: config-repo
   type: git
   source:
-    uri: ((secrets_git_url))
+    uri: ((config_repo_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -57,7 +57,7 @@ credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: env
   params:
@@ -72,7 +72,7 @@ credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: config
   params:
@@ -87,7 +87,7 @@ jobs:
 - name: upgrade-ops-manager
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -124,7 +124,7 @@ jobs:
       config: config
       env: env
       image: pivnet-product
-      state: secrets-repo
+      state: config-repo
       installation: installation
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
@@ -135,7 +135,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
-      repository: secrets-repo
+      repository: config-repo
       file-source: generated-state
     params:
       FILE_SOURCE_PATH: ((state_filename))
@@ -144,7 +144,7 @@ jobs:
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
 
-  - put: secrets-repo
+  - put: config-repo
     params:
       repository: repository-commit
 

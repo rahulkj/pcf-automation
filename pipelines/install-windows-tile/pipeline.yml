@@ -48,10 +48,10 @@ resources:
     repository: tile-config-convertor
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: secrets-repo
+- name: config-repo
   type: git
   source:
-    uri: ((secrets_git_url))
+    uri: ((config_repo_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -123,7 +123,7 @@ credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: env
   params:
@@ -138,7 +138,7 @@ credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: config
   params:
@@ -167,7 +167,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -203,7 +203,7 @@ jobs:
 
   - task: replicate-tile
     image: platform-automation-image
-    file: secrets-repo/tasks/replicate-tile/task.yml
+    file: config-repo/tasks/replicate-tile/task.yml
     input_mapping:
       product: product
     output_mapping:
@@ -214,7 +214,7 @@ jobs:
 
   - task: inject-winfs
     image: platform-automation-image
-    file: secrets-repo/tasks/inject-winfs/task.yml
+    file: config-repo/tasks/inject-winfs/task.yml
     input_mapping:
       product: replicated-folder
     output_mapping:
@@ -245,7 +245,7 @@ jobs:
 - name: generate-config
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: automation-repo
     - get: platform-automation-image
       params:
@@ -257,7 +257,7 @@ jobs:
         globs: ["*.zip"]
         unpack: true
       passed: [replicate-inject-upload-and-stage-product]
-    - get: secrets-repo
+    - get: config-repo
       passed: [replicate-inject-upload-and-stage-product]
     - get: pivnet-product
       resource: product
@@ -292,7 +292,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [replicate-inject-upload-and-stage-product]
     - get: platform-automation-image
       passed: [replicate-inject-upload-and-stage-product]
@@ -336,7 +336,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-product]
     - get: platform-automation-image
       passed: [configure-product]

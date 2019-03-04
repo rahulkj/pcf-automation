@@ -48,10 +48,10 @@ resources:
     repository: tile-config-convertor
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: secrets-repo
+- name: config-repo
   type: git
   source:
-    uri: ((secrets_git_url))
+    uri: ((config_repo_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -109,7 +109,7 @@ credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: env
   params:
@@ -124,7 +124,7 @@ credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: config
   params:
@@ -153,7 +153,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -182,7 +182,7 @@ jobs:
 
   - task: replicate-tile
     image: platform-automation-image
-    file: secrets-repo/tasks/replicate-tile/task.yml
+    file: config-repo/tasks/replicate-tile/task.yml
     input_mapping:
       pivnet-product: product
     output_mapping:
@@ -205,7 +205,7 @@ jobs:
 
   - task: download-stemcell
     image: platform-automation-image
-    file: secrets-repo/tasks/download-stemcell/task.yml
+    file: config-repo/tasks/download-stemcell/task.yml
     input_mapping:
       product: replicated-folder
     params:
@@ -227,7 +227,7 @@ jobs:
   plan:
   - aggregate:
     - get: automation-repo
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -238,7 +238,7 @@ jobs:
         globs: ["*.zip"]
         unpack: true
       passed: [replicate-upload-and-stage-product]
-    - get: secrets-repo
+    - get: config-repo
       passed: [replicate-upload-and-stage-product]
     - get: pivnet-product
       resource: product
@@ -273,7 +273,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [replicate-upload-and-stage-product]
     - get: platform-automation-image
       passed: [replicate-upload-and-stage-product]
@@ -317,7 +317,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-product]
     - get: platform-automation-image
       passed: [configure-product]

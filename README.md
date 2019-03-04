@@ -68,7 +68,7 @@ Upgrade OpsManager example:
 
 - For OpsManager/Ops Director configuration, refer to http://docs.pivotal.io/pcf-automation/latest/reference/inputs-outputs.html
 - For product configuration, you can generate the config after the staging is complete, and you can trigger the `generate-config` job. Capture the output and tweak it as needed.
-- Create a new folder for this product, for ex: in your `secrets_git_url` repo, create a folder `config/product`, and create a file called `config.yml` and paste the above contents into it. Take a look at [config](./config) folder
+- Create a new folder for this product, for ex: in your `config_repo_git_url` repo, create a folder `config/product`, and create a file called `config.yml` and paste the above contents into it. Take a look at [config](./config) folder
 - Finally, re-run the `config-product` job
 ---
 

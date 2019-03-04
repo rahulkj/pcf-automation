@@ -46,10 +46,10 @@ resources:
     repository: tile-config-convertor
     access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
 
-- name: secrets-repo
+- name: config-repo
   type: git
   source:
-    uri: ((secrets_git_url))
+    uri: ((config_repo_git_url))
     branch: ((git_branch))
     username: ((git_username))
     password: ((git_token))
@@ -114,7 +114,7 @@ credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: env
   params:
@@ -129,7 +129,7 @@ credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
-    files: secrets-repo
+    files: config-repo
   output_mapping:
     interpolated-files: config
   params:
@@ -154,7 +154,7 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
-    - get: secrets-repo
+    - get: config-repo
     - get: govc
       <<: *cli-params
     - get: pivnet-product
@@ -171,7 +171,7 @@ jobs:
 - name: install-ops-manager
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -196,7 +196,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
-      state: secrets-repo
+      state: config-repo
       image: pivnet-product
       config: config
     params:
@@ -207,7 +207,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
-      repository: secrets-repo
+      repository: config-repo
       file-source: generated-state
     params:
       FILE_SOURCE_PATH: ((state_filename))
@@ -227,14 +227,14 @@ jobs:
       AUTH_CONFIG_FILE: ((product_config_path))/((opsman_auth_filename))
     attempts: 20
 
-  - put: secrets-repo
+  - put: config-repo
     params:
       repository: repository-commit
 
 - name: configure-ops-director
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [install-ops-manager]
     - get: platform-automation-image
       passed: [install-ops-manager]
@@ -269,7 +269,7 @@ jobs:
 - name: deploy-director
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-ops-director]
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -303,7 +303,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-ops-director]
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -336,7 +336,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-ops-director]
     - get: automation-repo
     - get: platform-automation-image
@@ -398,7 +398,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [upload-nsxt]
     - get: platform-automation-image
       passed: [upload-nsxt, deploy-director]
@@ -441,7 +441,7 @@ jobs:
         globs: ["*.zip"]
         unpack: true
       passed: [stage-nsxt]
-    - get: secrets-repo
+    - get: config-repo
     - get: automation-repo
     - get: pivnet-product
       resource: nsxt-product
@@ -475,7 +475,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [stage-nsxt]
     - get: platform-automation-image
       passed: [stage-nsxt]
@@ -513,7 +513,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-nsxt]
     - get: platform-automation-image
       passed: [configure-nsxt]
@@ -556,7 +556,7 @@ jobs:
         globs: ["*.zip"]
         unpack: true
       passed: [stage-pas]
-    - get: secrets-repo
+    - get: config-repo
     - get: automation-repo
     - get: pivnet-product
       resource: pas-product
@@ -590,7 +590,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [stage-pas]
     - get: platform-automation-image
       passed: [stage-pas]
@@ -628,7 +628,7 @@ jobs:
   serial: true
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
       passed: [configure-pas]
     - get: platform-automation-image
       passed: [configure-pas, configure-nsxt]
@@ -671,7 +671,7 @@ jobs:
 - name: delete-all
   plan:
   - aggregate:
-    - get: secrets-repo
+    - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
@@ -702,7 +702,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
-      state: secrets-repo
+      state: config-repo
       config: config
     params:
       STATE_FILE: ((state_file_destination))/((state_filename))
@@ -712,7 +712,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/make-git-commit.yml
     input_mapping:
-      repository: secrets-repo
+      repository: config-repo
       file-source: generated-state
     params:
       FILE_SOURCE_PATH: ((state_filename))
@@ -721,7 +721,7 @@ jobs:
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
 
-  - put: secrets-repo
+  - put: config-repo
     params:
       repository: repository-commit
 

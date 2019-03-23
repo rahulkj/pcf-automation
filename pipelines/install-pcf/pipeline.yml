@@ -233,7 +233,6 @@ jobs:
   plan:
   - aggregate:
     - get: config-repo
-      passed: [configure-ops-director]
     - get: platform-automation-image
       passed: [configure-ops-director]
       params:
@@ -441,7 +440,6 @@ jobs:
   plan:
   - aggregate:
     - get: config-repo
-      passed: [configure-pas]
     - get: platform-automation-image
       passed: [configure-pas]
       params:
@@ -536,11 +534,11 @@ jobs:
   plan:
   - aggregate:
     - get: config-repo
-      passed: [install-ops-manager]
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
         unpack: true
+      passed: [deploy-director]
     - get: pivnet-product
       resource: ops-manager
       trigger: true
@@ -551,6 +549,7 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
+      passed: [deploy-director]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config

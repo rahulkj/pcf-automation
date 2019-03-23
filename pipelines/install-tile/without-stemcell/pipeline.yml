@@ -232,7 +232,6 @@ jobs:
   plan:
   - aggregate:
     - get: config-repo
-      passed: [upload-and-stage-product]
     - get: platform-automation-image
       passed: [upload-and-stage-product]
       params:
@@ -267,7 +266,6 @@ jobs:
   plan:
   - aggregate:
     - get: config-repo
-      passed: [configure-product]
     - get: platform-automation-image
       passed: [configure-product]
       params:

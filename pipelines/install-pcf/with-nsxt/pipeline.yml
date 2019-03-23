@@ -216,6 +216,10 @@ jobs:
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after creating the OpsManager VM"
 
+  - put: config-repo
+    params:
+      repository: repository-commit
+      
   - task: configure-authentication
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-authentication.yml
@@ -226,10 +230,6 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       AUTH_CONFIG_FILE: ((product_config_path))/((opsman_auth_filename))
     attempts: 20
-
-  - put: config-repo
-    params:
-      repository: repository-commit
 
 - name: configure-ops-director
   plan:

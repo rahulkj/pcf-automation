@@ -36,7 +36,7 @@ run:
       echo "Replicating the tile and adding " $REPLICATED_NAME
       $CMD -name $REPLICATED_NAME -path $INPUT_FILE -output $OUTPUT_FILE
     else
-      echo "Replication of the tile is not required " $REPLICATOR_NAME
+      echo "Replication of the tile is not required " $REPLICATED_NAME
       mv $INPUT_FILE $OUTPUT_FILE
     fi
 

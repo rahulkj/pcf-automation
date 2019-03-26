@@ -184,7 +184,7 @@ jobs:
     image: platform-automation-image
     file: config-repo/tasks/replicate-tile/task.yml
     input_mapping:
-      pivnet-product: product
+      product: product
     output_mapping:
       output-folder: replicated-folder
     params:

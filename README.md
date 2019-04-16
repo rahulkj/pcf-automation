@@ -21,6 +21,7 @@ This repository provides the pipelines for the products listed in the following 
 | Install Tile without Stemcell | x.x.x | [Install Tile without Stemcell](./pipelines/install-tile/without-stemcell)
 | Replicate Tile and Install | x.x.x | [Replicate Tile and Install](./pipelines/install-tiles-using-replicator)
 | Replicate [PAS for windows](https://network.pivotal.io/products/pas-windows) and Install | x.x.x | [Replicate PAS for windows and Install](./pipelines/install-windows-tile)
+| Repave | --- | [Repave](./pipelines/repave)
 
 ---
 ### Following is an example on how to `fly` a pipeline:
@@ -52,6 +53,14 @@ Upgrade OpsManager example:
 >	fly -t concourse-[ENV] unpause-pipeline -p upgrade-opsman
 ```
 
+Repave all VMs example:
+```
+>	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
+>	fly -t concourse-[ENV] set-pipeline -p repave -c ./pipelines/repave/pipeline.yml \
+      -l ./pipelines/globals.yml \
+      -l ./pipelines/repave/params.yml
+>	fly -t concourse-[ENV] unpause-pipeline -p repave
+```
 ---
 ### Store your secrets
 

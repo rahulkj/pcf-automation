@@ -1,0 +1,155 @@
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: config-repo
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: platform-automation-image
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+- name: schedule
+  type: time
+  source:
+    interval: 24h
+    start: "12:00 AM"
+    stop: "11:59 PM"
+    location: America/Los_Angeles
+    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+
+credhub-interpolate: &credhub-interpolate-env
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: config-repo
+  output_mapping:
+    interpolated-files: env
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((opsman_env_path))
+
+credhub-interpolate: &credhub-interpolate-config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: config-repo
+  output_mapping:
+    interpolated-files: config
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATH: ((product_config_path))
+
+cli-params: &cli-params
+  params:
+    globs:
+    - "*linux*64*"
+
+jobs:
+- name: configure-ops-director
+  plan:
+  - aggregate:
+    - get: schedule
+      trigger: true
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
+
+  - task: credhub-interpolate-env
+    <<: *credhub-interpolate-env
+
+  - task: configure-ops-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
+
+- name: apply-changes
+  serial: true
+  plan:
+  - aggregate:
+    - get: schedule
+      trigger: true
+      passed: [configure-ops-director]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [configure-ops-director]
+
+  - task: credhub-interpolate-env
+    <<: *credhub-interpolate-env
+
+  - task: apply-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  - put: email
+    params:
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"

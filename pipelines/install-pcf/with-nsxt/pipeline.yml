@@ -157,7 +157,7 @@ jobs:
     - get: config-repo
     - get: govc
       <<: *cli-params
-    - get: pivnet-product
+    - get: product
       resource: ops-manager
       params:
         globs:

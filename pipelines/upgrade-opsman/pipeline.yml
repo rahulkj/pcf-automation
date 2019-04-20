@@ -53,6 +53,15 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
+- name: opsman-backup-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: opsman-backup-bucket
+    regexp: installation-(.*).tgz
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
 credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -116,6 +125,10 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  - put: opsman-backup-bucket
+    params:
+      file: installation/installation-*.zip
 
   - task: upgrade-opsmanager
     image: platform-automation-image

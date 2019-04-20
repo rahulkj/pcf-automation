@@ -49,11 +49,10 @@ resources:
 - name: schedule
   type: time
   source:
-    interval: 24h
-    start: "12:00 AM"
-    stop: "11:59 PM"
-    location: America/Los_Angeles
-    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+    start: ((scheduler_start_time))
+    stop: ((scheduler_stop_time))
+    location: ((scheduler_location))
+    days: ((scheduler_days))
 
 credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image

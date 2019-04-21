@@ -1,0 +1,22 @@
+---
+
+platform: linux
+
+params:
+  ENV_FILE:
+  APPLY_CHANGES_CONFIG: deploy-products.yml
+
+inputs:
+  - name: om-cli
+  - name: env
+  - name: config
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    chmod +x om-cli/om-linux
+    OM_CMD=./om-cli/om-linux
+
+    $OM_CMD --env env/"${ENV_FILE}" apply-changes -c config/$APPLY_CHANGES_CONFIG

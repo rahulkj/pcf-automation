@@ -27,7 +27,7 @@ resources:
     product_version: ((platform_automation_version))
     sort_by: semver
 
-- name: ops-manager
+- name: product
   type: pivnet
   source:
     api_token: ((pivnet_token))
@@ -58,9 +58,18 @@ resources:
   source:
     endpoint: ((s3_endpoint))
     bucket: opsman-backup-bucket
-    regexp: installation-(.*).tgz
+    regexp: installation-(.*).zip
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+
+- name: locks
+  type: pool
+  source:
+    pool: lock
+    uri: ((locks_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
 
 credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
@@ -93,20 +102,32 @@ credhub-interpolate: &credhub-interpolate-config
     INTERPOLATION_PATH: ((product_config_path))
 
 jobs:
+
+- name: set-lock
+  plan:
+  - get: product
+    params:
+      globs: []
+    trigger: true
+  - put: locks
+    params: {acquire: true}
+
 - name: upgrade-ops-manager
   plan:
   - aggregate:
+    - get: locks
+      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
         unpack: true
-    - get: pivnet-product
-      resource: ops-manager
+    - get: product
       trigger: true
       params:
         globs:
         - ((opsman_glob))
+      passed: [set-lock]
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
@@ -136,7 +157,7 @@ jobs:
     input_mapping:
       config: config
       env: env
-      image: pivnet-product
+      image: product
       state: config-repo
       installation: installation
     params:
@@ -173,3 +194,21 @@ jobs:
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: release-lock
+  plan:
+  - get: product
+    params:
+      globs: []
+    passed: [upgrade-ops-manager]
+    trigger: true
+  - get: locks
+    passed: [upgrade-ops-manager]
+  - put: locks
+    params: {release: locks}
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

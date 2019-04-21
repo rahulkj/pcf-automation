@@ -105,6 +105,15 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
+- name: locks
+  type: pool
+  source:
+    pool: lock
+    uri: ((locks_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
 credhub-interpolate: &credhub-interpolate-env
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -149,10 +158,22 @@ jobs:
     params:
       globs: []
 
+- name: set-lock
+  plan:
+  - get: product
+    params:
+      globs: []
+    passed: [scheduler]
+    trigger: true
+  - put: locks
+    params: {acquire: true}
+
 - name: replicate-upload-and-stage-product
   serial: true
   plan:
   - aggregate:
+    - get: locks
+      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -165,7 +186,7 @@ jobs:
     - get: product
       params:
         globs: [((product_glob))]
-      passed: [scheduler]
+      passed: [set-lock]
       trigger: true
     - get: jq
       <<: *cli-params
@@ -273,6 +294,8 @@ jobs:
   serial: true
   plan:
   - aggregate:
+    - get: locks
+      passed: [replicate-upload-and-stage-product]
     - get: config-repo
     - get: platform-automation-image
       passed: [replicate-upload-and-stage-product]
@@ -316,6 +339,8 @@ jobs:
   serial: true
   plan:
   - aggregate:
+    - get: locks
+      passed: [configure-product]
     - get: config-repo
     - get: platform-automation-image
       passed: [configure-product]
@@ -348,3 +373,21 @@ jobs:
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: release-lock
+  plan:
+  - get: product
+    params:
+      globs: []
+    passed: [deploy-product]
+    trigger: true
+  - get: locks
+    passed: [deploy-product]
+  - put: locks
+    params: {release: locks}
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

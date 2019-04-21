@@ -1,38 +1,18 @@
-opsman_product_version: ^2\.3\..*$
+opsman_product_version: ^2\.5\.[0-9]*$
 opsman_glob: "*.ova"
 
-ops_manager_settings: |
-  opsman-configuration:
-    vsphere:
-      vcenter:
-        url: ((vcenter_host))
-        username: ((vcenter_usr))
-        password: ((vcenter_pwd))
-        datastore: PCF_STORAGE
-        datacenter: HOMELAB
-        resource_pool: /HOMELAB/host/PCF_CLUSTER/Resources/MGMT_RP
-        folder:
-        insecure: 1
-      disk_type: thick                          # example: thin|thick
-      private_ip: ((ops_mgr_ip))
-      dns: 10.0.0.21
-      ntp: 10.0.0.22                     # example: ntp.ubuntu.com
-      ssh_password: ((ops_mgr_ssh_pwd))
-      hostname: ((ops_mgr_host))
-      network: INFRASTRUCTURE                 # vcenter network to deploy to
-      netmask: 255.255.255.192
-      gateway: 192.168.10.1
-      vm_name: OpsManager
+credhub_prefix: concourse/homelab
 
-ops_manager_env: |
-  target: https://((ops_mgr_host))
-  skip-ssl-validation: true
-  username: ((ops_mgr_usr))
-  password: ((ops_mgr_pwd))
-  decryption-passphrase: ((ops_mgr_decryption_pwd))
+opsman_env_path: config/upgrade-opsman
+opsman_env_filename: env.yml
 
-opsman_env_filename: opsman-env.yml
+product_config_path: config/install-pcf
+product_config_filename: opsman-config.yml
 
-state_file_name: state.yml
+state_filename: homelab-state.yml
 
 state_file_destination: state-files
+
+s3_endpoint: ((s3_endpoint))
+s3_access_key: ((s3_access_key))
+s3_secret_key: ((s3_secret_key))

@@ -8,6 +8,7 @@ params:
 
 inputs:
   - name: om-cli
+  - name: jq
   - name: env
   - name: config
 
@@ -19,4 +20,33 @@ run:
     chmod +x om-cli/om-linux
     OM_CMD=./om-cli/om-linux
 
-    $OM_CMD --env env/"${ENV_FILE}" apply-changes -c config/$APPLY_CHANGES_CONFIG
+    chmod +x ./jq/jq-linux64
+    JQ_CMD=./jq/jq-linux64
+
+    if [[ ! -z "${APPLY_CHANGES_CONFIG}" && null != "${APPLY_CHANGES_CONFIG}" ]]; then
+      apply_changes_config=$(ruby -ryaml -rjson -e 'puts JSON.pretty_generate(YAML.load(ARGF))' < config/${APPLY_CHANGES_CONFIG})
+
+      deploy_products_type=$(echo "$apply_changes_config" | $JQ_CMD -r '.deploy_products | type')
+
+      staged_products=$($OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/staged/products)
+
+      if [[ "$deploy_products_type" == "array" ]]; then
+        products=$(echo "$apply_changes_config" | $JQ_CMD -r '.deploy_products[]')
+
+        for product in $(echo $products | sed "s/\n/ /g"); do
+          product_guid=$(echo "$staged_products" | $JQ_CMD -r --arg product_name $product '.[] | select(.type == $product_name) | .guid')
+          if [[ ! -z "$product_guid" ]]; then
+            sed -i -e "s/$product/$product_guid/g" config/${APPLY_CHANGES_CONFIG}
+          else
+            echo "$product specified in the apply changes config, not found"
+            exit 1
+          fi
+        done
+
+        apply_changes_config=$(ruby -ryaml -rjson -e 'puts JSON.pretty_generate(YAML.load(ARGF))' < config/${APPLY_CHANGES_CONFIG})
+      fi
+
+      $OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/installations -x POST -d "$apply_changes_config"
+    fi
+
+    $OM_CMD --env env/"${ENV_FILE}" apply-changes --ignore-warnings true

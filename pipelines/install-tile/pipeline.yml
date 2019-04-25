@@ -339,7 +339,6 @@ jobs:
     <<: *credhub-interpolate-env
 
   - task: deploy-product
-    image: platform-automation-image
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env

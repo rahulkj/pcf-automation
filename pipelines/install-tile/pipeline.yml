@@ -312,6 +312,7 @@ jobs:
     - get: locks
       passed: [configure-product]
     - get: config-repo
+    - get: automation-repo
     - get: platform-automation-image
       passed: [configure-product]
       params:
@@ -327,17 +328,25 @@ jobs:
         globs: []
       trigger: true
       passed: [configure-product]
+    - get: om-cli
+      params:
+        globs:
+        - "*linux*"
+    - get: jq
+      <<: *cli-params
 
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
 
   - task: deploy-product
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/apply-changes.yml
+    file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env
+      config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      APPLY_CHANGES_CONFIG: ((product_config_path))/((apply_changes_config_filename))
 
   - put: email
     params:

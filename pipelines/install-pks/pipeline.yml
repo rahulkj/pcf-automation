@@ -78,12 +78,12 @@ resources:
     product_slug: ops-manager
     product_version: ((opsman_product_version))
 
-- name: pas-product
+- name: pks-product
   type: pivnet
   source:
     api_token: ((pivnet_token))
-    product_slug: elastic-runtime
-    product_version: ((pas_product_version))
+    product_slug: pivotal-container-service
+    product_version: ((pks_product_version))
 
 - name: email
   type: email
@@ -270,7 +270,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-- name: upload-pas
+- name: upload-pks
   serial: true
   plan:
   - aggregate:
@@ -286,9 +286,9 @@ jobs:
         globs: ["*.zip"]
         unpack: true
       passed: [configure-ops-director]
-    - get: pas-product
+    - get: pks-product
       params:
-        globs: [((pas_product_glob))]
+        globs: [((pks_product_glob))]
       trigger: true
     - get: jq
       <<: *cli-params
@@ -306,7 +306,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upload-product.yml
     input_mapping:
-      product: pas-product
+      product: pks-product
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
@@ -315,7 +315,7 @@ jobs:
     image: platform-automation-image
     file: automation-repo/tasks/download-stemcell/task.yml
     input_mapping:
-      product: pas-product
+      product: pks-product
     params:
       DEBUG: ((debug))
       PIVNET_API_TOKEN: ((pivnet_token))
@@ -331,13 +331,13 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-- name: stage-pas
+- name: stage-pks
   serial: true
   plan:
   - aggregate:
     - get: config-repo
     - get: platform-automation-image
-      passed: [upload-pas, deploy-director]
+      passed: [upload-pks, deploy-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -345,12 +345,12 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [upload-pas, deploy-director]
-    - get: pas-product
+      passed: [upload-pks, deploy-director]
+    - get: pks-product
       params:
-        globs: [((pas_product_glob))]
+        globs: [((pks_product_glob))]
       trigger: true
-      passed: [upload-pas]
+      passed: [upload-pks]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -359,31 +359,31 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
-      product: pas-product
+      product: pks-product
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-- name: generate-pas-config
+- name: generate-pks-config
   plan:
   - aggregate:
     - get: platform-automation-image
       params:
         globs: ["*.tgz"]
         unpack: true
-      passed: [stage-pas]
+      passed: [stage-pks]
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
+      passed: [stage-pks]
     - get: config-repo
     - get: automation-repo
     - get: pivnet-product
-      resource: pas-product
+      resource: pks-product
       params:
         globs: []
-      passed: [stage-pas]
+      passed: [stage-pks]
     - get: om-cli
       params:
         globs:
@@ -405,15 +405,15 @@ jobs:
     params:
       DEBUG: ((debug))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((pas_product_identifier))
+      PRODUCT_NAME: ((pks_product_identifier))
 
-- name: configure-pas
+- name: configure-pks
   serial: true
   plan:
   - aggregate:
     - get: config-repo
     - get: platform-automation-image
-      passed: [stage-pas]
+      passed: [stage-pks]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -421,12 +421,12 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
-    - get: pas-product
+      passed: [stage-pks]
+    - get: pks-product
       params:
         globs: []
       trigger: true
-      passed: [stage-pas]
+      passed: [stage-pks]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -441,16 +441,16 @@ jobs:
       config: config
       env: env
     params:
-      CONFIG_FILE: ((product_config_path))/((pas_config_filename))
+      CONFIG_FILE: ((product_config_path))/((pks_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
 - name: set-lock
   plan:
-  - get: pas-product
+  - get: pks-product
     params:
       globs: []
     trigger: true
-    passed: [configure-pas]
+    passed: [configure-pks]
   - put: locks
     params: {acquire: true}
 
@@ -462,7 +462,7 @@ jobs:
       passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-pas]
+      passed: [configure-pks]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -470,16 +470,16 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-    - get: pas-product
+    - get: pks-product
       params:
         globs: []
       trigger: true
-      passed: [configure-pas]
+      passed: [configure-pks]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
 
-  - task: deploy-pas
+  - task: deploy-pks
     image: platform-automation-image
     file: platform-automation-tasks/tasks/apply-changes.yml
     input_mapping:
@@ -489,7 +489,7 @@ jobs:
 
 - name: release-lock
   plan:
-  - get: pas-product
+  - get: pks-product
     params:
       globs: []
     trigger: true

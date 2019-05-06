@@ -1,0 +1,23 @@
+credhub_prefix: concourse/homelab
+
+product_config_path: config/install-pcf
+
+opsman_product_version: ^2\.4\..*$
+opsman_glob: "*.ova"
+
+opsman_config_filename: opsman-config.yml
+opsman_auth_filename: opsman-auth.yml
+
+ops_director_config_filename: ops-director-config.yml
+
+state_file_destination: state-files
+state_filename: homelab-state.yml
+
+pks_product_version: ^1\.4\..*$
+pks_product_identifier: pivotal-container-service
+pks_product_glob: "*.pivotal"
+
+pks_config_filename: pks-config.yml
+
+iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
+stemcell_type: xenial

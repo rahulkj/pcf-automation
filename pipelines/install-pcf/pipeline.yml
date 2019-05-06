@@ -474,7 +474,7 @@ jobs:
       params:
         globs: []
       trigger: true
-      passed: [configure-pas]
+      passed: [set-lock]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

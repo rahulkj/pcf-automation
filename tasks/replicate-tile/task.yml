@@ -3,7 +3,6 @@
 platform: linux
 
 params:
-  DEBUG:
   REPLICATED_NAME:
 
 inputs:
@@ -18,12 +17,8 @@ run:
   args:
   - "-c"
   - |
-    if [[ $DEBUG == true ]]; then
-      set -ex
-    else
-      set -e
-    fi
-
+    set -e
+  
     REPLICATOR_CLI=$(find replicator/ -name "*linux")
     chmod +x $REPLICATOR_CLI
     CMD=./$REPLICATOR_CLI

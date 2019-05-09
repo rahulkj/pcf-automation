@@ -6,9 +6,6 @@ image_resource:
   type: docker-image
   source: {repository: rjain/buildbox}
 
-params:
-  DEBUG:
-
 inputs:
   - name: product
   - name: govc
@@ -18,11 +15,7 @@ run:
   args:
   - "-c"
   - |
-    if [[ $DEBUG == true ]]; then
-      set -ex
-    else
-      set -e
-    fi
+    set -e
 
     gunzip ./govc/govc_linux_amd64.gz
     chmod +x ./govc/govc_linux_amd64

@@ -3,7 +3,6 @@
 platform: linux
 
 params:
-  DEBUG:
   CI_USERNAME:
   CI_EMAIL_ADDRESS:
 
@@ -18,11 +17,7 @@ run:
   args:
   - "-c"
   - |
-    if [[ $DEBUG == true ]]; then
-      set -ex
-    else
-      set -e
-    fi
+    set -e
 
     git clone concourse-trigger-gist updated-concourse-trigger-gist
 

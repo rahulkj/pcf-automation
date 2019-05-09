@@ -3,7 +3,6 @@
 platform: linux
 
 params:
-  DEBUG:
   ENV_FILE:
   PRODUCT_NAME:
 

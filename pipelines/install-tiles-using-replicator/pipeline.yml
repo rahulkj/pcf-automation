@@ -209,7 +209,6 @@ jobs:
     output_mapping:
       output-folder: replicated-folder
     params:
-      DEBUG: ((debug))
       REPLICATED_NAME: ((replicated_name))
 
   - task: credhub-interpolate-env
@@ -230,7 +229,6 @@ jobs:
     input_mapping:
       product: replicated-folder
     params:
-      DEBUG: ((debug))
       PIVNET_API_TOKEN: ((pivnet_token))
       IAAS_TYPE: ((iaas_type))
       STEMCELL_TYPE: ((stemcell_type))
@@ -286,7 +284,6 @@ jobs:
       git-repo: automation-repo
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((product_identifier))
 
@@ -321,7 +318,6 @@ jobs:
     output_mapping:
       output-folder: config
     params:
-      DEBUG: ((debug))
       OUTPUT_FILE_NAME: product-config.yml
       PARAM_NAME: ((product_config))
 

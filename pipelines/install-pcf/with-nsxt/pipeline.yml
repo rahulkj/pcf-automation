@@ -174,8 +174,6 @@ jobs:
 
   - task: generate-config
     file: automation-repo/tasks/generate-opsman-config/task.yml
-    params:
-      DEBUG: ((debug))
 
 - name: install-ops-manager
   plan:
@@ -385,7 +383,6 @@ jobs:
     input_mapping:
       product: pas-product
     params:
-      DEBUG: ((debug))
       PIVNET_API_TOKEN: ((pivnet_token))
       IAAS_TYPE: ((iaas_type))
       STEMCELL_TYPE: ((stemcell_type))
@@ -471,7 +468,6 @@ jobs:
       git-repo: automation-repo
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((nsxt_product_identifier))
 
@@ -584,7 +580,6 @@ jobs:
       git-repo: automation-repo
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((pas_product_identifier))
 

@@ -317,7 +317,6 @@ jobs:
     input_mapping:
       product: pas-product
     params:
-      DEBUG: ((debug))
       PIVNET_API_TOKEN: ((pivnet_token))
       IAAS_TYPE: ((iaas_type))
       STEMCELL_TYPE: ((stemcell_type))
@@ -403,7 +402,6 @@ jobs:
       git-repo: automation-repo
       env: env
     params:
-      DEBUG: ((debug))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       PRODUCT_NAME: ((pas_product_identifier))
 

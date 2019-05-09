@@ -2,9 +2,6 @@
 
 platform: linux
 
-params:
-  DEBUG:
-
 inputs:
 - name: product
 - name: winfs-injector
@@ -17,11 +14,7 @@ run:
   args:
   - "-c"
   - |
-    if [[ $DEBUG == true ]]; then
-      set -ex
-    else
-      set -e
-    fi
+    set -e
 
     REPLICATOR_CLI=$(find winfs-injector/ -name "*linux")
     chmod +x $REPLICATOR_CLI

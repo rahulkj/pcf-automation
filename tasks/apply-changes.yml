@@ -11,8 +11,6 @@ params:
   APPLY_CHANGES_CONFIG: deploy-products.yml
 
 inputs:
-  - name: om-cli
-  - name: jq
   - name: env
   - name: config
 
@@ -21,11 +19,8 @@ run:
   args:
   - "-c"
   - |
-    chmod +x om-cli/om-linux
-    OM_CMD=./om-cli/om-linux
-
-    chmod +x ./jq/jq-linux64
-    JQ_CMD=./jq/jq-linux64
+    OM_CMD=om
+    JQ_CMD=jq
 
     if [[ ! -z "${APPLY_CHANGES_CONFIG}" && null != "${APPLY_CHANGES_CONFIG}" ]]; then
       apply_changes_config=$(ruby -ryaml -rjson -e 'puts JSON.pretty_generate(YAML.load(ARGF))' < config/${APPLY_CHANGES_CONFIG})

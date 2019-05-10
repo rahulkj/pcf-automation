@@ -1,10 +1,7 @@
 #!/bin/bash -e
 
-chmod +x om-cli/om-linux
-OM_CMD=./om-cli/om-linux
-
-chmod +x ./jq/jq-linux64
-JQ_CMD=./jq/jq-linux64
+OM_CMD=om
+JQ_CMD=jq
 
 chmod +x ./tile-config-convertor/tile-config-convertor_linux_amd64
 TCC_CMD=./tile-config-convertor/tile-config-convertor_linux_amd64

@@ -2,14 +2,16 @@
 
 platform: linux
 
+image_resource:
+  type: docker-image
+  source: {repository: rjain/buildbox}
+
 params:
   ENV_FILE:
   PRODUCT_NAME:
 
 inputs:
   - name: git-repo
-  - name: om-cli
-  - name: jq
   - name: tile-config-convertor
   - name: env
 

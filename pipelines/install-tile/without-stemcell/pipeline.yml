@@ -20,27 +20,6 @@ resources:
     location: America/Los_Angeles
     days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
 
-- name: om-cli
-  type: github-release
-  source:
-    user: pivotal-cf
-    repository: om
-    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
-
-- name: pivnet-cli
-  type: github-release
-  source:
-    user: pivotal-cf
-    repository: pivnet-cli
-    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
-
-- name: jq
-  type: github-release
-  source:
-    user: stedolan
-    repository: jq
-    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
-
 - name: tile-config-convertor
   type: github-release
   source:
@@ -86,6 +65,11 @@ resources:
     product_slug: platform-automation
     product_version: ((platform_automation_version))
     sort_by: semver
+
+- name: custom-docker-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
 
 - name: locks
   type: pool
@@ -181,14 +165,6 @@ jobs:
         globs: [((product_glob))]
       passed: [set-lock]
       trigger: true
-    - get: jq
-      <<: *cli-params
-    - get: pivnet-cli
-      <<: *cli-params
-    - get: om-cli
-      params:
-        globs:
-        - "*linux*"
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -207,11 +183,6 @@ jobs:
   - aggregate:
     - get: config-repo
     - get: automation-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-      passed: [upload-and-stage-product]
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
@@ -224,13 +195,7 @@ jobs:
       params:
         globs: []
       passed: [upload-and-stage-product]
-    - get: om-cli
-      params:
-        globs:
-        - "*linux*"
-    - get: jq
-      <<: *cli-params
-      passed: [upload-and-stage-product]
+    - get: custom-docker-image
     - get: tile-config-convertor
       <<: *cli-params
 
@@ -238,7 +203,7 @@ jobs:
     <<: *credhub-interpolate-env
 
   - task: generate-config
-    image: platform-automation-image
+    image: custom-docker-image
     file: automation-repo/tasks/generate-config/task.yml
     input_mapping:
       git-repo: automation-repo

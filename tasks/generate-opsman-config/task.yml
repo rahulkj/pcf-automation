@@ -8,7 +8,6 @@ image_resource:
 
 inputs:
   - name: product
-  - name: govc
 
 run:
   path: bash
@@ -17,9 +16,7 @@ run:
   - |
     set -e
 
-    gunzip ./govc/govc_linux_amd64.gz
-    chmod +x ./govc/govc_linux_amd64
-    GOVC_CMD=./govc/govc_linux_amd64
+    GOVC_CMD=govc
 
     FILE_PATH=`find ./product/ -name *.ova`
 

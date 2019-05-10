@@ -242,6 +242,11 @@ jobs:
     - get: config-repo
     - get: automation-repo
     - get: custom-docker-image
+    - get: platform-automation-image
+      passed: [replicate-inject-upload-and-stage-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]

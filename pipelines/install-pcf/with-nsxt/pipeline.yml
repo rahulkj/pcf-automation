@@ -399,6 +399,11 @@ jobs:
   plan:
   - aggregate:
     - get: custom-docker-image
+    - get: platform-automation-image
+      passed: [stage-nsxt]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
@@ -501,6 +506,11 @@ jobs:
   plan:
   - aggregate:
     - get: custom-docker-image
+    - get: platform-automation-image
+      passed: [stage-pas]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]

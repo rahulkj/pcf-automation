@@ -224,6 +224,11 @@ jobs:
   - aggregate:
     - get: automation-repo
     - get: config-repo
+    - get: platform-automation-image
+      passed: [replicate-upload-and-stage-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]

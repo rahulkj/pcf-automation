@@ -25,7 +25,7 @@ run:
   - |
     set -e
 
-    PIVNET_CLI=pivnet-cli
+    PIVNET_CLI=pivnet
     JQ_CMD=jq
 
     SC_DETAILS=`cat ./product/metadata.json | $JQ_CMD -r '[.Dependencies[] | select(.Release.Product.Name | contains("Stemcells"))][0]'`

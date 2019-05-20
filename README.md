@@ -8,6 +8,62 @@ PCF product tiles Concourse Pipelines:
 
 **Before you start, make sure you have access to [Platform Automation](https://network.pivotal.io/products/platform-automation) on PivNet, else reach out to your PA/SA to gain access to the release.**
 
+* Create a git repo, based on instructions from [Concourse Pool Resource](https://github.com/concourse/pool-resource)
+  - Avoids pipelines from stepping on each other, as they wait for the lock to be released, before they run
+* Create a git repo, to store the pipeline config, for example, create a config directory, and folder based config for each product.
+```
+.
+├── config
+│   ├── compliance
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   ├── director
+│   │   └── director.yml
+│   ├── event-alerts
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   ├── healthwatch
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   ├── install-pcf
+│   │   ├── nsxt-config.yml
+│   │   ├── ops-director-config.yml
+│   │   ├── ops-director-pks-config.yml
+│   │   ├── opsman-auth.yml
+│   │   ├── opsman-config.yml
+│   │   ├── pas-config.yml
+│   │   └── pks-config.yml
+│   ├── mysql
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   ├── opsman-env
+│   │   └── env.yml
+│   ├── p-rabbitmq
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   ├── pks
+│   │   ├── config.yml
+│   │   └── deploy-products.yml
+│   └── upgrade-opsman
+│       └── env.yml
+├── config-aws
+│   └── install-pcf
+│       ├── ops-director-config.yml
+│       ├── opsman-auth.yml
+│       ├── opsman-config.yml
+│       └── pas-config.yml
+└── state-files
+    ├── README.md
+    ├── aws-state.yml
+    └── homelab-state.yml
+```
+* Update the `globals.yml` variables
+  - `config_repo_git_url`
+  - `automation_git_url`
+  - `locks_repo_git_url`
+
+---
+
 ### Pipelines available in this repository are:
 
 This repository provides the pipelines for the products listed in the following table.
@@ -26,39 +82,42 @@ This repository provides the pipelines for the products listed in the following 
 ---
 ### Following is an example on how to `fly` a pipeline:
 
+export PIPELINES_REPO=~/Documents/workspace/automation-repo
+export CONFIG_REPO=~/Documents/workspace/config-repo
+
 Install PCF with NSX-T example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p install-pcf -c ./pipelines/install-pcf/with-nsxt/pipeline.yml \
-      -l ./pipelines/install-pcf/params.yml \
-      -l ./pipelines/globals.yml
+>	fly -t concourse-[ENV] set-pipeline -p install-pcf -c $PIPELINES_REPO/pipelines/install-pcf/with-nsxt/pipeline.yml \
+      -l $CONFIG_REPO/params/install-pcf/params.yml \
+      -l $PIPELINES_REPO/pipelines/globals.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p install-pcf
 ```
 
 Install Healthwatch example (Applicable for any tile):
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p healthwatch -c ./pipelines/install-tile/pipeline.yml \
-      -l ./pipelines/globals.yml \
-      -l ./pipelines/tiles/healthwatch/params.yml
+>	fly -t concourse-[ENV] set-pipeline -p healthwatch -c $PIPELINES_REPO/pipelines/install-tile/pipeline.yml \
+      -l $PIPELINES_REPO/pipelines/globals.yml \
+      -l $CONFIG_REPO/params/install-tile/healthwatch-params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p healthwatch
 ```
 
 Upgrade OpsManager example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p upgrade-opsman -c ./pipelines/upgrade-opsman/pipeline.yml \
-      -l ./pipelines/globals.yml \
-      -l ./pipelines/upgrade-opsman/params.yml
+>	fly -t concourse-[ENV] set-pipeline -p upgrade-opsman -c $PIPELINES_REPO/pipelines/upgrade-opsman/pipeline.yml \
+      -l $PIPELINES_REPO/pipelines/globals.yml \
+      -l $CONFIG_REPO/params/upgrade-opsman/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p upgrade-opsman
 ```
 
 Repave all VMs example:
 ```
 >	fly -t concourse-[ENV] login -c https://<CONCOURSE-URL> -k
->	fly -t concourse-[ENV] set-pipeline -p repave -c ./pipelines/repave/pipeline.yml \
-      -l ./pipelines/globals.yml \
-      -l ./pipelines/repave/params.yml
+>	fly -t concourse-[ENV] set-pipeline -p repave -c $PIPELINES_REPO/pipelines/repave/pipeline.yml \
+      -l $PIPELINES_REPO/pipelines/globals.yml \
+      -l $CONFIG_REPO/params/repave/params.yml
 >	fly -t concourse-[ENV] unpause-pipeline -p repave
 ```
 ---

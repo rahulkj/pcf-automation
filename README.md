@@ -83,8 +83,8 @@ This repository provides the pipelines for the products listed in the following 
 ---
 ### Following is an example on how to `fly` a pipeline:
 
-`export PIPELINES_REPO=~/Documents/workspace/automation-repo`
-`export CONFIG_REPO=~/Documents/workspace/config-repo`
+- `export PIPELINES_REPO=~/Documents/workspace/automation-repo`
+- `export CONFIG_REPO=~/Documents/workspace/config-repo`
 
 Install PCF with NSX-T example:
 ```

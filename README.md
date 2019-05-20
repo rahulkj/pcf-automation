@@ -62,6 +62,7 @@ PCF product tiles Concourse Pipelines:
   - `automation_git_url`
   - `locks_repo_git_url`
 
+* Load all the secrets in credhub _(These pipelines heavily rely on credhub)_
 ---
 
 ### Pipelines available in this repository are:
@@ -82,8 +83,8 @@ This repository provides the pipelines for the products listed in the following 
 ---
 ### Following is an example on how to `fly` a pipeline:
 
-export PIPELINES_REPO=~/Documents/workspace/automation-repo
-export CONFIG_REPO=~/Documents/workspace/config-repo
+`export PIPELINES_REPO=~/Documents/workspace/automation-repo`
+`export CONFIG_REPO=~/Documents/workspace/config-repo`
 
 Install PCF with NSX-T example:
 ```

@@ -125,7 +125,7 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((opsman_env_path))
+    INTERPOLATION_PATHS: ((opsman_env_path))
 
 credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
@@ -140,7 +140,7 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_config_path))
 
 cli-params: &cli-params
   params:
@@ -169,34 +169,33 @@ jobs:
 - name: replicate-inject-upload-and-stage-product
   serial: true
   plan:
-  - aggregate:
-    - get: locks
-      passed: [set-lock]
-    - get: config-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-    - get: product
-      params:
-        globs: [((product_glob))]
-      passed: [set-lock]
-      trigger: true
-    - get: stemcell
-      params:
-        globs: [((stemcell_glob))]
-    - get: replicator
-      params:
-        globs: [((replicator_glob))]
-        unpack: true
-    - get: winfs-injector
-      params:
-        globs: [((winfs_injector_glob))]
-        unpack: true
+  - get: locks
+    passed: [set-lock]
+  - get: config-repo
+  - get: platform-automation-image
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+  - get: product
+    params:
+      globs: [((product_glob))]
+    passed: [set-lock]
+    trigger: true
+  - get: stemcell
+    params:
+      globs: [((stemcell_glob))]
+  - get: replicator
+    params:
+      globs: [((replicator_glob))]
+      unpack: true
+  - get: winfs-injector
+    params:
+      globs: [((winfs_injector_glob))]
+      unpack: true
 
   - task: replicate-tile
     image: platform-automation-image
@@ -238,29 +237,28 @@ jobs:
 
 - name: generate-config
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: automation-repo
-    - get: custom-docker-image
-    - get: platform-automation-image
-      passed: [replicate-inject-upload-and-stage-product]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [replicate-inject-upload-and-stage-product]
-    - get: config-repo
-      passed: [replicate-inject-upload-and-stage-product]
-    - get: pivnet-product
-      resource: product
-      params:
-        globs: []
-      passed: [replicate-inject-upload-and-stage-product]
-    - get: tile-config-convertor
-      <<: *cli-params
+  - get: config-repo
+  - get: automation-repo
+  - get: custom-docker-image
+  - get: platform-automation-image
+    passed: [replicate-inject-upload-and-stage-product]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [replicate-inject-upload-and-stage-product]
+  - get: config-repo
+    passed: [replicate-inject-upload-and-stage-product]
+  - get: pivnet-product
+    resource: product
+    params:
+      globs: []
+    passed: [replicate-inject-upload-and-stage-product]
+  - get: tile-config-convertor
+    <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -278,25 +276,24 @@ jobs:
 - name: configure-product
   serial: true
   plan:
-  - aggregate:
-    - get: locks
-      passed: [replicate-inject-upload-and-stage-product]
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [replicate-inject-upload-and-stage-product]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [replicate-inject-upload-and-stage-product]
-    - get: product
-      params:
-        globs: []
-      trigger: true
-      passed: [replicate-inject-upload-and-stage-product]
+  - get: locks
+    passed: [replicate-inject-upload-and-stage-product]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [replicate-inject-upload-and-stage-product]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [replicate-inject-upload-and-stage-product]
+  - get: product
+    params:
+      globs: []
+    trigger: true
+    passed: [replicate-inject-upload-and-stage-product]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -322,25 +319,24 @@ jobs:
 - name: deploy-product
   serial: true
   plan:
-  - aggregate:
-    - get: locks
-      passed: [configure-product]
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [configure-product]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [configure-product]
-    - get: product
-      params:
-        globs: []
-      trigger: true
-      passed: [configure-product]
+  - get: locks
+    passed: [configure-product]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [configure-product]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [configure-product]
+  - get: product
+    params:
+      globs: []
+    trigger: true
+    passed: [configure-product]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

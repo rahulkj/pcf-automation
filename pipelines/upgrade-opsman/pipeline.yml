@@ -84,7 +84,7 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((opsman_env_path))
+    INTERPOLATION_PATHS: ((opsman_env_path))
 
 credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
@@ -99,7 +99,7 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_config_path))
 
 jobs:
 
@@ -114,24 +114,23 @@ jobs:
 
 - name: upgrade-ops-manager
   plan:
-  - aggregate:
-    - get: locks
-      passed: [set-lock]
-    - get: config-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: product
-      trigger: true
-      params:
-        globs:
-        - ((opsman_glob))
-      passed: [set-lock]
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
+  - get: locks
+    passed: [set-lock]
+  - get: config-repo
+  - get: platform-automation-image
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: product
+    trigger: true
+    params:
+      globs:
+      - ((opsman_glob))
+    passed: [set-lock]
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config

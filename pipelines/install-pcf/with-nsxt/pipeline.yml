@@ -109,7 +109,7 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((opsman_env_path))
+    INTERPOLATION_PATHS: ((opsman_env_path))
 
 credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
@@ -124,7 +124,7 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_config_path))
 
 cli-params: &cli-params
   params:

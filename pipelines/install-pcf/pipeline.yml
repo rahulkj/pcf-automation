@@ -102,7 +102,7 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((opsman_env_path))
+    INTERPOLATION_PATHS: ((opsman_env_path))
 
 credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
@@ -117,7 +117,7 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_config_path))
 
 cli-params: &cli-params
   params:
@@ -127,21 +127,20 @@ cli-params: &cli-params
 jobs:
 - name: install-ops-manager
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-    - get: pivnet-product
-      resource: ops-manager
-      params:
-        globs:
-        - ((opsman_glob))
+  - get: config-repo
+  - get: platform-automation-image
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+  - get: pivnet-product
+    resource: ops-manager
+    params:
+      globs:
+      - ((opsman_glob))
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -190,24 +189,23 @@ jobs:
 
 - name: configure-ops-director
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [install-ops-manager]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [install-ops-manager]
-    - get: pivnet-product
-      resource: ops-manager
-      params:
-        globs: []
-      trigger: true
-      passed: [install-ops-manager]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [install-ops-manager]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [install-ops-manager]
+  - get: pivnet-product
+    resource: ops-manager
+    params:
+      globs: []
+    trigger: true
+    passed: [install-ops-manager]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -224,24 +222,23 @@ jobs:
 
 - name: deploy-director
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [configure-ops-director]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [configure-ops-director]
-    - get: pivnet-product
-      resource: ops-manager
-      params:
-        globs: []
-      trigger: true
-      passed: [configure-ops-director]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [configure-ops-director]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [configure-ops-director]
+  - get: pivnet-product
+    resource: ops-manager
+    params:
+      globs: []
+    trigger: true
+    passed: [configure-ops-director]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -257,24 +254,23 @@ jobs:
 - name: upload-pas
   serial: true
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: automation-repo
-    - get: platform-automation-image
-      passed: [configure-ops-director]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [configure-ops-director]
-    - get: pas-product
-      params:
-        globs: [((pas_product_glob))]
-      trigger: true
-    - get: custom-docker-image
+  - get: config-repo
+  - get: automation-repo
+  - get: platform-automation-image
+    passed: [configure-ops-director]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [configure-ops-director]
+  - get: pas-product
+    params:
+      globs: [((pas_product_glob))]
+    trigger: true
+  - get: custom-docker-image
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -310,23 +306,22 @@ jobs:
 - name: stage-pas
   serial: true
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [upload-pas, deploy-director]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [upload-pas, deploy-director]
-    - get: pas-product
-      params:
-        globs: [((pas_product_glob))]
-      trigger: true
-      passed: [upload-pas]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [upload-pas, deploy-director]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [upload-pas, deploy-director]
+  - get: pas-product
+    params:
+      globs: [((pas_product_glob))]
+    trigger: true
+    passed: [upload-pas]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -342,27 +337,26 @@ jobs:
 
 - name: generate-pas-config
   plan:
-  - aggregate:
-    - get: custom-docker-image
-    - get: platform-automation-image
-      passed: [stage-pas]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [stage-pas]
-    - get: config-repo
-    - get: automation-repo
-    - get: pivnet-product
-      resource: pas-product
-      params:
-        globs: []
-      passed: [stage-pas]
-    - get: tile-config-convertor
-      <<: *cli-params
+  - get: custom-docker-image
+  - get: platform-automation-image
+    passed: [stage-pas]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [stage-pas]
+  - get: config-repo
+  - get: automation-repo
+  - get: pivnet-product
+    resource: pas-product
+    params:
+      globs: []
+    passed: [stage-pas]
+  - get: tile-config-convertor
+    <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -380,23 +374,22 @@ jobs:
 - name: configure-pas
   serial: true
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [stage-pas]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [stage-pas]
-    - get: pas-product
-      params:
-        globs: []
-      trigger: true
-      passed: [stage-pas]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [stage-pas]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [stage-pas]
+  - get: pas-product
+    params:
+      globs: []
+    trigger: true
+    passed: [stage-pas]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -427,24 +420,23 @@ jobs:
 - name: apply-changes
   serial: true
   plan:
-  - aggregate:
-    - get: locks
-      passed: [set-lock]
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [configure-pas]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-    - get: pas-product
-      params:
-        globs: []
-      trigger: true
-      passed: [set-lock]
+  - get: locks
+    passed: [set-lock]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [configure-pas]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+  - get: pas-product
+    params:
+      globs: []
+    trigger: true
+    passed: [set-lock]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -473,19 +465,18 @@ jobs:
 ## Remove this if you don't need it in your pipeline
 - name: delete-all
   plan:
-  - aggregate:
-    - get: config-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-    - get: ops-manager
-      params:
-        globs: []
+  - get: config-repo
+  - get: platform-automation-image
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+  - get: ops-manager
+    params:
+      globs: []
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

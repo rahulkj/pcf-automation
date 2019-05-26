@@ -76,7 +76,7 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((opsman_env_path))
+    INTERPOLATION_PATHS: ((opsman_env_path))
 
 credhub-interpolate: &credhub-interpolate-config
   image: platform-automation-image
@@ -91,7 +91,7 @@ credhub-interpolate: &credhub-interpolate-config
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATH: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_config_path))
 
 cli-params: &cli-params
   params:
@@ -101,18 +101,17 @@ cli-params: &cli-params
 jobs:
 - name: configure-ops-director
   plan:
-  - aggregate:
-    - get: schedule
-      trigger: true
-    - get: config-repo
-    - get: platform-automation-image
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
+  - get: schedule
+    trigger: true
+  - get: config-repo
+  - get: platform-automation-image
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
 
   - put: locks
     params: {acquire: true}
@@ -133,23 +132,22 @@ jobs:
 - name: apply-changes
   serial: true
   plan:
-  - aggregate:
-    - get: schedule
-      trigger: true
-      passed: [configure-ops-director]
-    - get: locks
-      passed: [configure-ops-director]
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [configure-ops-director]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [configure-ops-director]
+  - get: schedule
+    trigger: true
+    passed: [configure-ops-director]
+  - get: locks
+    passed: [configure-ops-director]
+  - get: config-repo
+  - get: platform-automation-image
+    passed: [configure-ops-director]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [configure-ops-director]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

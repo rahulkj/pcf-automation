@@ -23,7 +23,7 @@ run:
     JQ_CMD=jq
 
     if [[ ! -z "${APPLY_CHANGES_CONFIG}" && null != "${APPLY_CHANGES_CONFIG}" ]]; then
-      apply_changes_config=$(ruby -ryaml -rjson -e 'puts JSON.pretty_generate(YAML.load(ARGF))' < config/${APPLY_CHANGES_CONFIG})
+      apply_changes_config=$(yq r -j config/${APPLY_CHANGES_CONFIG})
 
       deploy_products_type=$(echo "$apply_changes_config" | $JQ_CMD -r '.deploy_products | type')
 
@@ -42,7 +42,7 @@ run:
           fi
         done
 
-        apply_changes_config=$(ruby -ryaml -rjson -e 'puts JSON.pretty_generate(YAML.load(ARGF))' < config/${APPLY_CHANGES_CONFIG})
+        apply_changes_config=$(yq r -j config/${APPLY_CHANGES_CONFIG})
       fi
 
       $OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/installations -x POST -d "$apply_changes_config"

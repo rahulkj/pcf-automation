@@ -349,11 +349,6 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-  - put: email
-    params:
-      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
-      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
-
 - name: release-lock
   plan:
   - get: product
@@ -363,8 +358,13 @@ jobs:
     trigger: true
   - get: locks
     passed: [deploy-product]
-  - put: locks
-    params: {release: locks}
+  - in_parallel:
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+    - put: locks
+      params: {release: locks}
 
 - name: unset-lock
   plan:

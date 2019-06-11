@@ -333,25 +333,25 @@ jobs:
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
+  - in_parallel:
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: pas-product
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-  - task: upload-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
-    input_mapping:
-      product: pas-product
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-
-  - task: download-stemcell
-    image: custom-docker-image
-    file: automation-repo/tasks/download-stemcell/task.yml
-    input_mapping:
-      product: pas-product
-    params:
-      PIVNET_API_TOKEN: ((pivnet_token))
-      IAAS_TYPE: ((iaas_type))
-      STEMCELL_TYPE: ((stemcell_type))
+    - task: download-stemcell
+      image: custom-docker-image
+      file: automation-repo/tasks/download-stemcell/task.yml
+      input_mapping:
+        product: pas-product
+      params:
+        PIVNET_API_TOKEN: ((pivnet_token))
+        IAAS_TYPE: ((iaas_type))
+        STEMCELL_TYPE: ((stemcell_type))
 
   - task: upload-stemcell
     image: platform-automation-image
@@ -630,11 +630,6 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-  - put: email
-    params:
-      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
-      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
-
 - name: release-lock
   plan:
   - get: pas-product
@@ -645,8 +640,13 @@ jobs:
     trigger: true
   - get: locks
     passed: [deploy]
-  - put: locks
-    params: {release: locks}
+  - in_parallel:
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+    - put: locks
+      params: {release: locks}
 
 ## Remove this if you don't need it in your pipeline
 - name: delete-all
@@ -701,15 +701,15 @@ jobs:
       GIT_AUTHOR_NAME: ((ci_username))
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
+  - in_parallel:
+    - put: config-repo
+      params:
+        repository: repository-commit
 
-  - put: config-repo
-    params:
-      repository: repository-commit
-
-  - put: email
-    params:
-      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
-      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
 - name: unset-lock
   plan:

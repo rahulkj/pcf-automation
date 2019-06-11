@@ -170,24 +170,25 @@ jobs:
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
 
-  - task: upload-and-stage-product
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-and-stage-product.yml
-    input_mapping:
-      product: product
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+  - in_parallel:
+    - task: upload-and-stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      input_mapping:
+        product: product
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-  - task: download-stemcell
-    image: custom-docker-image
-    file: automation-repo/tasks/download-stemcell/task.yml
-    input_mapping:
-      product: product
-    params:
-      PIVNET_API_TOKEN: ((pivnet_token))
-      IAAS_TYPE: ((iaas_type))
-      STEMCELL_TYPE: ((stemcell_type))
+    - task: download-stemcell
+      image: custom-docker-image
+      file: automation-repo/tasks/download-stemcell/task.yml
+      input_mapping:
+        product: product
+      params:
+        PIVNET_API_TOKEN: ((pivnet_token))
+        IAAS_TYPE: ((iaas_type))
+        STEMCELL_TYPE: ((stemcell_type))
 
   - task: upload-stemcell
     image: platform-automation-image

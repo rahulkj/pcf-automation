@@ -134,7 +134,7 @@ cli-params: &cli-params
 jobs:
 - name: generate-ops-manager-config
   plan:
-  - aggregate:
+  - in_parallel:
     - get: automation-repo
     - get: custom-docker-image
     - get: config-repo
@@ -150,7 +150,7 @@ jobs:
 
 - name: install-ops-manager
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -213,7 +213,7 @@ jobs:
 
 - name: configure-ops-director
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [install-ops-manager]
@@ -247,7 +247,7 @@ jobs:
 
 - name: deploy-director
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -280,7 +280,7 @@ jobs:
 - name: upload-nsxt
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [configure-ops-director]
@@ -312,7 +312,7 @@ jobs:
 - name: upload-pas
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: automation-repo
     - get: platform-automation-image
@@ -365,7 +365,7 @@ jobs:
 - name: stage-nsxt
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [upload-nsxt, deploy-director]
@@ -397,7 +397,7 @@ jobs:
 
 - name: generate-nsxt-config
   plan:
-  - aggregate:
+  - in_parallel:
     - get: custom-docker-image
     - get: platform-automation-image
       passed: [stage-nsxt]
@@ -435,7 +435,7 @@ jobs:
 - name: configure-nsxt
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [stage-nsxt]
@@ -472,7 +472,7 @@ jobs:
 - name: stage-pas
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [configure-nsxt]
@@ -504,7 +504,7 @@ jobs:
 
 - name: generate-pas-config
   plan:
-  - aggregate:
+  - in_parallel:
     - get: custom-docker-image
     - get: platform-automation-image
       passed: [stage-pas]
@@ -542,7 +542,7 @@ jobs:
 - name: configure-pas
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       passed: [stage-pas]
@@ -594,7 +594,7 @@ jobs:
 - name: deploy
   serial: true
   plan:
-  - aggregate:
+  - in_parallel:
     - get: locks
       passed: [set-lock]
     - get: config-repo
@@ -651,7 +651,7 @@ jobs:
 ## Remove this if you don't need it in your pipeline
 - name: delete-all
   plan:
-  - aggregate:
+  - in_parallel:
     - get: config-repo
     - get: platform-automation-image
       params:

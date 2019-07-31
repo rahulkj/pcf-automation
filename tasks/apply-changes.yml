@@ -22,7 +22,7 @@ run:
     OM_CMD=om
 
     if [[ ! -z "${APPLY_CHANGES_CONFIG}" && null != "${APPLY_CHANGES_CONFIG}" ]]; then
-      $OM_CMD --env env/"${ENV_FILE}" apply-changes -c config/${APPLY_CHANGES_CONFIG})
+      $OM_CMD --env env/"${ENV_FILE}" apply-changes -c config/${APPLY_CHANGES_CONFIG}
     fi
 
     $OM_CMD --env env/"${ENV_FILE}" apply-changes --ignore-warnings true

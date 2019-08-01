@@ -1,0 +1,20 @@
+---
+
+platform: linux
+
+inputs:
+  - name: env
+  - name: config
+
+params:
+  ENV_FILE:
+  RELEASE_JSON_FILE_PATH:
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    RELEASE_CONFIG=$(cat config/${RELEASE_JSON_FILE_PATH})
+    om -e env/${ENV_FILE} curl -p "/api/v0/staged/director/manifest_operations/add_job_to_instance_group" \
+      -x POST -d "$RELEASE_CONFIG"

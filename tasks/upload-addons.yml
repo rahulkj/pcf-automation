@@ -1,0 +1,25 @@
+---
+
+platform: linux
+
+inputs:
+  - name: env
+  - name: config
+  - name: release
+
+params:
+  ENV_FILE:
+  RUNTIME_CONFIG_FILE:
+  CLOUD_CONFIG_NAME:
+
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    RELEASE_FILE_PATH=`find release/ -name *.tgz`
+
+    eval "$(om -e env/${ENV_FILE} bosh-env)"
+    bosh upload-release ${RELEASE_FILE_PATH}
+
+    bosh update-runtime-config --name=$CLOUD_CONFIG_NAME config/${RUNTIME_CONFIG_FILE}

@@ -4,18 +4,19 @@ opsman-configuration:
       url: ((vcenter_host))
       username: ((vcenter_usr))
       password: ((vcenter_pwd))
-      datastore:
-      datacenter:
-      resource_pool: /DATACENTER/host/CLUSTER/Resources/RESOURCE-POOL
+      datastore: ((vcenter_storage))
+      datacenter: ((vcenter_datacenter))
+      resource_pool: ((management_resource_pool))
       folder:
       insecure: 1
-    disk_type: thick                            # example: thin|thick
+    disk_type: thick                          # example: thin|thick
     private_ip: ((opsman_ip))
-    dns:
-    ntp:                                        # example: ntp.ubuntu.com
+    dns: ((dns_server))
+    ntp: ((ntp_server))                     # example: ntp.ubuntu.com
     ssh_password: ((opsman_ssh_pwd))
+    ssh_public_key: ((opsman_ssh_key.public_key))
     hostname: ((opsman_host))
-    network: INFRASTRUCTURE                     # vcenter network to deploy to
-    netmask:
-    gateway:
+    network: ((infrastructure_network_name))                 # vcenter network to deploy to
+    netmask: ((infrastructure_subnet_mask))
+    gateway: ((infrastructure_gateway))
     vm_name: OpsManager

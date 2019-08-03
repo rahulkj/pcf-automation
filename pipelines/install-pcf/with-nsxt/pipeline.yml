@@ -179,9 +179,11 @@ jobs:
       state: config-repo
       image: pivnet-product
       config: config
+      vars: config-repo
     params:
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_filename))
+      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -241,7 +243,10 @@ jobs:
   - task: configure-ops-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      vars: config-repo
     params:
+      VARS_FILES: ((product_vars_path))/((ops_director_var_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
 
@@ -572,9 +577,11 @@ jobs:
     input_mapping:
       config: config
       env: env
+      vars: config-repo
     params:
       CONFIG_FILE: ((product_config_path))/((pas_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: ((product_vars_path))/((pas_var_filename))
 
 - name: set-lock
   plan:

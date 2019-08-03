@@ -57,6 +57,15 @@ PCF product tiles Concourse Pipelines:
     ├── aws-state.yml
     └── homelab-state.yml
 ```
+* Create a `vars` folder that looks like:
+```
+└── vars
+    └── install-pcf
+        ├── director.yml
+        ├── opsman.yml
+        └── pas.yml
+```
+
 * Update the `globals.yml` variables
   - `config_repo_git_url`
   - `automation_git_url`

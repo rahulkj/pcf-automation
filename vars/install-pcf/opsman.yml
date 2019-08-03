@@ -1,0 +1,9 @@
+vcenter_storage:
+vcenter_datacenter:
+management_resource_pool:
+opsman_ip:
+dns_server:
+ntp_server:
+infrastructure_network_name:
+infrastructure_subnet_mask:
+infrastructure_gateway:

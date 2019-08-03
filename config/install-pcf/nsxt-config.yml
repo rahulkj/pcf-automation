@@ -11,7 +11,7 @@ product-properties:
     value:
     - name:
   .properties.foundation_name:
-    value:
+    value: pcf
   .properties.log_dropped_traffic:
     value: true
   .properties.ncp_debug_log:
@@ -32,6 +32,6 @@ product-properties:
   .properties.overlay_tz:
     value:
   .properties.subnet_prefix:
-    value: 24
+    value:
   .properties.tier0_router:
-    value: 
+    value:

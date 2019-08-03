@@ -692,9 +692,11 @@ jobs:
     input_mapping:
       state: config-repo
       config: config
+      vars: config-repo
     params:
-      STATE_FILE: ((state_file_destination))/((state_filename))
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_filename))
+      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image

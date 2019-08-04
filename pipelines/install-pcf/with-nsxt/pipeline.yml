@@ -695,7 +695,7 @@ jobs:
       vars: config-repo
     params:
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
-      STATE_FILE: ((state_filename))
+      STATE_FILE: ((state_file_destination))/((state_filename))
       VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git

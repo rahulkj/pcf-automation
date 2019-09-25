@@ -48,4 +48,4 @@ run:
       $OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/installations -x POST -d "$apply_changes_config"
     fi
 
-    $OM_CMD --env env/"${ENV_FILE}" apply-changes --ignore-warnings true --reattach
+    $OM_CMD --env env/"${ENV_FILE}" apply-changes --ignore-warnings true --reattach true

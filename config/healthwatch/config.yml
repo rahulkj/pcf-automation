@@ -2,40 +2,20 @@ product-name: p-healthwatch
 
 network-properties:
   network:
-    name: SERVICES
+    name: ((network_name))
   service_network:
-    name: SERVICES
+    name: ((service_network_name))
   other_availability_zones:
-    - name: AZ-1
-    - name: AZ-2
+    - name: ((az_1_name))
+    - name: ((az_2_name))
   singleton_availability_zone:
-    name: AZ-2
+    name: ((singleton_availability_zone_name))
 
 product-properties:
-  .healthwatch-forwarder.boshhealth_instance_count:
-    value: 1
-  .healthwatch-forwarder.boshtasks_instance_count:
-    value: 1
-  .healthwatch-forwarder.canary_instance_count:
-    value: 1
-  .healthwatch-forwarder.cli_instance_count:
-    value: 1
-  .healthwatch-forwarder.foundation_name:                                                              # OPTIONAL
-    value: HOMELAB
+  .healthwatch-forwarder.foundation_name:
+    value: ((foundation_name))
   .healthwatch-forwarder.health_check_az:
-    value: AZ-2
-  .healthwatch-forwarder.health_check_vm_type:
-    value: nano
-  .healthwatch-forwarder.ingestor_instance_count:
-    value: 1
-  .healthwatch-forwarder.opsman_instance_count:
-    value: 1
-  .healthwatch-forwarder.publish_to_eva:
-    value: true
-  .healthwatch-forwarder.worker_instance_count:
-    value: 1
-  .mysql.skip_name_resolve:
-    value: true
+    value: ((health_check_az_name))
   .properties.boshtasks:
     value: disable
   .properties.opsman:

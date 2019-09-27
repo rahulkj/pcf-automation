@@ -1,0 +1,30 @@
+product-name: p-event-alerts
+
+network-properties:
+  network:
+    name: ((network_name))
+  other_availability_zones:
+    - name: ((az_1_name))
+    - name: ((az_2_name))
+  singleton_availability_zone:
+    name: ((singleton_availability_zone_name))
+
+product-properties:
+  .deploy-pcf-event-alerts.instance_count:
+    value: 2
+  .properties.mysql:
+    value: MySQL Service
+  .properties.mysql.internal.plan_name:
+    value: ((mysql_plan))
+  .properties.smtp_selector:
+    value: Enabled
+  .properties.smtp_selector.enabled.smtp_address:
+    value: ((smtp_address))
+  .properties.smtp_selector.enabled.smtp_credentials:
+    value:
+      identity: ((smtp_username))
+      password: ((smtp_password))
+  .properties.smtp_selector.enabled.smtp_from:
+    value: ((from_address))
+  .properties.smtp_selector.enabled.smtp_port:
+    value: ((smtp_port))

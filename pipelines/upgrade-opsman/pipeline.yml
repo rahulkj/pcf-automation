@@ -57,7 +57,7 @@ resources:
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: opsman-backup-bucket
+    bucket: ((s3_bucket))
     regexp: installation-(.*).zip
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
@@ -114,23 +114,24 @@ jobs:
 
 - name: upgrade-ops-manager
   plan:
-  - get: locks
-    passed: [set-lock]
-  - get: config-repo
-  - get: platform-automation-image
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: product
-    trigger: true
-    params:
-      globs:
-      - ((opsman_glob))
-    passed: [set-lock]
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
+  - in_parallel:
+    - get: locks
+      passed: [set-lock]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: product
+      trigger: true
+      params:
+        globs:
+        - ((opsman_glob))
+      passed: [set-lock]
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -194,13 +195,14 @@ jobs:
 
 - name: release-lock
   plan:
-  - get: product
-    params:
-      globs: []
-    passed: [upgrade-ops-manager]
-    trigger: true
-  - get: locks
-    passed: [upgrade-ops-manager]
+  - in_parallel:
+    - get: product
+      params:
+        globs: []
+      passed: [upgrade-ops-manager]
+      trigger: true
+    - get: locks
+      passed: [upgrade-ops-manager]
   - in_parallel:
     - put: email
       params:

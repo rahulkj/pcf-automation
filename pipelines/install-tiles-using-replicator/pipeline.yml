@@ -155,27 +155,28 @@ jobs:
 - name: replicate-upload-and-stage-product
   serial: true
   plan:
-  - get: locks
-    passed: [set-lock]
-  - get: config-repo
-  - get: platform-automation-image
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-  - get: custom-docker-image
-  - get: product
-    params:
-      globs: [((product_glob))]
-    passed: [set-lock]
-    trigger: true
-  - get: replicator
-    params:
-      globs: [((replicator_glob))]
-      unpack: true
+  - in_parallel:
+    - get: locks
+      passed: [set-lock]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+    - get: custom-docker-image
+    - get: product
+      params:
+        globs: [((product_glob))]
+      passed: [set-lock]
+      trigger: true
+    - get: replicator
+      params:
+        globs: [((replicator_glob))]
+        unpack: true
 
   - task: replicate-tile
     image: platform-automation-image
@@ -221,28 +222,29 @@ jobs:
 
 - name: generate-config
   plan:
-  - get: automation-repo
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [replicate-upload-and-stage-product]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [replicate-upload-and-stage-product]
-  - get: config-repo
-    passed: [replicate-upload-and-stage-product]
-  - get: pivnet-product
-    resource: product
-    params:
-      globs: []
-    passed: [replicate-upload-and-stage-product]
-  - get: tile-config-convertor
-    <<: *cli-params
-  - get: custom-docker-image
+  - in_parallel:
+    - get: automation-repo
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [replicate-upload-and-stage-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [replicate-upload-and-stage-product]
+    - get: config-repo
+      passed: [replicate-upload-and-stage-product]
+    - get: pivnet-product
+      resource: product
+      params:
+        globs: []
+      passed: [replicate-upload-and-stage-product]
+    - get: tile-config-convertor
+      <<: *cli-params
+    - get: custom-docker-image
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -260,24 +262,25 @@ jobs:
 - name: configure-product
   serial: true
   plan:
-  - get: locks
-    passed: [replicate-upload-and-stage-product]
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [replicate-upload-and-stage-product]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [replicate-upload-and-stage-product]
-  - get: product
-    params:
-      globs: []
-    trigger: true
-    passed: [replicate-upload-and-stage-product]
+  - in_parallel:
+    - get: locks
+      passed: [replicate-upload-and-stage-product]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [replicate-upload-and-stage-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [replicate-upload-and-stage-product]
+    - get: product
+      params:
+        globs: []
+      trigger: true
+      passed: [replicate-upload-and-stage-product]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -296,31 +299,34 @@ jobs:
     input_mapping:
       config: config
       env: env
+      vars: config-repo
     params:
       CONFIG_FILE: ((product_config_path))/((product_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: ((product_vars_path))/((product_var_filename))
 
 - name: deploy-product
   serial: true
   plan:
-  - get: locks
-    passed: [configure-product]
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [configure-product]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [configure-product]
-  - get: product
-    params:
-      globs: []
-    trigger: true
-    passed: [configure-product]
+  - in_parallel:
+    - get: locks
+      passed: [configure-product]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [configure-product]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [configure-product]
+    - get: product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-product]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -335,13 +341,14 @@ jobs:
 
 - name: release-lock
   plan:
-  - get: product
-    params:
-      globs: []
-    passed: [deploy-product]
-    trigger: true
-  - get: locks
-    passed: [deploy-product]
+  - in_parallel:
+    - get: product
+      params:
+        globs: []
+      passed: [deploy-product]
+      trigger: true
+    - get: locks
+      passed: [deploy-product]
   - in_parallel:
     - put: email
       params:

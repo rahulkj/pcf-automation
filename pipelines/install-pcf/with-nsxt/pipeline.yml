@@ -50,14 +50,14 @@ resources:
   type: pivnet
   source:
     api_token: ((pivnet_token))
-    product_slug: elastic-runtime
+    product_slug: ((pas_product_slug))
     product_version: ((pas_product_version))
 
 - name: nsxt-product
   type: pivnet
   source:
     api_token: ((pivnet_token))
-    product_slug: vmware-nsx-t
+    product_slug: ((nsxt_product_slug))
     product_version: ((nsxt_product_version))
 
 - name: platform-automation-image
@@ -585,16 +585,17 @@ jobs:
 
 - name: set-lock
   plan:
-  - get: pas-product
-    params:
-      globs: []
-    trigger: true
-    passed: [configure-pas]
-  - get: nsxt-product
-    params:
-      globs: []
-    trigger: true
-    passed: [configure-nsxt]
+  - in_parallel:
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-pas]
+    - get: nsxt-product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-nsxt]
   - put: locks
     params: {acquire: true}
 

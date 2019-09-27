@@ -39,6 +39,20 @@ resources:
     username: ((git_username))
     password: ((git_token))
 
+- name: ops-manager
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ops-manager
+    product_version: ((opsman_product_version))
+
+- name: pas-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ((pas_product_slug))
+    product_version: ((pas_product_version))
+
 - name: platform-automation-image
   type: pivnet
   source:
@@ -54,20 +68,6 @@ resources:
     product_slug: platform-automation
     product_version: ((platform_automation_version))
     sort_by: semver
-
-- name: ops-manager
-  type: pivnet
-  source:
-    api_token: ((pivnet_token))
-    product_slug: ops-manager
-    product_version: ((opsman_product_version))
-
-- name: pas-product
-  type: pivnet
-  source:
-    api_token: ((pivnet_token))
-    product_slug: elastic-runtime
-    product_version: ((pas_product_version))
 
 - name: email
   type: email
@@ -127,26 +127,27 @@ cli-params: &cli-params
 jobs:
 - name: install-ops-manager
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-  - get: pivnet-product
-    resource: ops-manager
-    params:
-      globs:
-      - ((opsman_glob))
-
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs:
+        - ((opsman_glob))
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
+
+  - task: credhub-interpolate-config
+    <<: *credhub-interpolate-config
 
   - task: deploy-opsmanager-vm
     image: platform-automation-image
@@ -155,9 +156,11 @@ jobs:
       state: config-repo
       image: pivnet-product
       config: config
+      vars: config-repo
     params:
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_filename))
+      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -189,23 +192,24 @@ jobs:
 
 - name: configure-ops-director
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [install-ops-manager]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [install-ops-manager]
-  - get: pivnet-product
-    resource: ops-manager
-    params:
-      globs: []
-    trigger: true
-    passed: [install-ops-manager]
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [install-ops-manager]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [install-ops-manager]
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs: []
+      trigger: true
+      passed: [install-ops-manager]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -216,29 +220,33 @@ jobs:
   - task: configure-ops-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      vars: config-repo
     params:
+      VARS_FILES: ((product_vars_path))/((ops_director_var_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
 
 - name: deploy-director
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [configure-ops-director]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [configure-ops-director]
-  - get: pivnet-product
-    resource: ops-manager
-    params:
-      globs: []
-    trigger: true
-    passed: [configure-ops-director]
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [configure-ops-director]
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-ops-director]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -254,23 +262,24 @@ jobs:
 - name: upload-pas
   serial: true
   plan:
-  - get: config-repo
-  - get: automation-repo
-  - get: platform-automation-image
-    passed: [configure-ops-director]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [configure-ops-director]
-  - get: pas-product
-    params:
-      globs: [((pas_product_glob))]
-    trigger: true
-  - get: custom-docker-image
+  - in_parallel:
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      passed: [configure-ops-director]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [configure-ops-director]
+    - get: pas-product
+      params:
+        globs: [((pas_product_glob))]
+      trigger: true
+    - get: custom-docker-image
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -303,25 +312,48 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
+- name: set-lock
+  plan:
+  - in_parallel:
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [upload-pas]
+    - get: platform-automation-image
+      passed: [upload-pas, deploy-director]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip", deploy-director]
+        unpack: true
+  - put: locks
+    params: {acquire: true}
+
 - name: stage-pas
   serial: true
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [upload-pas, deploy-director]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [upload-pas, deploy-director]
-  - get: pas-product
-    params:
-      globs: [((pas_product_glob))]
-    trigger: true
-    passed: [upload-pas]
+  - in_parallel:
+    - get: locks
+      passed: [set-lock]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [set-lock]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [set-lock]
+    - get: pas-product
+      params:
+        globs: [((pas_product_glob))]
+      trigger: true
+      passed: [set-lock]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -337,26 +369,27 @@ jobs:
 
 - name: generate-pas-config
   plan:
-  - get: custom-docker-image
-  - get: platform-automation-image
-    passed: [stage-pas]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [stage-pas]
-  - get: config-repo
-  - get: automation-repo
-  - get: pivnet-product
-    resource: pas-product
-    params:
-      globs: []
-    passed: [stage-pas]
-  - get: tile-config-convertor
-    <<: *cli-params
+  - in_parallel:
+    - get: custom-docker-image
+    - get: platform-automation-image
+      passed: [stage-pas]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [stage-pas]
+    - get: config-repo
+    - get: automation-repo
+    - get: pivnet-product
+      resource: pas-product
+      params:
+        globs: []
+      passed: [stage-pas]
+    - get: tile-config-convertor
+      <<: *cli-params
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -374,22 +407,25 @@ jobs:
 - name: configure-pas
   serial: true
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [stage-pas]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [stage-pas]
-  - get: pas-product
-    params:
-      globs: []
-    trigger: true
-    passed: [stage-pas]
+  - in_parallel:
+    - get: locks
+      passed: [stage-pas]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [stage-pas]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [stage-pas]
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [stage-pas]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -403,40 +439,34 @@ jobs:
     input_mapping:
       config: config
       env: env
+      vars: config-repo
     params:
       CONFIG_FILE: ((product_config_path))/((pas_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: ((product_vars_path))/((pas_var_filename))
 
-- name: set-lock
-  plan:
-  - get: pas-product
-    params:
-      globs: []
-    trigger: true
-    passed: [configure-pas]
-  - put: locks
-    params: {acquire: true}
-
-- name: apply-changes
+- name: deploy
   serial: true
   plan:
-  - get: locks
-    passed: [set-lock]
-  - get: config-repo
-  - get: platform-automation-image
-    passed: [configure-pas]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-  - get: pas-product
-    params:
-      globs: []
-    trigger: true
-    passed: [set-lock]
+  - in_parallel:
+    - get: locks
+      passed: [configure-pas]
+    - get: config-repo
+    - get: platform-automation-image
+      passed: [configure-pas]
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+      passed: [configure-pas]
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [configure-pas]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -455,28 +485,34 @@ jobs:
     params:
       globs: []
     trigger: true
-    passed: [apply-changes]
+    passed: [deploy]
     trigger: true
   - get: locks
-    passed: [apply-changes]
-  - put: locks
-    params: {release: locks}
+    passed: [deploy]
+  - in_parallel:
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+    - put: locks
+      params: {release: locks}
 
 ## Remove this if you don't need it in your pipeline
 - name: delete-all
   plan:
-  - get: config-repo
-  - get: platform-automation-image
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-  - get: ops-manager
-    params:
-      globs: []
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+    - get: ops-manager
+      params:
+        globs: []
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -498,9 +534,11 @@ jobs:
     input_mapping:
       state: config-repo
       config: config
+      vars: config-repo
     params:
-      STATE_FILE: ((state_file_destination))/((state_filename))
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_file_destination))/((state_filename))
+      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -514,7 +552,6 @@ jobs:
       GIT_AUTHOR_NAME: ((ci_username))
       GIT_AUTHOR_EMAIL: ((ci_email_address))
       COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
-
   - in_parallel:
     - put: config-repo
       params:

@@ -34,3 +34,8 @@ pas_var_filename: pas.yml
 
 iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
 stemcell_type: xenial
+
+s3_endpoint: ((s3_endpoint))
+s3_access_key: ((s3_access_key))
+s3_secret_key: ((s3_secret_key))
+s3_bucket: ((s3_bucket))

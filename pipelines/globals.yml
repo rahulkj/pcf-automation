@@ -30,3 +30,6 @@ credhub_ca_cert: ((credhub_server_ca.certificate))
 credhub_client: ((credhub_client))
 credhub_secret: ((credhub_client_secret))
 credhub_server: ((credhub_server))
+
+pipeline_lock_folder: pipeline-lock
+opsman_upgrade_lock_folder: opsman-lock

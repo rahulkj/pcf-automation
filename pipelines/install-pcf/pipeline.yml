@@ -351,6 +351,17 @@ jobs:
   plan:
   - get: opsman-lock
     passed: [deploy-director]
+    trigger: true
+  - get: platform-automation-image
+    passed: [deploy-director]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
+    passed: [deploy-director]
   - put: opsman-lock
     params: {release: opsman-lock}
 
@@ -666,6 +677,15 @@ jobs:
 - name: set-upgrade-opsman-lock
   plan:
   - get: opsman-lock
+  - get: platform-automation-image
+    passed: [release-opsman-lock]
+    params:
+      globs: ["*.tgz"]
+      unpack: true
+  - get: platform-automation-tasks
+    params:
+      globs: ["*.zip"]
+      unpack: true
     passed: [release-opsman-lock]
   - get: product
     resource: ops-manager
@@ -685,6 +705,7 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
+      passed: [set-upgrade-opsman-lock]
     - get: product
       resource: ops-manager
       trigger: true
@@ -696,6 +717,7 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
+      passed: [set-upgrade-opsman-lock]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -727,7 +749,7 @@ jobs:
       vars: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      OPSMAN_CONFIG_FILE: ((product_config_path))/((product_config_filename))
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
       VARS_FILES: ((product_vars_path))/((opsman_var_filename))
 

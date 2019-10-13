@@ -89,15 +89,6 @@ resources:
     username: ((git_username))
     password: ((git_token))
 
-- name: opsman-lock
-  type: pool
-  source:
-    pool: ((opsman_upgrade_lock_folder))
-    uri: ((locks_repo_git_url))
-    branch: ((git_branch))
-    username: ((git_username))
-    password: ((git_token))
-
 - name: opsman-backup-bucket
   type: s3
   source:
@@ -202,13 +193,13 @@ jobs:
       resource: ops-manager
       params:
         globs: []
-  - put: opsman-lock
+  - put: pipeline-lock
     params: {acquire: true}
 
 - name: install-ops-manager
   plan:
   - in_parallel:
-    - get: opsman-lock
+    - get: pipeline-lock
       passed: [set-opsman-lock]
     - get: config-repo
     - get: platform-automation-image
@@ -277,7 +268,7 @@ jobs:
 - name: configure-ops-director
   plan:
   - in_parallel:
-    - get: opsman-lock
+    - get: pipeline-lock
       passed: [install-ops-manager]
     - get: config-repo
     - get: platform-automation-image
@@ -316,7 +307,7 @@ jobs:
 - name: deploy-director
   plan:
   - in_parallel:
-    - get: opsman-lock
+    - get: pipeline-lock
       passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
@@ -349,7 +340,7 @@ jobs:
 
 - name: release-opsman-lock
   plan:
-  - get: opsman-lock
+  - get: pipeline-lock
     passed: [deploy-director]
     trigger: true
   - get: platform-automation-image
@@ -362,7 +353,7 @@ jobs:
       globs: ["*.zip"]
       unpack: true
     passed: [deploy-director]
-  - put: opsman-lock
+  - put: pipeline-lock
     params: {release: opsman-lock}
 
 - name: upload-pks
@@ -592,13 +583,12 @@ jobs:
       globs: []
     trigger: true
     passed: [deploy]
-    trigger: true
   - get: pipeline-lock
     passed: [deploy]
   - in_parallel:
     - put: email
       params:
-        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
     - put: pipeline-lock
       params: {release: pipeline-lock}
@@ -665,7 +655,7 @@ jobs:
 
     - put: email
       params:
-        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
 - name: unset-lock
@@ -676,7 +666,7 @@ jobs:
 
 - name: set-upgrade-opsman-lock
   plan:
-  - get: opsman-lock
+  - get: pipeline-lock
   - get: platform-automation-image
     passed: [release-opsman-lock]
     params:
@@ -692,13 +682,13 @@ jobs:
     params:
       globs: []
     trigger: true
-  - put: opsman-lock
+  - put: pipeline-lock
     params: {acquire: true}
 
 - name: upgrade-ops-manager
   plan:
   - in_parallel:
-    - get: opsman-lock
+    - get: pipeline-lock
       passed: [set-upgrade-opsman-lock]
     - get: config-repo
     - get: platform-automation-image
@@ -788,19 +778,19 @@ jobs:
         globs: []
       passed: [upgrade-ops-manager]
       trigger: true
-    - get: opsman-lock
+    - get: pipeline-lock
       passed: [upgrade-ops-manager]
   - in_parallel:
     - put: email
       params:
-        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
-    - put: opsman-lock
+    - put: pipeline-lock
       params: {release: opsman-lock}
 
 - name: unset-opsman-lock
   plan:
-  - get: opsman-lock
-  - put: opsman-lock
+  - get: pipeline-lock
+  - put: pipeline-lock
     params: {release: opsman-lock}

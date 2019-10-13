@@ -57,7 +57,7 @@ resources:
 - name: locks
   type: pool
   source:
-    pool: lock
+    pool: ((pipeline_lock_folder))
     uri: ((locks_repo_git_url))
     branch: ((git_branch))
     username: ((git_username))
@@ -164,7 +164,7 @@ jobs:
 
   - put: email
     params:
-      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_NAME}"
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
 - name: release-lock

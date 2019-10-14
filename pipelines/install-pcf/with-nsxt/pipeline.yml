@@ -149,12 +149,10 @@ groups:
   - configure-ops-director
   - deploy-director
   - release-opsman-lock
-  - unset-opsman-lock
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
   - install-ops-manager
   - release-upgrade-opsman-lock
-  - unset-opsman-lock
   - upload-nsxt
   - stage-nsxt
   - configure-nsxt
@@ -176,14 +174,14 @@ groups:
   - configure-ops-director
   - deploy-director
   - release-opsman-lock
-  - unset-opsman-lock
+  - unset-lock
 - name: upgrade-opsman
   jobs:
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
   - install-ops-manager
   - release-upgrade-opsman-lock
-  - unset-opsman-lock
+  - unset-lock
 - name: deploy-products
   jobs:
   - upload-nsxt
@@ -961,9 +959,3 @@ jobs:
 
     - put: pipeline-lock
       params: {release: pipeline-lock}
-
-- name: unset-opsman-lock
-  plan:
-  - get: pipeline-lock
-  - put: pipeline-lock
-    params: {release: pipeline-lock}

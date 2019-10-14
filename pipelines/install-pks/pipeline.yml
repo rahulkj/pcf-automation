@@ -354,7 +354,7 @@ jobs:
       unpack: true
     passed: [deploy-director]
   - put: pipeline-lock
-    params: {release: opsman-lock}
+    params: {release: pipeline-lock}
 
 - name: upload-pks
   serial: true
@@ -787,10 +787,10 @@ jobs:
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
     - put: pipeline-lock
-      params: {release: opsman-lock}
+      params: {release: pipeline-lock}
 
 - name: unset-opsman-lock
   plan:
   - get: pipeline-lock
   - put: pipeline-lock
-    params: {release: opsman-lock}
+    params: {release: pipeline-lock}

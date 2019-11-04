@@ -141,7 +141,6 @@ jobs:
       passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -149,7 +148,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env

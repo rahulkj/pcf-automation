@@ -306,7 +306,6 @@ jobs:
       passed: [install-ops-manager]
     - get: config-repo
     - get: platform-automation-image
-      passed: [install-ops-manager]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -314,7 +313,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [install-ops-manager]
     - get: pivnet-product
       resource: ops-manager
       params:
@@ -345,7 +343,6 @@ jobs:
       passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -353,7 +350,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
     - get: pivnet-product
       resource: ops-manager
       params:
@@ -377,16 +373,6 @@ jobs:
   - get: pipeline-lock
     passed: [deploy-director]
     trigger: true
-  - get: platform-automation-image
-    passed: [deploy-director]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [deploy-director]
   - put: pipeline-lock
     params: {release: pipeline-lock}
 
@@ -394,9 +380,10 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: pipeline-lock
+      passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -404,7 +391,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
     - get: nsxt-product
       params:
         globs: [((nsxt_product_glob))]
@@ -426,10 +412,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: pipeline-lock
+      passed: [configure-ops-director]
     - get: config-repo
     - get: automation-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -437,7 +424,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
     - get: pas-product
       params:
         globs: [((pas_product_glob))]
@@ -475,13 +461,30 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
+- name: set-lock
+  plan:
+  - in_parallel:
+    - get: pipeline-lock
+      passed: [deploy-director]
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
+      passed: [upload-pas]
+    - get: nsxt-product
+      params:
+        globs: []
+      trigger: true
+      passed: [upload-nsxt]
+  - put: pipeline-lock
+    params: {acquire: true}
+
 - name: stage-nsxt
   serial: true
   plan:
   - in_parallel:
     - get: config-repo
     - get: platform-automation-image
-      passed: [upload-nsxt, deploy-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -489,12 +492,11 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [upload-nsxt, deploy-director]
     - get: nsxt-product
       params:
         globs: [((nsxt_product_glob))]
       trigger: true
-      passed: [upload-nsxt]
+      passed: [set-lock]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -513,7 +515,6 @@ jobs:
   - in_parallel:
     - get: custom-docker-image
     - get: platform-automation-image
-      passed: [stage-nsxt]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -521,7 +522,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-nsxt]
     - get: config-repo
     - get: automation-repo
     - get: pivnet-product
@@ -551,7 +551,6 @@ jobs:
   - in_parallel:
     - get: config-repo
     - get: platform-automation-image
-      passed: [stage-nsxt]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -559,7 +558,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-nsxt]
     - get: nsxt-product
       params:
         globs: []
@@ -588,7 +586,6 @@ jobs:
   - in_parallel:
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-nsxt]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -596,12 +593,15 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-nsxt]
     - get: pas-product
       params:
         globs: [((pas_product_glob))]
       trigger: true
-      passed: [upload-pas]
+      passed: [set-lock]
+    - get: nsxt-product
+      params:
+        globs: []
+      passed: [stage-nsxt]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -620,7 +620,6 @@ jobs:
   - in_parallel:
     - get: custom-docker-image
     - get: platform-automation-image
-      passed: [stage-pas]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -628,7 +627,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
     - get: config-repo
     - get: automation-repo
     - get: pivnet-product
@@ -658,7 +656,6 @@ jobs:
   - in_parallel:
     - get: config-repo
     - get: platform-automation-image
-      passed: [stage-pas]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -666,7 +663,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
     - get: pas-product
       params:
         globs: []
@@ -691,9 +687,19 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: ((product_vars_path))/((pas_var_filename))
 
-- name: set-lock
+- name: deploy
+  serial: true
   plan:
   - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
     - get: pas-product
       params:
         globs: []
@@ -704,36 +710,6 @@ jobs:
         globs: []
       trigger: true
       passed: [configure-nsxt]
-  - put: pipeline-lock
-    params: {acquire: true}
-
-- name: deploy
-  serial: true
-  plan:
-  - in_parallel:
-    - get: pipeline-lock
-      passed: [set-lock]
-    - get: config-repo
-    - get: platform-automation-image
-      passed: [configure-pas, configure-nsxt]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip"]
-        unpack: true
-      passed: [configure-pas, configure-nsxt]
-    - get: pas-product
-      params:
-        globs: []
-      trigger: true
-      passed: [set-lock]
-    - get: nsxt-product
-      params:
-        globs: []
-      trigger: true
-      passed: [set-lock]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -749,12 +725,17 @@ jobs:
 - name: release-lock
   plan:
   - in_parallel:
-    - get: pas-product
+    - get: pipeline-lock
+      passed: [set-lock]
+    - get: nsxt-product
       params:
         globs: []
       trigger: true
       passed: [deploy]
-    - get: pipeline-lock
+    - get: pas-product
+      params:
+        globs: []
+      trigger: true
       passed: [deploy]
   - in_parallel:
     - put: email
@@ -838,15 +819,6 @@ jobs:
 - name: set-upgrade-opsman-lock
   plan:
   - get: pipeline-lock
-  - get: platform-automation-image
-    passed: [release-opsman-lock]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
     passed: [release-opsman-lock]
   - get: product
     resource: ops-manager
@@ -866,7 +838,6 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
-      passed: [set-upgrade-opsman-lock]
     - get: product
       resource: ops-manager
       trigger: true
@@ -878,7 +849,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [set-upgrade-opsman-lock]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config

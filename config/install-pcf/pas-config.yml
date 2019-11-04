@@ -24,17 +24,17 @@ product-properties:
     value: external
   .properties.credhub_key_encryption_passwords:
     value:
-    - name: ((credhub_key_encryption_name))
-      provider: internal
-      key:
-        secret: ((credhub_key_encryption_secret))
-      primary: ((credhub_key_encryption_is_primary))
+      - name: ((credhub_key_encryption_name))
+        provider: internal
+        key:
+          secret: ((credhub_key_encryption_secret))
+        primary: ((credhub_key_encryption_is_primary))
   .properties.networking_poe_ssl_certs:
     value:
-    - certificate:
-        private_key_pem: ((pcf_wildcard_certificate.private_key))
-        cert_pem: ((pcf_wildcard_certificate.certificate))
-      name: GENERATED-CERTS
+      - certificate:
+          private_key_pem: ((pcf_wildcard_certificate.private_key))
+          cert_pem: ((pcf_wildcard_certificate.certificate))
+        name: GENERATED-CERTS
   .properties.haproxy_forward_tls:
     value: disable
   .properties.push_apps_manager_company_name:
@@ -103,12 +103,12 @@ product-properties:
     value: ((istio_router_static_ips))
   .properties.istio:
     value: enable
-  .properties.istio_frontend_tls_keypairs:                                                             # OPTIONAL
+  .properties.istio_frontend_tls_keypairs: # OPTIONAL
     value:
-    - name: Istio-Generated-Certs
-      certificate:
-        private_key_pem: ((pcf_isito_wildcard_certificate.private_key))
-        cert_pem: ((pcf_isito_wildcard_certificate.certificate))
+      - name: Istio-Generated-Certs
+        certificate:
+          private_key_pem: ((pcf_isito_wildcard_certificate.private_key))
+          cert_pem: ((pcf_isito_wildcard_certificate.certificate))
 resource-config:
   nats:
     instances: 1
@@ -157,7 +157,7 @@ resource-config:
     instance_type:
       id: micro
     additional_vm_extensions:
-    - router-extension
+      - router-extension
   mysql_monitor:
     instances: 1
     instance_type:
@@ -175,7 +175,7 @@ resource-config:
     instance_type:
       id: small
     additional_vm_extensions:
-    - diego-brain-extension
+      - diego-brain-extension
   diego_cell:
     instances: 3
     instance_type:
@@ -217,7 +217,7 @@ resource-config:
     instance_type:
       id: large
     additional_vm_extensions:
-    - istio-extension
+      - istio-extension
 errand-config:
   smoke_tests:
     post-deploy-state: false

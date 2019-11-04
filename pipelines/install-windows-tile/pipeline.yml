@@ -170,8 +170,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: locks
-      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -243,7 +241,6 @@ jobs:
     - get: automation-repo
     - get: custom-docker-image
     - get: platform-automation-image
-      passed: [replicate-inject-upload-and-stage-product]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -251,9 +248,7 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [replicate-inject-upload-and-stage-product]
     - get: config-repo
-      passed: [replicate-inject-upload-and-stage-product]
     - get: pivnet-product
       resource: product
       params:
@@ -279,11 +274,8 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: locks
-      passed: [replicate-inject-upload-and-stage-product]
     - get: config-repo
     - get: platform-automation-image
-      passed: [replicate-inject-upload-and-stage-product]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -291,7 +283,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [replicate-inject-upload-and-stage-product]
     - get: product
       params:
         globs: []
@@ -325,11 +316,8 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: locks
-      passed: [configure-product]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-product]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -337,7 +325,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-product]
     - get: product
       params:
         globs: []
@@ -364,7 +351,7 @@ jobs:
       passed: [deploy-product]
       trigger: true
     - get: locks
-      passed: [deploy-product]
+      passed: [set-lock]
   - in_parallel:
     - put: email
       params:

@@ -278,13 +278,11 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [install-ops-manager]
     - get: pivnet-product
       resource: ops-manager
       params:
         globs: []
       trigger: true
-      passed: [install-ops-manager]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config
@@ -309,7 +307,6 @@ jobs:
       passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -317,7 +314,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
     - get: pivnet-product
       resource: ops-manager
       params:
@@ -341,16 +337,6 @@ jobs:
   - get: pipeline-lock
     passed: [deploy-director]
     trigger: true
-  - get: platform-automation-image
-    passed: [deploy-director]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
-    passed: [deploy-director]
   - put: pipeline-lock
     params: {release: pipeline-lock}
 
@@ -358,10 +344,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: pipeline-lock
+      passed: [configure-ops-director]
     - get: config-repo
     - get: automation-repo
     - get: platform-automation-image
-      passed: [configure-ops-director]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -369,7 +356,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-ops-director]
     - get: pas-product
       params:
         globs: [((pas_product_glob))]
@@ -410,20 +396,13 @@ jobs:
 - name: set-lock
   plan:
   - in_parallel:
+    - get: pipeline-lock
+      passed: [deploy-director]
     - get: pas-product
       params:
         globs: []
       trigger: true
       passed: [upload-pas]
-    - get: platform-automation-image
-      passed: [upload-pas, deploy-director]
-      params:
-        globs: ["*.tgz"]
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        globs: ["*.zip", deploy-director]
-        unpack: true
   - put: pipeline-lock
     params: {acquire: true}
 
@@ -431,11 +410,8 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
-      passed: [set-lock]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -443,7 +419,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [set-lock]
     - get: pas-product
       params:
         globs: [((pas_product_glob))]
@@ -467,7 +442,6 @@ jobs:
   - in_parallel:
     - get: custom-docker-image
     - get: platform-automation-image
-      passed: [stage-pas]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -475,7 +449,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
     - get: config-repo
     - get: automation-repo
     - get: pivnet-product
@@ -503,11 +476,8 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [stage-pas]
     - get: config-repo
     - get: platform-automation-image
-      passed: [stage-pas]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -515,7 +485,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [stage-pas]
     - get: pas-product
       params:
         globs: []
@@ -544,11 +513,8 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [configure-pas]
     - get: config-repo
     - get: platform-automation-image
-      passed: [configure-pas]
       params:
         globs: ["*.tgz"]
         unpack: true
@@ -556,7 +522,6 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [configure-pas]
     - get: pas-product
       params:
         globs: []
@@ -582,7 +547,7 @@ jobs:
     trigger: true
     passed: [deploy]
   - get: pipeline-lock
-    passed: [deploy]
+    passed: [set-lock]
   - in_parallel:
     - put: email
       params:
@@ -665,15 +630,6 @@ jobs:
 - name: set-upgrade-opsman-lock
   plan:
   - get: pipeline-lock
-  - get: platform-automation-image
-    passed: [release-opsman-lock]
-    params:
-      globs: ["*.tgz"]
-      unpack: true
-  - get: platform-automation-tasks
-    params:
-      globs: ["*.zip"]
-      unpack: true
     passed: [release-opsman-lock]
   - get: product
     resource: ops-manager
@@ -693,19 +649,16 @@ jobs:
       params:
         globs: ["*.tgz"]
         unpack: true
-      passed: [set-upgrade-opsman-lock]
     - get: product
       resource: ops-manager
       trigger: true
       params:
         globs:
         - ((opsman_glob))
-      passed: [set-upgrade-opsman-lock]
     - get: platform-automation-tasks
       params:
         globs: ["*.zip"]
         unpack: true
-      passed: [set-upgrade-opsman-lock]
 
   - task: credhub-interpolate-config
     <<: *credhub-interpolate-config

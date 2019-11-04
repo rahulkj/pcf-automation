@@ -214,8 +214,6 @@ jobs:
 - name: generate-ops-manager-config
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [set-opsman-lock]
     - get: automation-repo
     - get: custom-docker-image
     - get: config-repo

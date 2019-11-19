@@ -724,7 +724,6 @@ jobs:
   plan:
   - in_parallel:
     - get: pipeline-lock
-      passed: [set-lock]
     - get: nsxt-product
       params:
         globs: []

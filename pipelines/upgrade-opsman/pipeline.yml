@@ -115,8 +115,6 @@ jobs:
 - name: upgrade-ops-manager
   plan:
   - in_parallel:
-    - get: locks
-      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -202,7 +200,6 @@ jobs:
       passed: [upgrade-ops-manager]
       trigger: true
     - get: locks
-      passed: [upgrade-ops-manager]
   - in_parallel:
     - put: email
       params:

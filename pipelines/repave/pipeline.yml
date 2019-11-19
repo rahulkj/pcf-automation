@@ -137,8 +137,6 @@ jobs:
     - get: schedule
       trigger: true
       passed: [configure-ops-director]
-    - get: locks
-      passed: [configure-ops-director]
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -173,7 +171,6 @@ jobs:
       passed: [apply-changes]
       trigger: true
     - get: locks
-      passed: [apply-changes]
   - put: locks
     params: {release: locks}
 

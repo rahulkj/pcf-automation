@@ -521,8 +521,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [set-lock]
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -557,7 +555,6 @@ jobs:
     trigger: true
     passed: [deploy]
   - get: pipeline-lock
-    passed: [deploy]
   - in_parallel:
     - put: email
       params:

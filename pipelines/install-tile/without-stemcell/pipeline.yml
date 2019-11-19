@@ -296,7 +296,6 @@ jobs:
       passed: [deploy-product]
       trigger: true
     - get: locks
-      passed: [set-product]
     - put: locks
       params: {release: locks}
 

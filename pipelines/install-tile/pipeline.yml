@@ -311,7 +311,6 @@ jobs:
   plan:
   - in_parallel:
     - get: locks
-      passed: [set-lock]
     - get: product
       params:
         globs: []

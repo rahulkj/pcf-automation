@@ -547,7 +547,6 @@ jobs:
     trigger: true
     passed: [deploy]
   - get: pipeline-lock
-    passed: [set-lock]
   - in_parallel:
     - put: email
       params:

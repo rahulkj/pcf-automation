@@ -1,0 +1,323 @@
+resource_types:
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: schedule
+  type: time
+  source:
+    interval: 24h
+    start: "12:00 AM"
+    stop: "11:59 PM"
+    location: America/Los_Angeles
+    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+
+- name: tile-config-convertor
+  type: github-release
+  source:
+    user: rahul-kj
+    repository: tile-config-convertor
+    access_token: ((git_token)) ## Optional: Removing this will cause you to hit the rate limit
+
+- name: config-repo
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_product_bucket))
+    regexp: ((s3_product_regex))        # (.*.((product_version))).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: platform-automation-image
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_image_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: platform-automation-tasks
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_tasks_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: stemcells
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_product_bucket))
+    regexp: stemcells/((s3_stemcells_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: custom-docker-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
+
+- name: locks
+  type: pool
+  source:
+    pool: ((pipeline_lock_folder))
+    uri: ((locks_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+credhub-interpolate: &credhub-interpolate-env
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: config-repo
+  output_mapping:
+    interpolated-files: env
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATHS: ((opsman_env_path))
+
+credhub-interpolate: &credhub-interpolate-config
+  image: platform-automation-image
+  file: platform-automation-tasks/tasks/credhub-interpolate.yml
+  input_mapping:
+    files: config-repo
+  output_mapping:
+    interpolated-files: config
+  params:
+    PREFIX: ((credhub_prefix))
+    CREDHUB_CA_CERT: ((credhub_ca_cert))
+    CREDHUB_CLIENT: ((credhub_client))
+    CREDHUB_SECRET: ((credhub_client_secret))
+    CREDHUB_SERVER: ((credhub_server))
+    INTERPOLATION_PATHS: ((product_config_path))
+
+cli-params: &cli-params
+  params:
+    globs:
+    - "*linux*64*"
+
+jobs:
+- name: scheduler
+  plan:
+  - get: schedule
+    trigger: true
+  - get: product
+    resource: product-bucket
+    params:
+      skip_download: "true"
+
+- name: set-lock
+  plan:
+  - get: product
+    resource: product-bucket
+    passed: [scheduler]
+    trigger: true
+    params:
+      skip_download: "true"
+  - put: locks
+    params: {acquire: true}
+
+- name: upload-and-stage-product
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: product-bucket
+      passed: [set-lock]
+      trigger: true
+    - get: stemcells
+
+  - task: create-opsman-env-file
+    <<: *credhub-interpolate-env
+
+  - in_parallel:
+    - task: upload-and-stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      input_mapping:
+        product: product
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  - task: upload-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      stemcell: stemcells
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+- name: generate-config
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: automation-repo
+    - get: config-repo
+    - get: pivnet-product
+      resource: product-bucket
+      passed: [upload-and-stage-product]
+      params:
+        skip_download: "true"
+    - get: tile-config-convertor
+      <<: *cli-params
+    - get: custom-docker-image
+
+  - task: create-opsman-env-file
+    <<: *credhub-interpolate-env
+
+  - task: generate-config
+    image: custom-docker-image
+    file: automation-repo/tasks/generate-config/task.yml
+    input_mapping:
+      git-repo: automation-repo
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      PRODUCT_NAME: ((product_identifier))
+
+- name: configure-product
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: product-bucket
+      trigger: true
+      passed: [upload-and-stage-product]
+      params:
+        skip_download: "true"
+
+  - task: create-opsman-env-file
+    <<: *credhub-interpolate-env
+
+  - task: create-product-config-file
+    <<: *credhub-interpolate-config
+
+  - task: config-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: config
+      env: env
+      vars: config-repo
+    params:
+      CONFIG_FILE: ((product_config_path))/((product_config_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: ((product_vars_path))/((product_var_filename))
+
+- name: deploy-product
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: product-bucket
+      trigger: true
+      passed: [configure-product]
+      params:
+        skip_download: "true"
+
+  - task: create-opsman-env-file
+    <<: *credhub-interpolate-env
+
+  - task: deploy-product
+    file: automation-repo/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+      config: config-repo
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      APPLY_CHANGES_CONFIG: ((product_config_path))/((apply_changes_config_filename))
+
+  - put: email
+    params:
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: release-lock
+  plan:
+  - in_parallel:
+    - get: locks
+    - get: product
+      resource: product-bucket
+      passed: [deploy-product]
+      trigger: true
+      params:
+        skip_download: "true"
+  - put: locks
+    params: {release: locks}
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

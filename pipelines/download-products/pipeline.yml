@@ -1,0 +1,260 @@
+resource_types:
+- name: pivnet
+  type: docker-image
+  source:
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
+
+resources:
+- name: custom-docker-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
+
+- name: ops-manager
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ops-manager
+    product_version: ((opsman_product_version))
+
+- name: pas-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ((pas_product_slug))
+    product_version: ((pas_product_version))
+
+- name: pks-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ((pks_product_slug))
+    product_version: ((pks_product_version))
+
+- name: harbor-product
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: ((harbor_product_slug))
+    product_version: ((harbor_product_version))
+
+- name: platform-automation-image
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: opsman-product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_opsman_bucket))
+    regexp: (.*).ova
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: pas-product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_pas_bucket))
+    regexp: (.*).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: pas-stemcells-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_pas_bucket))
+    regexp: stemcells/(.*).tgz
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: pks-product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_pks_bucket))
+    regexp: (.*).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: pks-stemcells-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_pks_bucket))
+    regexp: stemcells/(.*).tgz
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: harbor-product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_harbor_bucket))
+    regexp: (.*).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: harbor-stemcells-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_harbor_bucket))
+    regexp: stemcells/(.*).tgz
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+- name: automation-product-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: (.*).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+jobs:
+- name: ops-manager
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: product
+      resource: ops-manager
+      trigger: true
+      params:
+        globs:
+        - "*.ova"
+
+  - put: opsman-product-bucket
+    params:
+      file: product/*.ova
+
+- name: pas
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: custom-docker-image
+    - get: product
+      resource: pas-product
+      trigger: true
+      params:
+        globs:
+        - "cf-*.pivotal"
+  - in_parallel:
+    - task: download-stemcell
+      image: custom-docker-image
+      file: automation-repo/tasks/download-stemcell/task.yml
+      params:
+        PIVNET_API_TOKEN: ((pivnet_token))
+        IAAS_TYPE: ((iaas_type))
+        STEMCELL_TYPE: ((stemcell_type))
+
+    - put: pas-product-bucket
+      params:
+        file: product/*.pivotal
+
+  - put: pas-stemcells-bucket
+    params:
+      file: stemcells/*.tgz
+
+
+- name: pks
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: custom-docker-image
+    - get: product
+      resource: pks-product
+      trigger: true
+      params:
+        globs:
+        - "*.pivotal"
+
+  - in_parallel:
+    - task: download-stemcell
+      image: custom-docker-image
+      file: automation-repo/tasks/download-stemcell/task.yml
+      params:
+        PIVNET_API_TOKEN: ((pivnet_token))
+        IAAS_TYPE: ((iaas_type))
+        STEMCELL_TYPE: ((stemcell_type))
+
+    - put: pks-product-bucket
+      params:
+        file: product/*.pivotal
+
+  - put: pks-stemcells-bucket
+    params:
+      file: stemcells/*.tgz
+
+- name: harbor
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: custom-docker-image
+    - get: product
+      resource: harbor-product
+      trigger: true
+      params:
+        globs:
+        - "*.pivotal"
+
+  - in_parallel:
+    - task: download-stemcell
+      image: custom-docker-image
+      file: automation-repo/tasks/download-stemcell/task.yml
+      params:
+        PIVNET_API_TOKEN: ((pivnet_token))
+        IAAS_TYPE: ((iaas_type))
+        STEMCELL_TYPE: ((stemcell_type))
+
+    - put: harbor-product-bucket
+      params:
+        file: product/*.pivotal
+
+  - put: harbor-stemcells-bucket
+    params:
+      file: stemcells/*.tgz
+
+- name: automation-tasks-image
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+      trigger: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+      trigger: true
+
+  - in_parallel:
+    - put: automation-product-bucket
+      params:
+        file: platform-automation-image/*.tgz
+
+    - put: automation-product-bucket
+      params:
+        file: platform-automation-tasks/*.zip

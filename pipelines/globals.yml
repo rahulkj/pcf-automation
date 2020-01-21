@@ -32,3 +32,12 @@ credhub_secret: ((credhub_client_secret))
 credhub_server: ((credhub_server))
 
 pipeline_lock_folder: pipeline-lock
+
+s3_endpoint: http://((s3_endpoint))/
+s3_access_key: ((s3_access_key))
+s3_secret_key: ((s3_secret_key))
+
+s3_automation_bucket: automation-bucket
+s3_automation_image_regex: platform-automation-image-(.*).tgz
+s3_automation_tasks_regex: platform-automation-tasks-(.*).zip
+s3_stemcells_regex: bosh-stemcell-(.*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz

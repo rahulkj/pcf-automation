@@ -40,34 +40,54 @@ resources:
     password: ((git_token))
 
 - name: ops-manager
-  type: pivnet
+  type: s3
   source:
-    api_token: ((pivnet_token))
-    product_slug: ops-manager
-    product_version: ((opsman_product_version))
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_opsman_product_bucket))
+    regexp: ((s3_opsman_product_regex))        # (.*.((product_version))).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
 
 - name: pks-product
-  type: pivnet
+  type: s3
   source:
-    api_token: ((pivnet_token))
-    product_slug: ((pks_product_slug))
-    product_version: ((pks_product_version))
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_product_bucket))
+    regexp: ((s3_product_regex))        # (.*.((product_version))).pivotal
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
 
 - name: platform-automation-image
-  type: pivnet
+  type: s3
   source:
-    api_token: ((pivnet_token))
-    product_slug: platform-automation
-    product_version: ((platform_automation_version))
-    sort_by: semver
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_image_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
 
 - name: platform-automation-tasks
-  type: pivnet
+  type: s3
   source:
-    api_token: ((pivnet_token))
-    product_slug: platform-automation
-    product_version: ((platform_automation_version))
-    sort_by: semver
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_tasks_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: stemcells
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_product_bucket))
+    regexp: stemcells/((s3_stemcells_regex))      # (.*.((platform_automation_version))).*
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
 
 - name: email
   type: email
@@ -190,7 +210,7 @@ jobs:
     - get: pivnet-product
       resource: ops-manager
       params:
-        globs: []
+        skip_download: "true"
   - put: pipeline-lock
     params: {acquire: true}
 
@@ -280,7 +300,7 @@ jobs:
     - get: pivnet-product
       resource: ops-manager
       params:
-        globs: []
+        skip_download: "true"
       trigger: true
       passed: [install-ops-manager]
 
@@ -317,7 +337,7 @@ jobs:
     - get: pivnet-product
       resource: ops-manager
       params:
-        globs: []
+        skip_download: "true"
       trigger: true
       passed: [configure-ops-director]
 
@@ -360,7 +380,7 @@ jobs:
       params:
         globs: [((pks_product_glob))]
       trigger: true
-    - get: custom-docker-image
+    - get: stemcells
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -373,16 +393,6 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-
-    - task: download-stemcell
-      image: custom-docker-image
-      file: automation-repo/tasks/download-stemcell/task.yml
-      input_mapping:
-        product: pks-product
-      params:
-        PIVNET_API_TOKEN: ((pivnet_token))
-        IAAS_TYPE: ((iaas_type))
-        STEMCELL_TYPE: ((stemcell_type))
 
   - task: upload-stemcell
     image: platform-automation-image
@@ -400,7 +410,7 @@ jobs:
       passed: [upload-pks]
     - get: pks-product
       params:
-        globs: []
+        skip_download: "true"
       trigger: true
       passed: [upload-pks]
     - get: platform-automation-image
@@ -428,8 +438,6 @@ jobs:
         globs: ["*.zip"]
         unpack: true
     - get: pks-product
-      params:
-        globs: [((pks_product_glob))]
       trigger: true
       passed: [set-lock]
 
@@ -462,7 +470,7 @@ jobs:
     - get: pivnet-product
       resource: pks-product
       params:
-        globs: []
+        skip_download: "true"
       passed: [stage-pks]
     - get: tile-config-convertor
       <<: *cli-params
@@ -495,7 +503,7 @@ jobs:
         unpack: true
     - get: pks-product
       params:
-        globs: []
+        skip_download: "true"
       trigger: true
       passed: [stage-pks]
 
@@ -532,7 +540,7 @@ jobs:
         unpack: true
     - get: pks-product
       params:
-        globs: []
+        skip_download: "true"
       trigger: true
       passed: [configure-pks]
 
@@ -551,7 +559,7 @@ jobs:
   plan:
   - get: pks-product
     params:
-      globs: []
+      skip_download: "true"
     trigger: true
     passed: [deploy]
   - get: pipeline-lock
@@ -641,7 +649,7 @@ jobs:
   - get: product
     resource: ops-manager
     params:
-      globs: []
+      skip_download: "true"
     trigger: true
   - put: pipeline-lock
     params: {acquire: true}
@@ -663,9 +671,6 @@ jobs:
     - get: product
       resource: ops-manager
       trigger: true
-      params:
-        globs:
-        - ((opsman_glob))
       passed: [set-upgrade-opsman-lock]
 
   - task: credhub-interpolate-config
@@ -734,7 +739,7 @@ jobs:
     - get: product
       resource: ops-manager
       params:
-        globs: []
+        skip_download: "true"
       passed: [upgrade-ops-manager]
       trigger: true
     - get: pipeline-lock

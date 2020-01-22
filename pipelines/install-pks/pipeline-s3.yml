@@ -47,7 +47,7 @@ resources:
     regexp: ((s3_opsman_product_regex))        # (.*.((product_version))).pivotal
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
-    disable_ssl: true
+    disable_ssl: ((s3_disable_ssl))
 
 - name: pks-product
   type: s3
@@ -57,7 +57,7 @@ resources:
     regexp: ((s3_product_regex))        # (.*.((product_version))).pivotal
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
-    disable_ssl: true
+    disable_ssl: ((s3_disable_ssl))
 
 - name: platform-automation-image
   type: s3
@@ -67,7 +67,7 @@ resources:
     regexp: ((s3_automation_image_regex))      # (.*.((platform_automation_version))).*
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
-    disable_ssl: true
+    disable_ssl: ((s3_disable_ssl))
 
 - name: platform-automation-tasks
   type: s3
@@ -77,7 +77,7 @@ resources:
     regexp: ((s3_automation_tasks_regex))      # (.*.((platform_automation_version))).*
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
-    disable_ssl: true
+    disable_ssl: ((s3_disable_ssl))
 
 - name: stemcells
   type: s3
@@ -87,7 +87,7 @@ resources:
     regexp: stemcells/((s3_stemcells_regex))      # (.*.((platform_automation_version))).*
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
-    disable_ssl: true
+    disable_ssl: ((s3_disable_ssl))
 
 - name: email
   type: email

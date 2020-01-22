@@ -71,6 +71,7 @@ resources:
     regexp: (.*).ova
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 - name: pas-product-bucket
   type: s3
@@ -80,6 +81,7 @@ resources:
     regexp: (.*).pivotal
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 - name: pas-stemcells-bucket
   type: s3
@@ -98,6 +100,7 @@ resources:
     regexp: (.*).pivotal
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 - name: pks-stemcells-bucket
   type: s3
@@ -107,6 +110,7 @@ resources:
     regexp: stemcells/(.*).tgz
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 - name: harbor-product-bucket
   type: s3
@@ -116,6 +120,7 @@ resources:
     regexp: (.*).pivotal
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 - name: harbor-stemcells-bucket
   type: s3
@@ -125,15 +130,27 @@ resources:
     regexp: stemcells/(.*).tgz
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
-- name: automation-product-bucket
+- name: automation-image-bucket
   type: s3
   source:
     endpoint: ((s3_endpoint))
     bucket: ((s3_automation_bucket))
-    regexp: (.*).*
+    regexp: ((s3_automation_image_regex))
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
+
+- name: automation-tasks-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_tasks_regex))
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
 
 jobs:
 - name: ops-manager
@@ -251,10 +268,10 @@ jobs:
       trigger: true
 
   - in_parallel:
-    - put: automation-product-bucket
+    - put: automation-image-bucket
       params:
         file: platform-automation-image/*.tgz
 
-    - put: automation-product-bucket
+    - put: automation-tasks-bucket
       params:
         file: platform-automation-tasks/*.zip

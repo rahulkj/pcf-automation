@@ -155,14 +155,12 @@ resources:
 jobs:
 - name: ops-manager
   plan:
-  - in_parallel:
-    - get: automation-repo
-    - get: product
-      resource: ops-manager
-      trigger: true
-      params:
-        globs:
-        - "*.ova"
+  - get: product
+    resource: ops-manager
+    trigger: true
+    params:
+      globs:
+      - "*.ova"
 
   - put: opsman-product-bucket
     params:

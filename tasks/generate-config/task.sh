@@ -9,9 +9,10 @@ TCC_CMD=./tile-config-convertor/tile-config-convertor_linux_amd64
 function cleanAndEchoProperties {
   INPUT=$1
   OUTPUT=$2
+  VARS_OUTPUT=$3
 
   echo "$PROPERTIES" >> $INPUT
-  $TCC_CMD -g properties -i $INPUT -o $OUTPUT
+  $TCC_CMD -c properties -i $INPUT -o $OUTPUT -ov $VARS_OUTPUT
 
   sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
@@ -21,9 +22,10 @@ function cleanAndEchoProperties {
 function cleanAndEchoResources() {
   INPUT=$1
   OUTPUT=$2
+  VARS_OUTPUT=$3
 
   echo "$RESOURCES" >> $INPUT
-  $TCC_CMD -g resources -i $INPUT -o $OUTPUT
+  $TCC_CMD -c resources -i $INPUT -o $OUTPUT -ov $VARS_OUTPUT
 
   sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
@@ -33,9 +35,10 @@ function cleanAndEchoResources() {
 function cleanAndEchoErrands() {
   INPUT=$1
   OUTPUT=$2
+  VARS_OUTPUT=$3
 
   echo "$ERRANDS" >> $INPUT
-  $TCC_CMD -g errands -i $INPUT -o $OUTPUT
+  $TCC_CMD -c errands -i $INPUT -o $OUTPUT -ov $VARS_OUTPUT
 
   sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
@@ -44,8 +47,9 @@ function cleanAndEchoErrands() {
 
 function echoNetworkTemplate() {
   OUTPUT=$1
+  VARS_OUTPUT=$2
 
-  $TCC_CMD -g network-azs -o $OUTPUT
+  $TCC_CMD -c network-azs -o $OUTPUT -ov $VARS_OUTPUT
 
   sed -i -e 's/^/  /' $OUTPUT
   cat $OUTPUT
@@ -68,9 +72,22 @@ function applyChangesConfig() {
 
   echo "  ignore_warnings: true" >> "$APPLY_CHANGES_CONFIG_YML"
 
+  echo "---"
   echo "# Apply Changes Config for $PRODUCT_NAME are:"
   cat $APPLY_CHANGES_CONFIG_YML
   echo ""
+}
+
+function echoVars {
+  PRODUCT_NAME=$1
+
+  echo ""
+  echo "---"
+  cat "$PRODUCT_NAME-nw-azs-vars.yml"
+  cat "$PRODUCT_NAME-properties-vars.yml"
+  cat "$PRODUCT_NAME-resources-vars.yml"
+  cat "$PRODUCT_NAME-errands-vars.yml"
+  #statements
 }
 
 CURL_CMD="$OM_CMD --env env/"${ENV_FILE}" curl -s -p"
@@ -89,13 +106,15 @@ RESOURCES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/resources)
 ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands)
 
 ## Cleanup all the stuff, and echo on the console
+echo "---"
 echo "product_config: |"
 echo "  product-name: $PRODUCT_NAME"
-echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml"
-cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml"
-cleanAndEchoResources "$PRODUCT_NAME-resources.json" "$PRODUCT_NAME-resources.yml"
-cleanAndEchoErrands "$PRODUCT_NAME-errands.json" "$PRODUCT_NAME-errands.yml"
+echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml" "$PRODUCT_NAME-nw-azs-vars.yml"
+cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml" "$PRODUCT_NAME-properties-vars.yml"
+cleanAndEchoResources "$PRODUCT_NAME-resources.json" "$PRODUCT_NAME-resources.yml" "$PRODUCT_NAME-resources-vars.yml"
+cleanAndEchoErrands "$PRODUCT_NAME-errands.json" "$PRODUCT_NAME-errands.yml" "$PRODUCT_NAME-errands-vars.yml"
 applyChangesConfig
+echoVars $PRODUCT_NAME
 
 
 ## Clean-up the container

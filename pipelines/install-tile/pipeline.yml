@@ -106,20 +106,21 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_SERVER: ((credhub_server))
     INTERPOLATION_PATHS: ((opsman_env_path))
 
-credhub-interpolate: &credhub-interpolate-config
+credhub-interpolate: &credhub-interpolate-vars
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
     files: config-repo
   output_mapping:
-    interpolated-files: config
+    interpolated-files: vars
   params:
     PREFIX: ((credhub_prefix))
     CREDHUB_CA_CERT: ((credhub_ca_cert))
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATHS: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_vars_path))
+    SKIP_MISSING: true
 
 cli-params: &cli-params
   params:
@@ -255,20 +256,20 @@ jobs:
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
 
-  - task: create-product-config-file
-    <<: *credhub-interpolate-config
+  - task: create-product-var-files
+    <<: *credhub-interpolate-vars
 
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
-      config: config
+      config: config-repo
       env: env
-      vars: config-repo
+      vars: vars
     params:
       CONFIG_FILE: ((product_config_path))/((product_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      VARS_FILES: ((product_vars_path))/((product_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((product_var_filename))
 
 - name: deploy-product
   serial: true
@@ -301,6 +302,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       APPLY_CHANGES_CONFIG: ((product_config_path))/((apply_changes_config_filename))
+    attempts: 20
 
   - put: email
     params:

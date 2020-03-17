@@ -157,6 +157,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    attempts: 20
 
   - put: email
     params:
@@ -169,7 +170,6 @@ jobs:
     - get: schedule
       trigger: true
       passed: [apply-changes]
-      trigger: true
     - get: locks
   - put: locks
     params: {release: locks}

@@ -132,21 +132,23 @@ credhub-interpolate: &credhub-interpolate-env
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
     INTERPOLATION_PATHS: ((opsman_env_path))
+    SKIP_MISSING: true
 
-credhub-interpolate: &credhub-interpolate-config
+credhub-interpolate: &credhub-interpolate-vars
   image: platform-automation-image
   file: platform-automation-tasks/tasks/credhub-interpolate.yml
   input_mapping:
     files: config-repo
   output_mapping:
-    interpolated-files: config
+    interpolated-files: vars
   params:
     PREFIX: ((credhub_prefix))
     CREDHUB_CA_CERT: ((credhub_ca_cert))
     CREDHUB_CLIENT: ((credhub_client))
     CREDHUB_SECRET: ((credhub_client_secret))
     CREDHUB_SERVER: ((credhub_server))
-    INTERPOLATION_PATHS: ((product_config_path))
+    INTERPOLATION_PATHS: ((product_vars_path))
+    SKIP_MISSING: true
 
 cli-params: &cli-params
   params:
@@ -239,8 +241,8 @@ jobs:
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
 
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
+  - task: credhub-interpolate-vars
+    <<: *credhub-interpolate-vars
 
   - task: deploy-opsmanager-vm
     image: platform-automation-image
@@ -248,12 +250,12 @@ jobs:
     input_mapping:
       state: config-repo
       image: pivnet-product
-      config: config
-      vars: config-repo
+      config: config-repo
+      vars: vars
     params:
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_filename))
-      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -276,11 +278,11 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-authentication.yml
     input_mapping:
-      config: config
+      config: vars
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      AUTH_CONFIG_FILE: ((product_config_path))/((opsman_auth_filename))
+      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
     attempts: 20
 
 - name: configure-ops-director
@@ -304,19 +306,20 @@ jobs:
       trigger: true
       passed: [install-ops-manager]
 
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
-
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
+
+  - task: credhub-interpolate-vars
+    <<: *credhub-interpolate-vars
 
   - task: configure-ops-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     input_mapping:
-      vars: config-repo
+      config: config-repo
+      vars: vars
     params:
-      VARS_FILES: ((product_vars_path))/((ops_director_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((ops_director_var_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
 
@@ -351,6 +354,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    attempts: 20
 
 - name: release-opsman-lock
   plan:
@@ -510,20 +514,20 @@ jobs:
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
 
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
+  - task: credhub-interpolate-vars
+    <<: *credhub-interpolate-vars
 
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
-      config: config
+      config: config-repo
       env: env
-      vars: config-repo
+      vars: vars
     params:
       CONFIG_FILE: ((product_config_path))/((pks_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      VARS_FILES: ((product_vars_path))/((pks_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((pks_var_filename))
 
 - name: deploy
   serial: true
@@ -554,6 +558,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    attempts: 20
 
 - name: release-lock
   plan:
@@ -584,15 +589,12 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
-    - get: ops-manager
-      params:
-        globs: []
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
 
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
+  - task: credhub-interpolate-vars
+    <<: *credhub-interpolate-vars
 
   - task: delete-products
     image: platform-automation-image
@@ -607,12 +609,12 @@ jobs:
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
       state: config-repo
-      config: config
-      vars: config-repo
+      config: config-repo
+      vars: vars
     params:
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
-      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -673,11 +675,11 @@ jobs:
       trigger: true
       passed: [set-upgrade-opsman-lock]
 
-  - task: credhub-interpolate-config
-    <<: *credhub-interpolate-config
-
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
+
+  - task: credhub-interpolate-vars
+    <<: *credhub-interpolate-vars
 
   - task: export-installation
     image: platform-automation-image
@@ -695,17 +697,17 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/upgrade-opsman.yml
     input_mapping:
-      config: config
+      config: config-repo
       env: env
       image: product
       state: config-repo
       installation: installation
-      vars: config-repo
+      vars: vars
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
-      VARS_FILES: ((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -732,6 +734,7 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      attempts: 20
 
 - name: release-upgrade-opsman-lock
   plan:

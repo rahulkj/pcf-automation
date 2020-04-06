@@ -293,7 +293,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
-    attempts: 20
+    attempts: ((attempts))
 
 - name: configure-ops-director
   plan:
@@ -364,7 +364,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-    attempts: 20
+    attempts: ((attempts))
 
 - name: release-opsman-lock
   plan:
@@ -721,7 +721,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-    attempts: 20
+    attempts: ((attempts))
 
 - name: release-lock
   plan:
@@ -906,7 +906,7 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      attempts: 20
+      attempts: ((attempts))
 
 - name: release-upgrade-opsman-lock
   plan:

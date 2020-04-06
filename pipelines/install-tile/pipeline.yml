@@ -302,7 +302,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       APPLY_CHANGES_CONFIG: ((product_config_path))/((apply_changes_config_filename))
-    attempts: 20
+    attempts: ((attempts))
 
   - put: email
     params:

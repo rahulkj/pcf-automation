@@ -1,0 +1,367 @@
+#@ load("@ytt:data", "data")
+resource_types:
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: schedule
+  type: time
+  source:
+    interval: 24h
+    start: "12:00 AM"
+    stop: "11:59 PM"
+    location: America/Los_Angeles
+    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+
+- name: tile-config-convertor
+  type: github-release
+  source:
+    user: rahulkj
+    repository: tile-config-convertor
+    access_token: ((git_token))
+
+- name: config-repo
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: platform-automation-image
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_image_regex))
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: platform-automation-tasks
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_automation_bucket))
+    regexp: ((s3_automation_tasks_regex))
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+- name: custom-docker-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
+
+- name: locks
+  type: pool
+  source:
+    pool: ((pipeline_lock_folder))
+    uri: ((locks_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+#@ for product in data.values.products:
+- name: #@ product.name
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+
+#@ if/end product.has_stemcell == True:
+- name: #@ product.name + "-stemcells"
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: ((s3_disable_ssl))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+#@ end
+
+jobs:
+- name: scheduler
+  plan:
+  - get: schedule
+    trigger: true
+  #@ for/end product in data.values.products:
+  - get: #@ product.name
+    resource: #@ product.name
+    params:
+      skip_download: "true"
+
+#@ for product in data.values.products:
+- name: #@ "set-lock-" + product.name
+  plan:
+  - get: #@ product.name
+    resource: #@ product.name
+    passed: [scheduler]
+    trigger: true
+    params:
+      skip_download: "true"
+  - put: locks
+    params: {acquire: true}
+
+- name: #@ "upload-and-stage-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      passed:
+      - #@ "set-lock-" + product.name
+      trigger: true
+    #@ if/end product.has_stemcell == True:
+    - get: #@ product.name + "-stemcells"
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - in_parallel:
+    - task: upload-and-stage-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      input_mapping:
+        product: product
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  #@ if/end product.has_stemcell == True:
+  - task: upload-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      stemcell: stemcells
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+- name: #@ "generate-config-" + product.name
+  plan:
+  - in_parallel:
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: automation-repo
+    - get: config-repo
+    - get: pivnet-product
+      resource: #@ product.name
+      passed:
+      - #@ "upload-and-stage-" + product.name
+      params:
+        skip_download: "true"
+    - get: tile-config-convertor
+      params:
+        globs:
+        - "*linux*64*"
+
+    - get: custom-docker-image
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: generate-config
+    image: custom-docker-image
+    file: automation-repo/tasks/generate-config/task.yml
+    input_mapping:
+      git-repo: automation-repo
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      PRODUCT_NAME: #@ "((" + product.name + "_product_identifier))"
+
+- name: #@ "configure-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      trigger: true
+      passed:
+      - #@ "upload-and-stage-" + product.name
+      params:
+        skip_download: "true"
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: create-product-var-files
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: config-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: config-repo
+      env: env
+      vars: vars
+    params:
+      CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: #@ "((vars_folder))/((" + product.name + "_product_vars_path))/((" + product.name + "_product_var_filename))"
+
+- name: #@ "deploy-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      trigger: true
+      passed:
+      - #@ "configure-" + product.name
+      params:
+        skip_download: "true"
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: deploy-product
+    file: automation-repo/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+      config: config-repo
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      APPLY_CHANGES_CONFIG: #@ "((" + product.name + "_config_path))/((apply_changes_config_filename))"
+    attempts: ((attempts))
+
+  - put: email
+    params:
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: #@ "release-lock-" + product.name
+  plan:
+  - in_parallel:
+    - get: locks
+    - get: product
+      resource: #@ product.name
+      passed:
+      - #@ "deploy-" + product.name
+      trigger: true
+      params:
+        skip_download: "true"
+  - put: locks
+    params: {release: locks}
+#@ end
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

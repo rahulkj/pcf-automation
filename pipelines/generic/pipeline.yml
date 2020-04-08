@@ -19,12 +19,6 @@ resources:
     - Thursday
     - Friday
     - Saturday
-- name: tile-config-convertor
-  type: github-release
-  source:
-    user: rahulkj
-    repository: tile-config-convertor
-    access_token: ((git_token))
 - name: config-repo
   type: git
   source:
@@ -57,10 +51,6 @@ resources:
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: true
-- name: custom-docker-image
-  type: docker-image
-  source:
-    repository: rjain/buildbox
 - name: locks
   type: pool
   source:
@@ -151,7 +141,7 @@ jobs:
     resource: harbor
     params:
       skip_download: "true"
-- name: set-lock-pas
+- name: set-lock
   plan:
   - get: pas
     resource: pas
@@ -160,10 +150,24 @@ jobs:
     trigger: true
     params:
       skip_download: "true"
+  - get: pks
+    resource: pks
+    passed:
+    - scheduler
+    trigger: true
+    params:
+      skip_download: "true"
+  - get: harbor
+    resource: harbor
+    passed:
+    - scheduler
+    trigger: true
+    params:
+      skip_download: "true"
   - put: locks
     params:
       acquire: true
-- name: upload-and-stage-pas
+- name: upload-pas
   serial: true
   plan:
   - in_parallel:
@@ -178,7 +182,7 @@ jobs:
     - get: product
       resource: pas
       passed:
-      - set-lock-pas
+      - set-lock
       trigger: true
     - get: pas-stemcells
   - task: create-opsman-env-file
@@ -196,72 +200,28 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((opsman_env_path))
   - in_parallel:
-    - task: upload-and-stage-product
+    - task: upload-product
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: product
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-  - task: upload-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      stemcell: stemcells
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-- name: generate-config-pas
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
+    - task: upload-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        stemcell: stemcells
+        env: env
       params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: automation-repo
-    - get: config-repo
-    - get: pivnet-product
-      resource: pas
-      passed:
-      - upload-and-stage-pas
-      params:
-        skip_download: "true"
-    - get: tile-config-convertor
-      params:
-        globs:
-        - '*linux*64*'
-    - get: custom-docker-image
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
-  - task: generate-config
-    image: custom-docker-image
-    file: automation-repo/tasks/generate-config/task.yml
-    input_mapping:
-      git-repo: automation-repo
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((pas_product_identifier))
-- name: configure-pas
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+- name: stage-configure-deploy-pas
   serial: true
   plan:
   - in_parallel:
     - get: config-repo
+    - get: automation-repo
     - get: platform-automation-image
       params:
         unpack: true
@@ -270,11 +230,9 @@ jobs:
         unpack: true
     - get: product
       resource: pas
-      trigger: true
       passed:
-      - upload-and-stage-pas
-      params:
-        skip_download: "true"
+      - upload-pas
+      trigger: true
   - task: create-opsman-env-file
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -304,6 +262,14 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((product_vars_path))
       SKIP_MISSING: true
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -315,39 +281,6 @@ jobs:
       CONFIG_FILE: ((pas_product_config_path))/((pas_product_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: ((vars_folder))/((pas_product_vars_path))/((pas_product_var_filename))
-- name: deploy-pas
-  serial: true
-  plan:
-  - in_parallel:
-    - get: config-repo
-    - get: automation-repo
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: product
-      resource: pas
-      trigger: true
-      passed:
-      - configure-pas
-      params:
-        skip_download: "true"
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
@@ -368,26 +301,14 @@ jobs:
     - get: product
       resource: pas
       passed:
-      - deploy-pas
+      - stage-configure-deploy-pas
       trigger: true
       params:
         skip_download: "true"
   - put: locks
     params:
       release: locks
-- name: set-lock-pks
-  plan:
-  - get: pks
-    resource: pks
-    passed:
-    - scheduler
-    trigger: true
-    params:
-      skip_download: "true"
-  - put: locks
-    params:
-      acquire: true
-- name: upload-and-stage-pks
+- name: upload-pks
   serial: true
   plan:
   - in_parallel:
@@ -402,7 +323,7 @@ jobs:
     - get: product
       resource: pks
       passed:
-      - set-lock-pks
+      - set-lock
       trigger: true
     - get: pks-stemcells
   - task: create-opsman-env-file
@@ -420,72 +341,28 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((opsman_env_path))
   - in_parallel:
-    - task: upload-and-stage-product
+    - task: upload-product
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: product
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-  - task: upload-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      stemcell: stemcells
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-- name: generate-config-pks
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
+    - task: upload-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        stemcell: stemcells
+        env: env
       params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: automation-repo
-    - get: config-repo
-    - get: pivnet-product
-      resource: pks
-      passed:
-      - upload-and-stage-pks
-      params:
-        skip_download: "true"
-    - get: tile-config-convertor
-      params:
-        globs:
-        - '*linux*64*'
-    - get: custom-docker-image
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
-  - task: generate-config
-    image: custom-docker-image
-    file: automation-repo/tasks/generate-config/task.yml
-    input_mapping:
-      git-repo: automation-repo
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((pks_product_identifier))
-- name: configure-pks
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+- name: stage-configure-deploy-pks
   serial: true
   plan:
   - in_parallel:
     - get: config-repo
+    - get: automation-repo
     - get: platform-automation-image
       params:
         unpack: true
@@ -494,11 +371,9 @@ jobs:
         unpack: true
     - get: product
       resource: pks
-      trigger: true
       passed:
-      - upload-and-stage-pks
-      params:
-        skip_download: "true"
+      - upload-pks
+      trigger: true
   - task: create-opsman-env-file
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -528,6 +403,14 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((product_vars_path))
       SKIP_MISSING: true
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -539,39 +422,6 @@ jobs:
       CONFIG_FILE: ((pks_product_config_path))/((pks_product_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: ((vars_folder))/((pks_product_vars_path))/((pks_product_var_filename))
-- name: deploy-pks
-  serial: true
-  plan:
-  - in_parallel:
-    - get: config-repo
-    - get: automation-repo
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: product
-      resource: pks
-      trigger: true
-      passed:
-      - configure-pks
-      params:
-        skip_download: "true"
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
@@ -592,26 +442,14 @@ jobs:
     - get: product
       resource: pks
       passed:
-      - deploy-pks
+      - stage-configure-deploy-pks
       trigger: true
       params:
         skip_download: "true"
   - put: locks
     params:
       release: locks
-- name: set-lock-harbor
-  plan:
-  - get: harbor
-    resource: harbor
-    passed:
-    - scheduler
-    trigger: true
-    params:
-      skip_download: "true"
-  - put: locks
-    params:
-      acquire: true
-- name: upload-and-stage-harbor
+- name: upload-harbor
   serial: true
   plan:
   - in_parallel:
@@ -626,7 +464,7 @@ jobs:
     - get: product
       resource: harbor
       passed:
-      - set-lock-harbor
+      - set-lock
       trigger: true
     - get: harbor-stemcells
   - task: create-opsman-env-file
@@ -644,72 +482,28 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((opsman_env_path))
   - in_parallel:
-    - task: upload-and-stage-product
+    - task: upload-product
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: product
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-  - task: upload-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      stemcell: stemcells
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-- name: generate-config-harbor
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
+    - task: upload-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        stemcell: stemcells
+        env: env
       params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: automation-repo
-    - get: config-repo
-    - get: pivnet-product
-      resource: harbor
-      passed:
-      - upload-and-stage-harbor
-      params:
-        skip_download: "true"
-    - get: tile-config-convertor
-      params:
-        globs:
-        - '*linux*64*'
-    - get: custom-docker-image
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
-  - task: generate-config
-    image: custom-docker-image
-    file: automation-repo/tasks/generate-config/task.yml
-    input_mapping:
-      git-repo: automation-repo
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((harbor_product_identifier))
-- name: configure-harbor
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+- name: stage-configure-deploy-harbor
   serial: true
   plan:
   - in_parallel:
     - get: config-repo
+    - get: automation-repo
     - get: platform-automation-image
       params:
         unpack: true
@@ -718,11 +512,9 @@ jobs:
         unpack: true
     - get: product
       resource: harbor
-      trigger: true
       passed:
-      - upload-and-stage-harbor
-      params:
-        skip_download: "true"
+      - upload-harbor
+      trigger: true
   - task: create-opsman-env-file
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -752,6 +544,14 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((product_vars_path))
       SKIP_MISSING: true
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -763,39 +563,6 @@ jobs:
       CONFIG_FILE: ((harbor_product_config_path))/((harbor_product_config_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: ((vars_folder))/((harbor_product_vars_path))/((harbor_product_var_filename))
-- name: deploy-harbor
-  serial: true
-  plan:
-  - in_parallel:
-    - get: config-repo
-    - get: automation-repo
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: product
-      resource: harbor
-      trigger: true
-      passed:
-      - configure-harbor
-      params:
-        skip_download: "true"
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
@@ -816,7 +583,7 @@ jobs:
     - get: product
       resource: harbor
       passed:
-      - deploy-harbor
+      - stage-configure-deploy-harbor
       trigger: true
       params:
         skip_download: "true"

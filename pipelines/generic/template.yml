@@ -15,13 +15,6 @@ resources:
     location: America/Los_Angeles
     days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
 
-- name: tile-config-convertor
-  type: github-release
-  source:
-    user: rahulkj
-    repository: tile-config-convertor
-    access_token: ((git_token))
-
 - name: config-repo
   type: git
   source:
@@ -57,11 +50,6 @@ resources:
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: true
-
-- name: custom-docker-image
-  type: docker-image
-  source:
-    repository: rjain/buildbox
 
 - name: locks
   type: pool
@@ -117,19 +105,25 @@ jobs:
     params:
       skip_download: "true"
 
-#@ for product in data.values.products:
-- name: #@ "set-lock-" + product.name
+- name: set-lock
   plan:
+  #@ for/end product in data.values.products:
   - get: #@ product.name
     resource: #@ product.name
-    passed: [scheduler]
+    passed:
+    - scheduler
     trigger: true
     params:
       skip_download: "true"
   - put: locks
     params: {acquire: true}
 
-- name: #@ "upload-and-stage-" + product.name
+#@ for product in data.values.products:
+#@ index=data.values.products.index(product)
+#@ if index != 0:
+#@  product_prev=data.values.products[index-1]
+#@ end
+- name: #@ "upload-" + product.name
   serial: true
   plan:
   - in_parallel:
@@ -144,7 +138,7 @@ jobs:
     - get: product
       resource: #@ product.name
       passed:
-      - #@ "set-lock-" + product.name
+      - set-lock
       trigger: true
     #@ if/end product.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
@@ -165,79 +159,31 @@ jobs:
       INTERPOLATION_PATHS: ((opsman_env_path))
 
   - in_parallel:
-    - task: upload-and-stage-product
+    - task: upload-product
       image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-and-stage-product.yml
+      file: platform-automation-tasks/tasks/upload-product.yml
       input_mapping:
         product: product
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-  #@ if/end product.has_stemcell == True:
-  - task: upload-stemcell
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-stemcell.yml
-    input_mapping:
-      stemcell: stemcells
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-
-- name: #@ "generate-config-" + product.name
-  plan:
-  - in_parallel:
-    - get: platform-automation-image
+    #@ if/end product.has_stemcell == True:
+    - task: upload-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        stemcell: stemcells
+        env: env
       params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: automation-repo
-    - get: config-repo
-    - get: pivnet-product
-      resource: #@ product.name
-      passed:
-      - #@ "upload-and-stage-" + product.name
-      params:
-        skip_download: "true"
-    - get: tile-config-convertor
-      params:
-        globs:
-        - "*linux*64*"
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
-    - get: custom-docker-image
-
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
-
-  - task: generate-config
-    image: custom-docker-image
-    file: automation-repo/tasks/generate-config/task.yml
-    input_mapping:
-      git-repo: automation-repo
-      env: env
-    params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: #@ "((" + product.name + "_product_identifier))"
-
-- name: #@ "configure-" + product.name
+- name: #@ "stage-configure-deploy-" + product.name
   serial: true
   plan:
   - in_parallel:
     - get: config-repo
+    - get: automation-repo
     - get: platform-automation-image
       params:
         unpack: true
@@ -246,11 +192,9 @@ jobs:
         unpack: true
     - get: product
       resource: #@ product.name
-      trigger: true
       passed:
-      - #@ "upload-and-stage-" + product.name
-      params:
-        skip_download: "true"
+      - #@ "upload-" + product.name
+      trigger: true
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -283,6 +227,15 @@ jobs:
       INTERPOLATION_PATHS: ((product_vars_path))
       SKIP_MISSING: true
 
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
   - task: config-product
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
@@ -294,41 +247,6 @@ jobs:
       CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_product_vars_path))/((" + product.name + "_product_var_filename))"
-
-- name: #@ "deploy-" + product.name
-  serial: true
-  plan:
-  - in_parallel:
-    - get: config-repo
-    - get: automation-repo
-    - get: platform-automation-image
-      params:
-        unpack: true
-    - get: platform-automation-tasks
-      params:
-        unpack: true
-    - get: product
-      resource: #@ product.name
-      trigger: true
-      passed:
-      - #@ "configure-" + product.name
-      params:
-        skip_download: "true"
-
-  - task: create-opsman-env-file
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/credhub-interpolate.yml
-    input_mapping:
-      files: config-repo
-    output_mapping:
-      interpolated-files: env
-    params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
 
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
@@ -352,7 +270,7 @@ jobs:
     - get: product
       resource: #@ product.name
       passed:
-      - #@ "deploy-" + product.name
+      - #@ "stage-configure-deploy-" + product.name
       trigger: true
       params:
         skip_download: "true"

@@ -162,10 +162,10 @@ jobs:
       trigger: true
       params:
         globs:
-        - '*.pivotal'
+        - cf-*.pivotal
   - put: pas-product-bucket
     params:
-      file: product/*.pivotal
+      file: product/cf-*.pivotal
   - task: download-stemcell
     image: custom-docker-image
     file: automation-repo/tasks/download-stemcell/task.yml

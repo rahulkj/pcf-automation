@@ -12,7 +12,7 @@ products:
 - name: pas
   slug: ((pas_product_slug))
   version: ((pas_product_version))
-  glob: "*.pivotal"
+  glob: "cf-*.pivotal"
   s3_bucket: ((s3_pas_bucket))
   s3_product_regex: "(.*).pivotal"
   s3_stemcells_regex: "(.*).tgz"

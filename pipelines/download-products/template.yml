@@ -7,19 +7,6 @@ resource_types:
     tag: latest-final
 
 resources:
-- name: custom-docker-image
-  type: docker-image
-  source:
-    repository: rjain/buildbox
-
-- name: automation-repo
-  type: git
-  source:
-    uri: ((automation_git_url))
-    branch: ((git_branch))
-    username: ((git_username))
-    password: ((git_token))
-
 #@ for product in data.values.products:
 - name: #@ product.name
   type: pivnet
@@ -40,6 +27,14 @@ resources:
     disable_ssl: ((s3_disable_ssl))
 
 #@ if product.has_stemcell == True:
+- name: #@ product.name + "-stemcell"
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: #@ product.stemcell_slug
+    product_version: #@ product.stemcell_version
+    sort_by: semver
+
 - name: #@ product.name + "-stemcells"
   type: s3
   source:
@@ -53,14 +48,10 @@ resources:
 #@ end
 
 jobs:
-#@ for/end product in data.values.products:
+#@ for product in data.values.products:
 - name: #@ product.name
   plan:
   - in_parallel:
-    #@ if/end product.has_stemcell == True:
-    - get: automation-repo
-    #@ if/end product.has_stemcell == True:
-    - get: custom-docker-image
     - get: product
       resource: #@ product.name
       trigger: true
@@ -72,15 +63,25 @@ jobs:
     params:
       file: #@ "product/" + product.glob
 
-  #@ if/end product.has_stemcell == True:
-  - task: download-stemcell
-    image: custom-docker-image
-    file: automation-repo/tasks/download-stemcell/task.yml
-    params:
-      PIVNET_API_TOKEN: ((pivnet_token))
-      IAAS_TYPE: ((iaas_type))
-      STEMCELL_TYPE: ((stemcell_type))
-  #@ if/end product.has_stemcell == True:
+#@ if product.has_stemcell == True:
+- name: #@ product.name + "-stemcell"
+  plan:
+  - in_parallel:
+    - get: stemcells
+      resource: #@ product.name + "-stemcell"
+      trigger: true
+      params:
+        globs:
+        - #@ product.s3_glob
+    - get: product
+      resource: #@ product.name
+      params:
+        globs: []
+      passed:
+      - #@ product.name
+
   - put: #@ product.name + "-stemcells"
     params:
       file: stemcells/*.tgz
+#@ end
+#@ end

@@ -147,6 +147,7 @@ jobs:
     resource: product-bucket
     params:
       skip_download: "true"
+  - get: stemcells
 
 - name: set-lock
   plan:
@@ -156,6 +157,9 @@ jobs:
     trigger: true
     params:
       skip_download: "true"
+  - get: stemcells
+    trigger: true
+    passed: [scheduler]
   - put: locks
     params: {acquire: true}
 
@@ -176,6 +180,8 @@ jobs:
       passed: [set-lock]
       trigger: true
     - get: stemcells
+      trigger: true
+      passed: [set-lock]
 
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
@@ -249,6 +255,11 @@ jobs:
       passed: [upload-and-stage-product]
       params:
         skip_download: "true"
+    - get: stemcells
+      trigger: true
+      passed: [upload-and-stage-product]
+      params:
+        skip_download: "true"
 
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
@@ -286,6 +297,11 @@ jobs:
       passed: [configure-product]
       params:
         skip_download: "true"
+    - get: stemcells
+      trigger: true
+      passed: [configure-product]
+      params:
+        skip_download: "true"
 
   - task: create-opsman-env-file
     <<: *credhub-interpolate-env
@@ -315,6 +331,12 @@ jobs:
       trigger: true
       params:
         skip_download: "true"
+    - get: stemcells
+      trigger: true
+      passed: [deploy-product]
+      params:
+        skip_download: "true"
+
   - put: locks
     params: {release: locks}
 

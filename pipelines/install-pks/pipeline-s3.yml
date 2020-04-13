@@ -368,7 +368,11 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: pipeline-lock
+    - get: pivnet-product
+      resource: ops-manager
+      params:
+        skip_download: "true"
+      trigger: true
       passed: [configure-ops-director]
     - get: config-repo
     - get: automation-repo
@@ -385,6 +389,7 @@ jobs:
         globs: [((pks_product_glob))]
       trigger: true
     - get: stemcells
+      trigger: true
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -411,10 +416,12 @@ jobs:
   plan:
   - in_parallel:
     - get: pipeline-lock
-      passed: [upload-pks]
     - get: pks-product
       params:
         skip_download: "true"
+      trigger: true
+      passed: [upload-pks]
+    - get: stemcells
       trigger: true
       passed: [upload-pks]
     - get: platform-automation-image
@@ -443,6 +450,11 @@ jobs:
         unpack: true
     - get: pks-product
       trigger: true
+      passed: [set-lock]
+    - get: stemcells
+      trigger: true
+      params:
+        skip_download: "true"
       passed: [set-lock]
 
   - task: credhub-interpolate-env
@@ -510,6 +522,11 @@ jobs:
         skip_download: "true"
       trigger: true
       passed: [stage-pks]
+    - get: stemcells
+      params:
+        skip_download: "true"
+      trigger: true
+      passed: [stage-pks]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -547,6 +564,11 @@ jobs:
         skip_download: "true"
       trigger: true
       passed: [configure-pks]
+    - get: stemcells
+      params:
+        skip_download: "true"
+      trigger: true
+      passed: [configure-pks]
 
   - task: credhub-interpolate-env
     <<: *credhub-interpolate-env
@@ -563,6 +585,11 @@ jobs:
 - name: release-lock
   plan:
   - get: pks-product
+    params:
+      skip_download: "true"
+    trigger: true
+    passed: [deploy]
+  - get: stemcells
     params:
       skip_download: "true"
     trigger: true

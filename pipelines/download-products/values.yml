@@ -15,7 +15,10 @@ products:
   glob: "cf-*.pivotal"
   s3_bucket: ((s3_pas_bucket))
   s3_product_regex: "(.*).pivotal"
+  stemcell_slug: ((pas_stemcell_slug))
+  stemcell_version: ((pas_stemcell_version))
   s3_stemcells_regex: "(.*).tgz"
+  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   has_stemcell: True
 - name: pks
   slug: ((pks_product_slug))
@@ -23,6 +26,9 @@ products:
   glob: "*.pivotal"
   s3_bucket: ((s3_pks_bucket))
   s3_product_regex: "(.*).pivotal"
+  stemcell_slug: ((pks_stemcell_slug))
+  stemcell_version: ((pks_stemcell_version))
+  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True
 - name: harbor
@@ -31,6 +37,9 @@ products:
   glob: "*.pivotal"
   s3_bucket: ((s3_harbor_bucket))
   s3_product_regex: "(.*).pivotal"
+  stemcell_slug: ((harbor_stemcell_slug))
+  stemcell_version: ((harbor_stemcell_version))
+  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True
 - name: platform-automation-image

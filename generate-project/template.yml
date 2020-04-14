@@ -1,0 +1,340 @@
+#@ load("@ytt:data", "data")
+resources:
+- name: schedule
+  type: time
+  source:
+    interval: 24h
+    start: "12:00 AM"
+    stop: "11:59 PM"
+    location: America/Los_Angeles
+    days: [Sunday]
+
+- name: automation-repo
+  type: git
+  source:
+    uri: ((automation_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: locks
+  type: pool
+  source:
+    pool: ((pipeline_lock_folder))
+    uri: ((locks_repo_git_url))
+    branch: ((git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: platform-automation-image
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+- name: platform-automation-tasks
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: ((platform_automation_version))
+    sort_by: semver
+
+#@ for product in data.values.products:
+- name: #@ product.name
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: #@ product.slug
+    product_version: #@ product.version
+    sort_by: semver
+
+#@ if/end product.has_stemcell == True:
+- name: #@ product.name + "-stemcells"
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: #@ product.stemcell_slug
+    product_version: #@ product.stemcell_version
+    sort_by: semver
+#@ end
+
+#@ for product in data.values.products:
+groups:
+- name: complete
+#@ end
+
+jobs:
+- name: scheduler
+  plan:
+  - get: schedule
+    trigger: true
+  #@ for product in data.values.products:
+  - get: #@ product.name
+    resource: #@ product.name
+    params:
+      globs: []
+  #@ if/end product.has_stemcell == True:
+  - get: #@ product.name + "-stemcells"
+    params:
+      globs: []
+  #@ end
+
+#@ for product in data.values.products:
+- name: #@ product.name + "-set-lock"
+  plan:
+  - get: #@ product.name
+    resource: #@ product.name
+    passed:
+    - scheduler
+    trigger: true
+    params:
+      globs: []
+  #@ if/end product.has_stemcell == True:
+  - get: #@ product.name + "-stemcells"
+    params:
+      globs: []
+    trigger: true
+    passed:
+    - scheduler
+  - put: locks
+    params: {acquire: true}
+#@ end
+
+#@ for product in data.values.products:
+#@ index=data.values.products.index(product)
+#@ if index != 0:
+#@  product_prev=data.values.products[index-1]
+#@ end
+- name: #@ "upload-stage-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      params:
+        globs:
+        - #@ product.product_glob
+      passed:
+      - #@ product.name + "-set-lock"
+      trigger: true
+    #@ if/end product.has_stemcell == True:
+    - get: #@ product.name + "-stemcells"
+      params:
+        globs:
+        - #@ product.stemcell_glob
+      passed:
+      - #@ product.name + "-set-lock"
+      trigger: true
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: automation-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - in_parallel:
+    - task: upload-product
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-product.yml
+      input_mapping:
+        product: product
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+    #@ if/end product.has_stemcell == True:
+    - task: upload-stemcell
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/upload-stemcell.yml
+      input_mapping:
+        stemcell: stemcells
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+
+  - task: stage-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+- name: #@ "configure-deploy-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      params:
+        globs: []
+      passed:
+      - #@ "upload-stage-" + product.name
+      trigger: true
+    #@ if/end product.has_stemcell == True:
+    - get: #@ product.name + "-stemcells"
+      passed:
+      - #@ "upload-stage-" + product.name
+      trigger: true
+      params:
+        globs: []
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: automation-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: create-product-var-files
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: automation-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: config-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: automation-repo
+      env: env
+      vars: vars
+    params:
+      CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: #@ "((vars_folder))/((" + product.name + "_product_vars_path))/((" + product.name + "_product_var_filename))"
+
+  - task: deploy-product
+    file: automation-repo/tasks/apply-product-changes.yml
+    input_mapping:
+      env: env
+      config: automation-repo
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
+    attempts: ((attempts))
+
+- name: #@ "release-lock-" + product.name
+  plan:
+  - in_parallel:
+    - get: locks
+    - get: product
+      resource: #@ product.name
+      passed:
+      - #@ "configure-deploy-" + product.name
+      trigger: true
+      params:
+        globs: []
+    #@ if/end product.has_stemcell == True:
+    - get: #@ product.name + "-stemcells"
+      passed:
+      - #@ "configure-deploy-" + product.name
+      trigger: true
+      params:
+        globs: []
+  - put: locks
+    params: {release: locks}
+
+- name: #@ "run-errand-" + product.name
+  serial: true
+  plan:
+  - in_parallel:
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: #@ product.name
+      params:
+        globs: []
+      passed:
+      - #@ "release-lock-" + product.name
+      trigger: true
+    #@ if/end product.has_stemcell == True:
+    - get: #@ product.name + "-stemcells"
+      passed:
+      - #@ "release-lock-" + product.name
+      trigger: true
+      params:
+        globs: []
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: automation-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: run-product-errands
+    image: platform-automation-image
+    file: automation-repo/tasks/run-errands.yml
+    input_mapping:
+      config: automation-repo
+      env: env
+    params:
+      CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+#@ end
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

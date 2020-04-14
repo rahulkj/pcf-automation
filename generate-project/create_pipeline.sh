@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-PIPELINE_DIR=$PWD/test
+PIPELINE_DIR=/Users/rjain/Documents/github/rahulkj/secrets
 
 clis=(jq ytt yq)
 

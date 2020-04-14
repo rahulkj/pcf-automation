@@ -26,13 +26,20 @@ ytt -f template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/params.yml
 PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')
 
 for p in ${PRODUCTS}; do
-  echo ${p} + "test"
+  echo "----- ${p} -----"
   if [[ ! -d "${PIPELINE_DIR}/config/${p}" ]]; then
-    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/config.yml"
-    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/deploy-products.yml"
+    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/.gitkeep"
   fi
 
   if [[ ! -d "${PIPELINE_DIR}/vars/${p}" ]]; then
-    mkdir -p "${PIPELINE_DIR}/vars/${p}" && touch "${PIPELINE_DIR}/vars/${p}/vars.yml"
+    mkdir -p "${PIPELINE_DIR}/vars/${p}" && touch "${PIPELINE_DIR}/vars/${p}/.gitkeep"
+  fi
+
+  if [[ ! -d "${PIPELINE_DIR}/errands" ]]; then
+    mkdir -p "${PIPELINE_DIR}/errands"
+  fi
+
+  if [[ ! -f "${PIPELINE_DIR}/errands/${p}" ]]; then
+    touch "${PIPELINE_DIR}/errands/${p}"
   fi
 done;

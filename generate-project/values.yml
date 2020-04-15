@@ -1,6 +1,14 @@
 #@data/values
 ---
 products:
+- name: harbor
+  slug: harbor-container-registry
+  version: ^1\.10\.[0-9]*$
+  stemcell_slug: stemcells-ubuntu-xenial
+  stemcell_version: 456.*
+  product_glob: "*.pivotal"
+  stemcell_glob: "bosh-stemcell-*-azure-hyperv-ubuntu-xenial-go_agent.tgz"
+  has_stemcell: True
 - name: healthwatch
   slug: p-healthwatch
   version: ^1\.8\.[0-9]*$
@@ -9,11 +17,27 @@ products:
   product_glob: "*.pivotal"
   stemcell_glob: "bosh-stemcell-*-azure-hyperv-ubuntu-xenial-go_agent.tgz"
   has_stemcell: True
+- name: mysql
+  slug: pivotal-mysql
+  version: ^2\.7\.[0-9]*$
+  stemcell_slug: stemcells-ubuntu-xenial
+  stemcell_version: 315.*
+  product_glob: "*.pivotal"
+  stemcell_glob: "bosh-stemcell-*-azure-hyperv-ubuntu-xenial-go_agent.tgz"
+  has_stemcell: True
 - name: event-alerts
   slug: p-event-alerts
   version: ^1\.2\.[0-9]*$
   stemcell_slug: stemcells-ubuntu-xenial
   stemcell_version: 250.*
+  product_glob: "*.pivotal"
+  stemcell_glob: "bosh-stemcell-*-azure-hyperv-ubuntu-xenial-go_agent.tgz"
+  has_stemcell: True
+- name: compliance
+  slug: p-compliance-scanner
+  version: ^1\.2\.[0-9]*$
+  stemcell_slug: stemcells-ubuntu-xenial
+  stemcell_version: 315.*
   product_glob: "*.pivotal"
   stemcell_glob: "bosh-stemcell-*-azure-hyperv-ubuntu-xenial-go_agent.tgz"
   has_stemcell: True

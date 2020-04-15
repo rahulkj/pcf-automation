@@ -84,35 +84,12 @@ jobs:
   plan:
   - get: schedule
     trigger: true
-  #@ for product in data.values.products:
-  - get: #@ product.name
-    resource: #@ product.name
-    params:
-      globs: []
-  #@ if/end product.has_stemcell == True:
-  - get: #@ product.name + "-stemcells"
-    params:
-      globs: []
-  #@ end
 
 - name: set-lock
   plan:
-  #@ for product in data.values.products:
-  - get: #@ product.name
-    resource: #@ product.name
-    passed:
-    - scheduler
+  - get: schedule
     trigger: true
-    params:
-      globs: []
-  #@ if/end product.has_stemcell == True:
-  - get: #@ product.name + "-stemcells"
-    params:
-      globs: []
-    trigger: true
-    passed:
-    - scheduler
-  #@ end
+    passed: [scheduler]
   - put: locks
     params: {acquire: true}
 
@@ -125,13 +102,18 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: schedule
+      #@ if index != 0:
+      passed:
+      - #@ "upload-stage-configure-deploy-" + product_prev.name
+      #@ else:
+      passed:
+      - set-lock
+      #@ end
     - get: automation-repo
     - get: platform-automation-image
       params:
         unpack: true
-      #@ if/end index != 0:
-      passed:
-      - #@ "upload-stage-configure-deploy-" + product_prev.name
     - get: platform-automation-tasks
       params:
         unpack: true
@@ -140,16 +122,12 @@ jobs:
       params:
         globs:
         - #@ product.product_glob
-      passed:
-      - set-lock
       trigger: true
     #@ if/end product.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
       params:
         globs:
         - #@ product.stemcell_glob
-      passed:
-      - set-lock
       trigger: true
 
   - task: create-opsman-env-file

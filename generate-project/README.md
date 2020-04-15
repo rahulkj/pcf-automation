@@ -29,27 +29,28 @@ On execution, it will result in the follow directories:
 ```
 .
 ├── config
+│   ├── compliance
+│   ├── event-alerts
 │   ├── harbor
-│   │   ├── config.yml
-│   │   └── deploy-products.yml
-│   ├── pas
-│   │   ├── config.yml
-│   │   └── deploy-products.yml
-│   └── pks
-│       ├── config.yml
-│       └── deploy-products.yml
+│   ├── healthwatch
+│   └── mysql
+├── errands
+│   ├── compliance
+│   ├── event-alerts
+│   ├── harbor
+│   ├── healthwatch
+│   └── mysql
 ├── pipelines
 │   ├── params.yml
 │   └── pipeline.yml
 └── vars
+    ├── compliance
+    ├── event-alerts
     ├── harbor
-    │   └── vars.yml
-    ├── pas
-    │   └── vars.yml
-    └── pks
-        └── vars.yml
+    ├── healthwatch
+    └── mysql
 
-9 directories, 11 files
+14 directories, 7 files
 ```
 
 Now switch into the `pipelines` director and fly the pipeline:

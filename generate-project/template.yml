@@ -62,12 +62,6 @@ resources:
 #@ end
 
 groups:
-#@ for product in data.values.products:
-- name: #@ product.name
-  jobs:
-  - #@ "upload-stage-configure-deploy-" + product.name
-  - #@ "run-errand-" + product.name
-#@ end
 - name: all
   jobs:
   - scheduler
@@ -78,6 +72,12 @@ groups:
   - #@ "upload-stage-configure-deploy-" + product.name
   - #@ "run-errand-" + product.name
   #@ end
+#@ for product in data.values.products:
+- name: #@ product.name
+  jobs:
+  - #@ "upload-stage-configure-deploy-" + product.name
+  - #@ "run-errand-" + product.name
+#@ end
 
 jobs:
 - name: scheduler

@@ -26,7 +26,7 @@ ytt -f template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/params.yml
 PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')
 
 for p in ${PRODUCTS}; do
-  echo ${p} + "test"
+  echo "------ ${p} ------"
   if [[ ! -d "${PIPELINE_DIR}/config/${p}" ]]; then
     mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/config.yml"
     mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/deploy-products.yml"

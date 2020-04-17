@@ -6,19 +6,19 @@ products:
   version: ((harbor_product_version))
   s3_bucket: ((s3_harbor_bucket))
   s3_product_regex: "(.*).pivotal"
-  s3_stemcells_regex: "(.*).tgz"
+  s3_stemcell_regex: "(.*).tgz"
   has_stemcell: True
 - name: compliance-scanner
   slug: ((compliance_scanner_product_slug))
   version: ((compliance_scanner_product_version))
   s3_bucket: ((s3_compliance_scanner_bucket))
   s3_product_regex: "(.*).pivotal"
-  s3_stemcells_regex: "(.*).tgz"
+  s3_stemcell_regex: "(.*).tgz"
   has_stemcell: True
 - name: healthwatch
   slug: ((healthwatch_product_slug))
   version: ((healthwatch_product_version))
   s3_bucket: ((s3_healthwatch_bucket))
   s3_product_regex: "(.*).pivotal"
-  s3_stemcells_regex: "(.*).tgz"
+  s3_stemcell_regex: "(.*).tgz"
   has_stemcell: True

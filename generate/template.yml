@@ -91,7 +91,7 @@ resources:
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))
     bucket: #@ product.s3_bucket
-    regexp: #@ product.s3_product_regex
+    regexp: #@ product.s3_stemcell_regex
 #@ end
 
 jobs:
@@ -145,9 +145,11 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: platform-automation-tasks
       params:
         unpack: true
+        globs: ["*.zip"]
     - get: product
       resource: #@ product.name
       passed:
@@ -213,9 +215,11 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: platform-automation-tasks
       params:
         unpack: true
+        globs: ["*.zip"]
     - get: product
       resource: #@ product.name
       passed:
@@ -268,9 +272,9 @@ jobs:
       env: env
       vars: vars
     params:
-      CONFIG_FILE: #@ "((" + product.name + "_product_config_path))/((" + product.name + "_product_config_filename))"
+      CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      VARS_FILES: #@ "((vars_folder))/((" + product.name + "_product_vars_path))/((" + product.name + "_product_var_filename))"
+      VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
 
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml

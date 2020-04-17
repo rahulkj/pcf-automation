@@ -114,9 +114,11 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: platform-automation-tasks
       params:
         unpack: true
+        globs: ["*.zip"]
     - get: product
       resource: #@ product.name
       params:
@@ -245,9 +247,11 @@ jobs:
     - get: platform-automation-image
       params:
         unpack: true
+        globs: ["*.tgz"]
     - get: platform-automation-tasks
       params:
         unpack: true
+        globs: ["*.zip"]
     - get: product
       resource: #@ product.name
       params:

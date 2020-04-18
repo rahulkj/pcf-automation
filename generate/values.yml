@@ -1,24 +1,41 @@
 #@data/values
 ---
+separate_config: True
+pivnet_token: ((pivnet_token))
+automation_git_url: https://github.com/rahulkj/pcf-automation
+automation_git_branch: master
+config_repo_git_url: https://github.com/rahulkj/secrets
+config_repo_git_branch: master
+locks_git_url: https://github.com/rahulkj/pipeline-locks
+locks_git_branch: master
+env_lock_folder: pipeline-lock
+git_username: ((git_username))
+git_token: ((git_token))
+credhub_prefix: concourse/homelab
+credhub_ca_cert: ((credhub_server_ca.certificate))
+credhub_client: ((credhub_client))
+credhub_client_secret: ((credhub_client_secret))
+credhub_server: ((credhub_server))
+smtp_address: ((smtp_address))
+smtp_port: ((smtp_port))
+smtp_username: ((smtp_username))
+smtp_password: ((smtp_password))
+from_address: ((from_address))
+to_addresses: ((to_addresses))
+s3_endpoint: http://((s3_endpoint))/
+s3_access_key: ((s3_access_key))
+s3_secret_key: ((s3_secret_key))
+s3_disable_ssl: true
+platform_automation_version: ^4\.*\..*$
+s3_automation_bucket: automation
+s3_automation_image_regex: image/platform-automation-image-(.*).tgz
+s3_automation_tasks_regex: tasks/platform-automation-tasks-(.*).zip
+apply_changes_config_filename: deploy-products.yml
 products:
 - name: harbor
-  slug: ((harbor_product_slug))
-  version: ((harbor_product_version))
-  s3_bucket: ((s3_harbor_bucket))
+  slug: harbor-container-registry
+  version: ^1\.10\..*$
+  s3_bucket: harbor
   s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "(.*).tgz"
-  has_stemcell: True
-- name: compliance-scanner
-  slug: ((compliance_scanner_product_slug))
-  version: ((compliance_scanner_product_version))
-  s3_bucket: ((s3_compliance_scanner_bucket))
-  s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "(.*).tgz"
-  has_stemcell: True
-- name: healthwatch
-  slug: ((healthwatch_product_slug))
-  version: ((healthwatch_product_version))
-  s3_bucket: ((s3_healthwatch_bucket))
-  s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "(.*).tgz"
+  s3_stemcell_regex: "stemcells/bosh-stemcell-(.*).tgz"
   has_stemcell: True

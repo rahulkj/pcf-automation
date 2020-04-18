@@ -8,12 +8,13 @@ image_resource:
 
 params:
   ENV_FILE:
-  PRODUCT_NAME:
+  CONFIG_FILE:
 
 inputs:
   - name: git-repo
   - name: tile-config-convertor
   - name: env
+  - name: config
 
 run:
   path: git-repo/tasks/generate-config/task.sh

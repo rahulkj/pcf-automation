@@ -90,10 +90,12 @@ function echoVars {
   #statements
 }
 
+PRODUCT_NAME="${OM_CMD} interpolate --config config/${CONFIG_FILE} --path /product-name -s"
+
 CURL_CMD="$OM_CMD --env env/"${ENV_FILE}" curl -s -p"
 
 PRODUCTS=$($CURL_CMD /api/v0/staged/products)
-PRODUCT_GUID=$(echo $PRODUCTS | $JQ_CMD -r --arg product_identifier $PRODUCT_NAME '.[] | select(.type == $product_identifier) | .guid')
+PRODUCT_GUID=$(echo $PRODUCTS | $JQ_CMD -r --arg product_name $PRODUCT_NAME '.[] | select(.type == $product_name) | .guid')
 
 ## Download the product properties
 

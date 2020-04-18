@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-PIPELINE_DIR=$PWD/test
+PIPELINE_DIR=/Users/rjain/Documents/github/rahulkj/secrets
 
 clis=(jq ytt yq)
 
@@ -22,17 +22,21 @@ rm -rf "${PIPELINE_DIR}/pipelines/pipeline.yml" "${PIPELINE_DIR}/pipelines/param
 
 ytt -f template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/pipeline.yml"
 ytt -f template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/params.yml"
+ytt -f globals-params.yml -f values.yml> "${PIPELINE_DIR}/pipelines/globals.yml"
 
 PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')
 
 for p in ${PRODUCTS}; do
   echo "------ ${p} ------"
   if [[ ! -d "${PIPELINE_DIR}/config/${p}" ]]; then
-    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/config.yml"
-    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/deploy-products.yml"
+    mkdir -p "${PIPELINE_DIR}/config/${p}" && touch "${PIPELINE_DIR}/config/${p}/.gitkeep"
   fi
 
   if [[ ! -d "${PIPELINE_DIR}/vars/${p}" ]]; then
-    mkdir -p "${PIPELINE_DIR}/vars/${p}" && touch "${PIPELINE_DIR}/vars/${p}/vars.yml"
+    mkdir -p "${PIPELINE_DIR}/vars/${p}" && touch "${PIPELINE_DIR}/vars/${p}/.gitkeep"
+  fi
+
+  if [[ ! -d "${PIPELINE_DIR}/env" ]]; then
+    mkdir -p "${PIPELINE_DIR}/env" && touch "${PIPELINE_DIR}/env/.gitkeep"
   fi
 done;

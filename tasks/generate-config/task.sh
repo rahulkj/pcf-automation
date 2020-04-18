@@ -90,7 +90,7 @@ function echoVars {
   #statements
 }
 
-PRODUCT_NAME="${OM_CMD} interpolate --config config/${CONFIG_FILE} --path /product-name -s"
+PRODUCT_NAME=$(${OM_CMD} interpolate --config config/${CONFIG_FILE} --path /product-name -s)
 
 CURL_CMD="$OM_CMD --env env/"${ENV_FILE}" curl -s -p"
 

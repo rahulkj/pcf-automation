@@ -280,6 +280,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    - get: locks
     - get: config-repo
     - get: automation-repo
     - get: platform-automation-image

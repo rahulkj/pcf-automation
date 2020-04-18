@@ -19,14 +19,12 @@ state_filename: homelab-state.yml
 
 nsxt_product_version: ^2\.5\.[0-9]*$
 nsxt_product_slug: vmware-nsx-t
-nsxt_product_identifier: VMware-NSX-T
 nsxt_product_glob: "*.pivotal"
 
 nsxt_config_filename: nsxt-config.yml
 
 pas_product_version: ^2\.7\.[0-9]*$
 pas_product_slug: elastic-runtime
-pas_product_identifier: cf
 pas_product_glob: "cf-*.pivotal"
 
 pas_config_filename: pas-config.yml

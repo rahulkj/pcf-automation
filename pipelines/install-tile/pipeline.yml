@@ -230,9 +230,10 @@ jobs:
     input_mapping:
       git-repo: automation-repo
       env: env
+      config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((product_identifier))
+      CONFIG_FILE: ((product_config_path))/((product_config_filename))
 
 - name: configure-product
   serial: true

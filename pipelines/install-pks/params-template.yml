@@ -18,7 +18,6 @@ state_file_destination: state-files
 state_filename: homelab-state.yml
 
 pks_product_version: ^1\.5\.[0-9]*$
-pks_product_identifier: pivotal-container-service
 pks_product_glob: "*.pivotal"
 
 pks_config_filename: pks-config.yml

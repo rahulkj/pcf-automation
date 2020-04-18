@@ -4,8 +4,6 @@ product_glob: "*.pivotal"
 winfs_injector_glob: "winfs-injector-*.zip"
 replicator_glob: "replicator-*.zip"
 replicated_name:
-product_identifier:                           # if you are replicating the tile, then identifier will be like identifier-replicated_name,
-                                              # ex: p-rabbitmq-zone1, where zone1 is the replicated_name value
 stemcell_slug: stemcells-windows-server
 stemcell_version:
 stemcell_glob: "*google*"                     # google|azure|openstack

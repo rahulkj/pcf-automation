@@ -480,9 +480,10 @@ jobs:
     input_mapping:
       git-repo: automation-repo
       env: env
+      config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((pas_product_identifier))
+      CONFIG_FILE: ((product_config_path))/((pas_config_filename))
 
 - name: configure-pas
   serial: true

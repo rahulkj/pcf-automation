@@ -19,7 +19,6 @@ state_filename: homelab-state.yml
 
 pas_product_version: ^2\.7\.[0-9]*$
 pas_product_slug: elastic-runtime
-pas_product_identifier: cf
 pas_product_glob: "cf-*.pivotal"
 
 pas_config_filename: pas-config.yml

@@ -1,7 +1,6 @@
 product_slug:
 product_version: ^1\.0\..*$
 product_glob: "*.pivotal"
-product_identifier:
 
 iaas_type: vsphere-esxi
 stemcell_type: xenial

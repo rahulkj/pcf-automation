@@ -539,9 +539,10 @@ jobs:
     input_mapping:
       git-repo: automation-repo
       env: env
+      config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((nsxt_product_identifier))
+      CONFIG_FILE: ((product_config_path))/((nsxt_config_filename))
 
 - name: configure-nsxt
   serial: true
@@ -646,9 +647,10 @@ jobs:
     input_mapping:
       git-repo: automation-repo
       env: env
+      config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      PRODUCT_NAME: ((pas_product_identifier))
+      CONFIG_FILE: ((product_config_path))/((pas_config_filename))
 
 - name: configure-pas
   serial: true

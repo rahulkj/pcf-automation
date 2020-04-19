@@ -1,5 +1,7 @@
 #@data/values
 ---
+separate_config: True
+env:
 products:
 - name: harbor
   slug: harbor-container-registry

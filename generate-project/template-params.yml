@@ -1,40 +1,40 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:template", "template")
 
-pivnet_token:
+pivnet_token: ""
 
-automation_git_url:
-automation_git_branch:
+automation_git_url: ""
+automation_git_branch: ""
 
-locks_git_url:
-locks_git_branch:
-env_lock_folder:
+locks_git_url: ""
+locks_git_branch: ""
+env_lock_folder: ""
 
-git_username:
-git_token:
+git_username: ""
+git_token: ""
 
-opsman_ssh_private_key:
+opsman_ssh_private_key: ""
 
-platform_automation_version:
+platform_automation_version: ""
 
-credhub_prefix:
-credhub_ca_cert:
-credhub_client:
-credhub_client_secret:
-credhub_server:
+credhub_prefix: ""
+credhub_ca_cert: ""
+credhub_client: ""
+credhub_client_secret: ""
+credhub_server: ""
 
-opsman_env_path:
-opsman_env_filename:
+opsman_env_path: #@ data.values.env + "/env"
+opsman_env_filename: env.yml
 
 vars_folder: vars
 
 attempts: 1
 
 #@ for product in data.values.products:
-_: #@ template.replace({product.name + "_config_path": "config/" + product.name})
+_: #@ template.replace({product.name + "_config_path": data.values.env + "/config/" + product.name})
 _: #@ template.replace({product.name + "_config_filename": "config.yml"})
-_: #@ template.replace({product.name + "_errand_file": "errand/" + product.name})
-_: #@ template.replace({product.name + "_vars_path": "var/" + product.name})
-_: #@ template.replace({product.name + "_var_filename": product.name + "-vars.yml"})
+_: #@ template.replace({product.name + "_errand_file": data.values.env + "/errands/" + product.name})
+_: #@ template.replace({product.name + "_vars_path": data.values.env + "/vars/" + product.name})
+_: #@ template.replace({product.name + "_var_filename": "vars.yml"})
 _: #@ template.replace({product.name + "_errand_execution_job": ""})
 #@ end

@@ -1,0 +1,38 @@
+#@ load("@ytt:template", "template")
+#@ load("@ytt:data", "data")
+
+pivnet_token: #@ data.values.pivnet_token
+
+automation_git_url: #@ data.values.automation_git_url
+automation_git_branch: #@ data.values.automation_git_branch
+config_repo_git_url: #@ data.values.config_repo_git_url
+config_repo_git_branch: #@ data.values.config_repo_git_branch
+locks_git_url: #@ data.values.locks_git_url
+locks_git_branch: #@ data.values.locks_git_branch
+env_lock_folder: #@ data.values.env_lock_folder
+git_username: #@ data.values.git_username
+git_token: #@ data.values.git_token
+credhub_prefix: #@ data.values.credhub_prefix
+credhub_ca_cert: #@ data.values.credhub_ca_cert
+credhub_client: #@ data.values.credhub_client
+credhub_client_secret: #@ data.values.credhub_client_secret
+credhub_server: #@ data.values.credhub_server
+smtp_address: #@ data.values.smtp_address
+smtp_port: #@ data.values.smtp_port
+smtp_username: #@ data.values.smtp_username
+smtp_password: #@ data.values.smtp_password
+from_address: #@ data.values.from_address
+to_addresses: #@ data.values.to_addresses
+s3_endpoint: #@ data.values.s3_endpoint
+s3_access_key: #@ data.values.s3_access_key
+s3_secret_key: #@ data.values.s3_secret_key
+s3_disable_ssl: #@ data.values.s3_disable_ssl
+opsman_env_path: env
+opsman_env_filename: env.yml
+
+attempts: 1
+
+s3_automation_bucket: #@ data.values.s3_automation_bucket
+s3_automation_image_regex: #@ data.values.s3_automation_image_regex
+s3_automation_tasks_regex: #@ data.values.s3_automation_tasks_regex
+platform_automation_version: #@ data.values.platform_automation_version

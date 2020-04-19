@@ -7,7 +7,7 @@ resources:
     start: "12:00 AM"
     stop: "11:59 PM"
     location: America/Los_Angeles
-    days: [Sunday]
+    days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
 
 - name: automation-repo
   type: git
@@ -65,17 +65,25 @@ groups:
 - name: all
   jobs:
   - scheduler
-  - set-lock
   - unset-lock
-  - release-lock
   #@ for product in data.values.products:
-  - #@ "upload-stage-configure-deploy-" + product.name
+  #@ if data.values.separate_config == True:
+  - #@ "lock-upload-stage-" + product.name
+  - #@ "configure-deploy-unlock-" + product.name
+  #@ else:
+  - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
+  #@ end
   - #@ "run-errand-" + product.name
   #@ end
 #@ for product in data.values.products:
 - name: #@ product.name
   jobs:
-  - #@ "upload-stage-configure-deploy-" + product.name
+  #@ if data.values.separate_config == True:
+  - #@ "lock-upload-stage-" + product.name
+  - #@ "configure-deploy-unlock-" + product.name
+  #@ else:
+  - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
+  #@ end
   - #@ "run-errand-" + product.name
 #@ end
 
@@ -85,30 +93,27 @@ jobs:
   - get: schedule
     trigger: true
 
-- name: set-lock
-  plan:
-  - get: schedule
-    trigger: true
-    passed: [scheduler]
-  - put: locks
-    params: {acquire: true}
-
 #@ for product in data.values.products:
 #@ index=data.values.products.index(product)
 #@ if index != 0:
 #@  product_prev=data.values.products[index-1]
 #@ end
-- name: #@ "upload-stage-configure-deploy-" + product.name
+#@ if data.values.separate_config == True:
+#@   job_name="lock-upload-stage-" + product.name
+#@ else:
+#@   job_name="lock-upload-stage-configure-deploy-unlock-" + product.name
+#@ end
+- name: #@ job_name
   serial: true
   plan:
   - in_parallel:
     - get: schedule
       #@ if index != 0:
       passed:
-      - #@ "upload-stage-configure-deploy-" + product_prev.name
+      - #@ "lock-upload-stage-configure-deploy-inlock-" + product_prev.name
       #@ else:
       passed:
-      - set-lock
+      - scheduler
       #@ end
     - get: automation-repo
     - get: platform-automation-image
@@ -131,6 +136,8 @@ jobs:
         globs:
         - #@ product.stemcell_glob
       trigger: true
+    - put: locks
+      params: {acquire: true}
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -176,6 +183,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
 
+#@ if data.values.separate_config != True:
   - task: create-product-var-files
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
@@ -213,30 +221,94 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     attempts: ((attempts))
-#@ end
 
-- name: release-lock
+  - put: locks
+    params: {release: locks}
+#@ else:
+- name: #@ "configure-deploy-unlock-" + product.name
+  serial: true
   plan:
   - in_parallel:
-    - get: locks
-    #@ for product in data.values.products:
-    - get: #@ product.name
+    - get: config-repo
+    - get: automation-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs: ["*.tgz"]
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+        globs: ["*.zip"]
+    - get: product
       resource: #@ product.name
       passed:
-      - #@ "run-errand-" + product.name
+      - #@ "lock-upload-stage-" + product.name
       trigger: true
-      params:
-        globs: []
     #@ if/end product.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
       passed:
-      - #@ "run-errand-" + product.name
+      - #@ "lock-upload-stage-" + product.name
       trigger: true
       params:
-        globs: []
-    #@ end
+        skip_download: "true"
+
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: create-product-var-files
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: config-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-product.yml
+    input_mapping:
+      config: config-repo
+      env: env
+      vars: vars
+    params:
+      CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+
+  - task: deploy-product
+    file: automation-repo/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+      config: config-repo
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      APPLY_CHANGES_CONFIG: #@ "((" + product.name + "_config_path))/((apply_changes_config_filename))"
+    attempts: ((attempts))
+
   - put: locks
     params: {release: locks}
+#@ end
+#@ end
 
 #@ for product in data.values.products:
 - name: #@ "run-errand-" + product.name
@@ -256,16 +328,27 @@ jobs:
       resource: #@ product.name
       params:
         globs: []
+      #@ if data.values.separate_config == True:
       passed:
-      - #@ "upload-stage-configure-deploy-" + product.name
+      - #@ "configure-deploy-unlock-" + product.name
+      #@ else:
+      passed:
+      - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
+      #@ end
       trigger: true
-    #@ if/end product.has_stemcell == True:
+    #@ if product.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
+      #@ if data.values.separate_config == True:
       passed:
-      - #@ "upload-stage-configure-deploy-" + product.name
+      - #@ "configure-deploy-unlock-" + product.name
+      #@ else:
+      passed:
+      - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
+      #@ end
       trigger: true
       params:
         globs: []
+    #@ end
 
   - task: create-opsman-env-file
     image: platform-automation-image

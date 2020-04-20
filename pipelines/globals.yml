@@ -23,7 +23,7 @@ smtp_password: ((smtp_password))
 from_address: ((from_address))
 to_addresses: ((to_addresses))
 
-opsman_env_path: config/opsman-env
+opsman_env_path: env
 opsman_env_filename: env.yml
 
 credhub_ca_cert: ((credhub_server_ca.certificate))

@@ -1,0 +1,33 @@
+credhub_prefix: concourse/homelab
+
+product_config_path: config/install-pcf
+product_vars_path: vars/vars/install-pcf
+
+opsman_product_version: ^2\.7\.[0-9]*$
+opsman_glob: "*.ova"
+
+opsman_config_filename: opsman-config.yml
+opsman_var_filename: opsman.yml
+
+opsman_auth_filename: opsman-auth.yml
+
+ops_director_config_filename: ops-director-config.yml
+ops_director_var_filename: director.yml
+
+state_file_destination: state-files
+state_filename: homelab-state.yml
+
+pas_product_version: ^2\.7\.[0-9]*$
+pas_product_slug: elastic-runtime
+pas_product_glob: "cf-*.pivotal"
+
+pas_config_filename: pas-config.yml
+pas_var_filename: pas.yml
+
+iaas_type: vsphere-esxi                       # azure-hyperv|vsphere-esxi|aws-xen-hvm|openstack-kvm|vcloud-esxi|google-kvm
+stemcell_type: xenial
+
+s3_endpoint: ((s3_endpoint))
+s3_access_key: ((s3_access_key))
+s3_secret_key: ((s3_secret_key))
+s3_bucket: ((s3_bucket))

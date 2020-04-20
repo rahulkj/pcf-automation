@@ -308,6 +308,9 @@ jobs:
       params:
         skip_download: "true"
 
+    - put: locks
+      params: {acquire: true}
+
   - task: create-opsman-env-file
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml

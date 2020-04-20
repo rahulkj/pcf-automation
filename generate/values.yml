@@ -32,6 +32,13 @@ s3_automation_image_regex: image/platform-automation-image-(.*).tgz
 s3_automation_tasks_regex: tasks/platform-automation-tasks-(.*).zip
 apply_changes_config_filename: deploy-products.yml
 products:
+- name: pks
+  slug: pivotal-container-service
+  version: ^1\.7\..*$
+  s3_bucket: pks
+  s3_product_regex: "(.*).pivotal"
+  s3_stemcell_regex: "stemcells/bosh-stemcell-(.*).tgz"
+  has_stemcell: True
 - name: harbor
   slug: harbor-container-registry
   version: ^1\.10\..*$

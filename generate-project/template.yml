@@ -100,8 +100,10 @@ jobs:
 #@ end
 #@ if data.values.separate_config == True:
 #@   job_name="lock-upload-stage-" + product.name
+#@   config_job_name="configure-deploy-unlock-"
 #@ else:
 #@   job_name="lock-upload-stage-configure-deploy-unlock-" + product.name
+#@   config_job_name="lock-upload-stage-configure-deploy-unlock-"
 #@ end
 - name: #@ job_name
   serial: true
@@ -110,7 +112,7 @@ jobs:
     - get: schedule
       #@ if index != 0:
       passed:
-      - #@ "lock-upload-stage-configure-deploy-inlock-" + product_prev.name
+      - #@ config_job_name + product_prev.name
       #@ else:
       passed:
       - scheduler
@@ -176,7 +178,7 @@ jobs:
 
   - task: stage-product
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
+    file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
       product: product
       env: env
@@ -229,7 +231,6 @@ jobs:
   serial: true
   plan:
   - in_parallel:
-    - get: config-repo
     - get: automation-repo
     - get: platform-automation-image
       params:
@@ -244,6 +245,9 @@ jobs:
       passed:
       - #@ "lock-upload-stage-" + product.name
       trigger: true
+    - get: schedule
+      passed:
+      - #@ "lock-upload-stage-" + product.name    
     #@ if/end product.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
       passed:
@@ -251,12 +255,14 @@ jobs:
       trigger: true
       params:
         skip_download: "true"
+    - put: locks
+      params: {acquire: locks}
 
   - task: create-opsman-env-file
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
     input_mapping:
-      files: config-repo
+      files: automation-repo
     output_mapping:
       interpolated-files: env
     params:
@@ -271,7 +277,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/credhub-interpolate.yml
     input_mapping:
-      files: config-repo
+      files: automation-repo
     output_mapping:
       interpolated-files: vars
     params:
@@ -287,7 +293,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-product.yml
     input_mapping:
-      config: config-repo
+      config: automation-repo
       env: env
       vars: vars
     params:
@@ -299,7 +305,7 @@ jobs:
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env
-      config: config-repo
+      config: coautomationnfig-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       APPLY_CHANGES_CONFIG: #@ "((" + product.name + "_config_path))/((apply_changes_config_filename))"

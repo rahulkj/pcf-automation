@@ -224,6 +224,9 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+  
+  - put: locks
+    params: {release: locks}
 
 #@ if data.values.separate_config != True:
   - task: create-product-var-files

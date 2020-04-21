@@ -25,6 +25,7 @@ rm -rf "${PIPELINE_DIR}/pipelines/pipeline.yml" "${PIPELINE_DIR}/pipelines/param
 
 ytt -f template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/pipeline.yml"
 ytt -f template-params.yml -f values.yml --data-values-env YTT > "${PIPELINE_DIR}/pipelines/params.yml"
+ytt -f globals-params.yml -f values.yml> "${PIPELINE_DIR}/pipelines/globals.yml"
 
 PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')
 

@@ -2,6 +2,20 @@
 ---
 separate_config: True
 env:
+pivnet_token: ((pivnet_token))
+automation_git_url: https://github.com/rahulkj/pcf-automation
+automation_git_branch: master
+locks_git_url: https://github.com/rahulkj/pipeline-locks
+locks_git_branch: master
+env_lock_folder: pipeline-lock
+git_username: ((git_username))
+git_token: ((git_token))
+credhub_prefix: concourse/homelab
+credhub_ca_cert: ((credhub_server_ca.certificate))
+credhub_client: ((credhub_client))
+credhub_client_secret: ((credhub_client_secret))
+credhub_server: ((credhub_server))
+platform_automation_version: ^4\.*\..*$
 products:
 - name: harbor
   slug: harbor-container-registry

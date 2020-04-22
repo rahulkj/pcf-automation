@@ -61,7 +61,7 @@ jobs:
 
   - put: #@ product.name + "-product-bucket"
     params:
-      file: #@ "((" + product.name + "_glob))"
+      file: #@ "product/((" + product.name + "_glob))"
 
 #@ if product.has_stemcell == True:
 - name: #@ product.name + "-stemcell"

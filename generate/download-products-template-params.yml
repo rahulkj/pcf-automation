@@ -1,0 +1,24 @@
+#@ load("@ytt:template", "template")
+#@ load("@ytt:data", "data")
+
+pivnet_token: #@ data.values.pivnet_token
+
+s3_endpoint: #@ data.values.s3_endpoint
+s3_access_key: #@ data.values.s3_access_key
+s3_secret_key: #@ data.values.s3_secret_key
+s3_disable_ssl: #@ data.values.s3_disable_ssl
+
+#@ for product in data.values.download_products:
+_: #@ template.replace({product.name + "_slug": ""})
+_: #@ template.replace({product.name + "_version": ""})
+_: #@ template.replace({product.name + "_glob": "*.pivotal"})
+_: #@ template.replace({product.name + "_s3_bucket": "vars/" + product.name})
+_: #@ template.replace({product.name + "_s3_product_regex": "(.*).pivotal"})
+#@ if product.has_stemcell == True:
+_: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-xenial"})
+_: #@ template.replace({product.name + "_stemcell_version": ""})
+_: #@ template.replace({product.name + "_s3_stemcell_bucket": ""})
+_: #@ template.replace({product.name + "_s3_stemcells_regex": "(.*).tgz"})
+_: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"})
+#@ end
+#@ end

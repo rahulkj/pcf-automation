@@ -1,63 +1,21 @@
 #@data/values
 ---
+pivnet_token: ""
+s3_endpoint: http://((s3_endpoint))/
+s3_access_key: ""
+s3_secret_key: ""
+s3_disable_ssl: true
+
 products:
 - name: ops-manager
-  slug: ((opsman_product_slug))
-  version: ((opsman_product_version))
-  glob: "*.ova"
-  s3_bucket: ((s3_opsman_bucket))
-  s3_product_regex: "(.*).ova"
-  s3_stemcells_regex: ""
   has_stemcell: False
 - name: pas
-  slug: ((pas_product_slug))
-  version: ((pas_product_version))
-  glob: "cf-*.pivotal"
-  s3_bucket: ((s3_pas_bucket))
-  s3_product_regex: "(.*).pivotal"
-  stemcell_slug: ((pas_stemcell_slug))
-  stemcell_version: ((pas_stemcell_version))
-  s3_stemcell_bucket: ((s3_stemcell_bucket))
-  s3_stemcells_regex: "(.*).tgz"
-  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   has_stemcell: True
 - name: pks
-  slug: ((pks_product_slug))
-  version: ((pks_product_version))
-  glob: "*.pivotal"
-  s3_bucket: ((s3_pks_bucket))
-  s3_product_regex: "(.*).pivotal"
-  stemcell_slug: ((pks_stemcell_slug))
-  stemcell_version: ((pks_stemcell_version))
-  s3_stemcell_bucket: ((s3_stemcell_bucket))
-  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
-  s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True
 - name: harbor
-  slug: ((harbor_product_slug))
-  version: ((harbor_product_version))
-  glob: "*.pivotal"
-  s3_bucket: ((s3_harbor_bucket))
-  s3_product_regex: "(.*).pivotal"
-  stemcell_slug: ((harbor_stemcell_slug))
-  stemcell_version: ((harbor_stemcell_version))
-  s3_stemcell_bucket: ((s3_stemcell_bucket))
-  s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
-  s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True
 - name: platform-automation-image
-  slug: platform-automation
-  version: ((platform_automation_version))
-  glob: "*.tgz"
-  s3_bucket: ((s3_automation_bucket))
-  s3_product_regex: ((s3_automation_image_regex))
-  s3_stemcells_regex: ""
   has_stemcell: False
 - name: platform-automation-tasks
-  slug: platform-automation
-  version: ((platform_automation_version))
-  glob: "*.zip"
-  s3_bucket: ((s3_automation_bucket))
-  s3_product_regex: ((s3_automation_tasks_regex))
-  s3_stemcells_regex: ""
   has_stemcell: False

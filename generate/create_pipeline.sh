@@ -14,14 +14,21 @@ for cli in "${clis[@]}"; do
 done
 set -e
 
-if [[ ! -d "${PIPELINE_DIR}/pipelines" ]]; then
+if [[ ! -d "${PIPELINE_DIR}/pipelines" || ! -d "${PIPELINE_DIR}/pipelines/products" || ! -d "${PIPELINE_DIR}/pipelines/download-products" ]]; then
   mkdir -p "${PIPELINE_DIR}/pipelines"
+  mkdir -p "${PIPELINE_DIR}/pipelines/products"
+  mkdir -p "${PIPELINE_DIR}/pipelines/download-products" 
 fi
 
-rm -rf "${PIPELINE_DIR}/pipelines/pipeline.yml" "${PIPELINE_DIR}/pipelines/params.yml"
+rm -rf "${PIPELINE_DIR}/pipelines/products/pipeline.yml" "${PIPELINE_DIR}/pipelines/products/params-template.yml"
+rm -rf "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml" "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
-ytt -f template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/pipeline.yml"
-ytt -f template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/params.yml"
+ytt -f products-template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/products/pipeline.yml"
+ytt -f products-template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/products/params-template.yml"
+
+ytt -f download-products-template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
+ytt -f download-products-template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
+
 ytt -f globals-params.yml -f values.yml> "${PIPELINE_DIR}/pipelines/globals.yml"
 
 PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')

@@ -48,3 +48,17 @@ products:
   s3_product_regex: "(.*).pivotal"
   s3_stemcell_regex: "bosh-stemcell-(.*).tgz"
   has_stemcell: True
+
+download_products:
+- name: ops-manager
+  has_stemcell: False
+- name: pas
+  has_stemcell: True
+- name: pks
+  has_stemcell: True
+- name: harbor
+  has_stemcell: True
+- name: platform-automation-image
+  has_stemcell: False
+- name: platform-automation-tasks
+  has_stemcell: False

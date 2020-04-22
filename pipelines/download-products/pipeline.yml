@@ -48,7 +48,7 @@ resources:
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: ((s3_pas_bucket))
+    bucket: ((s3_stemcell_bucket))
     regexp: stemcells/((s3_stemcells_regex))
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
@@ -80,7 +80,7 @@ resources:
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: ((s3_pks_bucket))
+    bucket: ((s3_stemcell_bucket))
     regexp: stemcells/((s3_stemcells_regex))
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
@@ -112,7 +112,7 @@ resources:
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: ((s3_harbor_bucket))
+    bucket: ((s3_stemcell_bucket))
     regexp: stemcells/((s3_stemcells_regex))
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))

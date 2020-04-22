@@ -36,13 +36,15 @@ products:
   slug: pivotal-container-service
   version: ^1\.7\..*$
   s3_bucket: pks
+  s3_stemcell_bucket: stemcells
   s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "stemcells/bosh-stemcell-(.*).tgz"
+  s3_stemcell_regex: "bosh-stemcell-(.*).tgz"
   has_stemcell: True
 - name: harbor
   slug: harbor-container-registry
   version: ^1\.10\..*$
   s3_bucket: harbor
+  s3_stemcell_bucket: stemcells
   s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "stemcells/bosh-stemcell-(.*).tgz"
+  s3_stemcell_regex: "bosh-stemcell-(.*).tgz"
   has_stemcell: True

@@ -17,6 +17,7 @@ products:
   s3_product_regex: "(.*).pivotal"
   stemcell_slug: ((pas_stemcell_slug))
   stemcell_version: ((pas_stemcell_version))
+  s3_stemcell_bucket: ((s3_stemcell_bucket))
   s3_stemcells_regex: "(.*).tgz"
   s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   has_stemcell: True
@@ -28,6 +29,7 @@ products:
   s3_product_regex: "(.*).pivotal"
   stemcell_slug: ((pks_stemcell_slug))
   stemcell_version: ((pks_stemcell_version))
+  s3_stemcell_bucket: ((s3_stemcell_bucket))
   s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True
@@ -39,6 +41,7 @@ products:
   s3_product_regex: "(.*).pivotal"
   stemcell_slug: ((harbor_stemcell_slug))
   stemcell_version: ((harbor_stemcell_version))
+  s3_stemcell_bucket: ((s3_stemcell_bucket))
   s3_glob: "bosh-stemcell-*-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
   s3_stemcells_regex: "(.*).tgz"
   has_stemcell: True

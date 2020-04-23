@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+BASE_DIR=$(dirname "$(realpath $0)")
+
 PIPELINE_DIR=/Users/rjain/Documents/github/rahulkj/secrets
 
 clis=(jq ytt yq)
@@ -23,15 +25,15 @@ fi
 rm -rf "${PIPELINE_DIR}/pipelines/products/pipeline.yml" "${PIPELINE_DIR}/pipelines/products/params-template.yml"
 rm -rf "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml" "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
-ytt -f products-template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/products/pipeline.yml"
-ytt -f products-template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/products/params-template.yml"
+ytt -f "${BASE_DIR}/products-template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/pipeline.yml"
+ytt -f "${BASE_DIR}/products-template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/params-template.yml"
 
-ytt -f download-products-template.yml -f values.yml > "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
-ytt -f download-products-template-params.yml -f values.yml > "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
+ytt -f "${BASE_DIR}/download-products-template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
+ytt -f "${BASE_DIR}/download-products-template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
-ytt -f globals-params.yml -f values.yml> "${PIPELINE_DIR}/pipelines/globals.yml"
+ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/globals.yml"
 
-PRODUCTS=$(yq r values.yml products -j | jq -r '.[].name')
+PRODUCTS=$(yq r "${BASE_DIR}/values.yml" products -j | jq -r '.[].name')
 
 for p in ${PRODUCTS}; do
   echo "------ ${p} ------"

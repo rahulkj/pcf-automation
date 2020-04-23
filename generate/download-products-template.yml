@@ -39,7 +39,7 @@ resources:
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    regexp: ((s3_stemcells_regex))
+    regexp: #@ "((" + product.name + "_s3_stemcells_regex))"
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))

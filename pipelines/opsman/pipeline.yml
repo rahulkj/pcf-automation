@@ -15,7 +15,7 @@ resources:
   type: git
   source:
     uri: ((config_repo_git_url))
-    branch: ((git_branch))
+    branch: ((config_repo_git_branch))
     username: ((git_username))
     password: ((git_token))
 
@@ -56,9 +56,9 @@ resources:
 - name: pipeline-lock
   type: pool
   source:
-    pool: ((pipeline_lock_folder))
-    uri: ((locks_repo_git_url))
-    branch: ((git_branch))
+    pool: ((env_lock_folder))
+    uri: ((locks_git_url))
+    branch: ((locks_git_branch))
     username: ((git_username))
     password: ((git_token))
 

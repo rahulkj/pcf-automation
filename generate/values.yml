@@ -8,7 +8,7 @@ config_repo_git_url: https://github.com/rahulkj/secrets
 config_repo_git_branch: master
 locks_git_url: https://github.com/rahulkj/pipeline-locks
 locks_git_branch: master
-env_lock_folder: pipeline-lock
+lock_folder: pipeline-lock
 git_username: ((git_credentials.username))
 git_token: ((git_credentials.password))
 credhub_prefix: concourse/homelab

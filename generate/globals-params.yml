@@ -9,7 +9,7 @@ config_repo_git_url: #@ data.values.config_repo_git_url
 config_repo_git_branch: #@ data.values.config_repo_git_branch
 locks_git_url: #@ data.values.locks_git_url
 locks_git_branch: #@ data.values.locks_git_branch
-env_lock_folder: #@ data.values.env_lock_folder
+lock_folder: #@ data.values.lock_folder
 git_username: #@ data.values.git_username
 git_token: #@ data.values.git_token
 credhub_prefix: #@ data.values.credhub_prefix

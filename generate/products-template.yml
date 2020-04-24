@@ -26,7 +26,7 @@ resources:
 - name: locks
   type: pool
   source:
-    pool: ((env_lock_folder))
+    pool: ((lock_folder))
     uri: ((locks_git_url))
     branch: ((locks_git_branch))
     username: ((git_username))

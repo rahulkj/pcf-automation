@@ -63,14 +63,6 @@ resources:
     from: ((from_address))
     to: [((to_addresses))]
 
-- name: config-repo
-  type: git
-  source:
-    uri: ((config_repo_git_url))
-    branch: ((config_repo_git_branch))
-    username: ((git_username))
-    password: ((git_token))
-
 - name: tile-config-convertor
   type: github-release
   source:
@@ -84,6 +76,17 @@ resources:
     repository: rjain/buildbox
 
 #@ for product in data.values.products:
+- name: #@ product.name + "-git-repo"
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((config_repo_git_branch))
+    username: ((git_username))
+    password: ((git_token))
+    paths:
+    - #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
+    - #@ "((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+
 - name: #@ product.name
   type: s3
   source:
@@ -163,6 +166,8 @@ jobs:
       - scheduler
       #@ end
     - get: config-repo
+      resource: #@ product.name + "-git-repo"
+      trigger: true
     - get: platform-automation-image
       params:
         unpack: true
@@ -285,6 +290,8 @@ jobs:
   - in_parallel:
     - get: locks
     - get: config-repo
+      resource: #@ product.name + "-git-repo"
+      trigger: true
     - get: automation-repo
     - get: platform-automation-image
       params:
@@ -384,6 +391,8 @@ jobs:
   - in_parallel:
     - get: automation-repo
     - get: config-repo
+      resource: #@ product.name + "-git-repo"
+      trigger: true
     - get: tile-config-convertor
       params:
         globs:

@@ -72,6 +72,7 @@ function applyChangesConfig() {
 
   echo "  ignore_warnings: true" >> "$APPLY_CHANGES_CONFIG_YML"
 
+  echo ""
   echo "--------------------- BEGIN APPLY CHANGES CONFIG ---------------------"
   echo "# Apply Changes Config for $PRODUCT_NAME are:"
   cat $APPLY_CHANGES_CONFIG_YML

@@ -72,22 +72,23 @@ function applyChangesConfig() {
 
   echo "  ignore_warnings: true" >> "$APPLY_CHANGES_CONFIG_YML"
 
-  echo "---"
+  echo "--------------------- BEGIN APPLY CHANGES CONFIG ---------------------"
   echo "# Apply Changes Config for $PRODUCT_NAME are:"
   cat $APPLY_CHANGES_CONFIG_YML
   echo ""
+  echo "--------------------- END APPLY CHANGES CONFIG ---------------------"
 }
 
 function echoVars {
   PRODUCT_NAME=$1
 
   echo ""
-  echo "---"
+  echo "--------------------- BEGIN VARS ---------------------"
   cat "$PRODUCT_NAME-nw-azs-vars.yml"
   cat "$PRODUCT_NAME-properties-vars.yml"
   cat "$PRODUCT_NAME-resources-vars.yml"
   cat "$PRODUCT_NAME-errands-vars.yml"
-  #statements
+  echo "--------------------- END VARS ---------------------"
 }
 
 PRODUCT_NAME=$(${OM_CMD} interpolate --config config/${CONFIG_FILE} --path /product-name -s)
@@ -108,13 +109,15 @@ RESOURCES=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/resources)
 ERRANDS=$($CURL_CMD /api/v0/staged/products/$PRODUCT_GUID/errands)
 
 ## Cleanup all the stuff, and echo on the console
-echo "---"
+echo "--------------------- BEGIN PRODUCT CONFIG ---------------------"
 echo "product_config: |"
 echo "  product-name: $PRODUCT_NAME"
 echoNetworkTemplate "$PRODUCT_NAME-nw-azs.yml" "$PRODUCT_NAME-nw-azs-vars.yml"
 cleanAndEchoProperties "$PRODUCT_NAME-properties.json" "$PRODUCT_NAME-properties.yml" "$PRODUCT_NAME-properties-vars.yml"
 cleanAndEchoResources "$PRODUCT_NAME-resources.json" "$PRODUCT_NAME-resources.yml" "$PRODUCT_NAME-resources-vars.yml"
 cleanAndEchoErrands "$PRODUCT_NAME-errands.json" "$PRODUCT_NAME-errands.yml" "$PRODUCT_NAME-errands-vars.yml"
+echo "--------------------- END PRODUCT CONFIG ---------------------"
+
 applyChangesConfig
 echoVars $PRODUCT_NAME
 

@@ -1,0 +1,544 @@
+#@ load("@ytt:data", "data")
+resource_types:
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: config-repo
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((config_repo_git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+#@ for product in data.values.products:
+#@ if/end product.is_opsman == True:
+- name: ops-manager
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+
+#@ if product.is_platform_automation == True:
+- name: #@ product.name
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+#@ end
+#@ end
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+- name: pipeline-lock
+  type: pool
+  source:
+    pool: ((lock_folder))
+    uri: ((locks_git_url))
+    branch: ((locks_git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+- name: opsman-backup-bucket
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: ((s3_opsman_backup_bucket))
+    regexp: installation-(.*).zip
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+
+groups:
+- name: complete
+  jobs:
+  - set-opsman-lock
+  - install-ops-manager
+  - configure-ops-director
+  - deploy-director
+  - release-opsman-lock
+  - set-upgrade-opsman-lock
+  - upgrade-ops-manager
+  - install-ops-manager
+  - release-upgrade-opsman-lock
+  - unset-lock
+  - delete-all
+- name: install-opsman
+  jobs:
+  - set-opsman-lock
+  - install-ops-manager
+  - configure-ops-director
+  - deploy-director
+  - release-opsman-lock
+  - unset-lock
+- name: upgrade-opsman
+  jobs:
+  - set-upgrade-opsman-lock
+  - upgrade-ops-manager
+  - install-ops-manager
+  - release-upgrade-opsman-lock
+  - unset-lock
+- name: cleanup
+  jobs:
+  - delete-all
+
+jobs:
+- name: set-opsman-lock
+  plan:
+  - in_parallel:
+    - get: product
+      resource: ops-manager
+      params:
+        skip_download: true
+  - put: pipeline-lock
+    params: {acquire: true}
+
+- name: install-ops-manager
+  plan:
+  - in_parallel:
+    - get: pipeline-lock
+      passed: [set-opsman-lock]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: ops-manager
+      passed: [set-opsman-lock]
+      trigger: true
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+      SKIP_MISSING: true
+
+  - task: credhub-interpolate-vars
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: deploy-opsmanager-vm
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/create-vm.yml
+    input_mapping:
+      state: config-repo
+      image: product
+      config: config-repo
+      vars: vars
+    params:
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+
+  - task: commit-files-into-git
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/make-git-commit.yml
+    input_mapping:
+      repository: config-repo
+      file-source: generated-state
+    params:
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
+      GIT_AUTHOR_NAME: ((ci_username))
+      GIT_AUTHOR_EMAIL: ((ci_email_address))
+      COMMIT_MESSAGE: "Updated state file after creating the OpsManager VM"
+
+  - put: config-repo
+    params:
+      repository: repository-commit
+
+  - task: configure-authentication
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-authentication.yml
+    input_mapping:
+      config: vars
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+    attempts: ((attempts))
+
+- name: configure-ops-director
+  plan:
+  - in_parallel:
+    - get: pipeline-lock
+      passed: [install-ops-manager]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: ops-manager
+      params:
+        skip_download: true
+      trigger: true
+      passed: [install-ops-manager]
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+      SKIP_MISSING: true
+
+  - task: credhub-interpolate-vars
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: configure-ops-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    input_mapping:
+      config: config-repo
+      vars: vars
+    params:
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((ops_director_var_filename))
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
+
+- name: deploy-director
+  plan:
+  - in_parallel:
+    - get: pipeline-lock
+      passed: [configure-ops-director]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: ops-manager
+      params:
+        skip_download: true
+      trigger: true
+      passed: [configure-ops-director]
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+      SKIP_MISSING: true
+
+  - task: deploy-ops-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    attempts: ((attempts))
+
+- name: release-opsman-lock
+  plan:
+  - get: pipeline-lock
+    passed: [deploy-director]
+    trigger: true
+  - put: pipeline-lock
+    params: {release: pipeline-lock}
+
+- name: delete-all
+  plan:
+  - in_parallel:
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+      SKIP_MISSING: true
+
+  - task: credhub-interpolate-vars
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: delete-products
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-installation.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  - task: delete-opsmanager-vm
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/delete-vm.yml
+    input_mapping:
+      state: config-repo
+      config: config-repo
+      vars: vars
+    params:
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_file_destination))/((state_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+
+  - task: commit-files-into-git
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/make-git-commit.yml
+    input_mapping:
+      repository: config-repo
+      file-source: generated-state
+    params:
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
+      GIT_AUTHOR_NAME: ((ci_username))
+      GIT_AUTHOR_EMAIL: ((ci_email_address))
+      COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
+  - in_parallel:
+    - put: config-repo
+      params:
+        repository: repository-commit
+
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: unset-lock
+  plan:
+  - get: pipeline-lock
+  - put: pipeline-lock
+    params: {release: pipeline-lock}
+
+- name: set-upgrade-opsman-lock
+  plan:
+  - get: pipeline-lock
+    passed: [release-opsman-lock]
+  - get: product
+    resource: ops-manager
+    params:
+      skip_download: true
+    trigger: true
+  - put: pipeline-lock
+    params: {acquire: true}
+
+- name: upgrade-ops-manager
+  plan:
+  - in_parallel:
+    - get: pipeline-lock
+      passed: [set-upgrade-opsman-lock]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+    - get: product
+      resource: ops-manager
+      trigger: true
+      passed: [set-upgrade-opsman-lock]
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+      SKIP_MISSING: true
+
+  - task: credhub-interpolate-vars
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: vars
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_vars_path))
+      SKIP_MISSING: true
+
+  - task: export-installation
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/export-installation.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+
+  - put: opsman-backup-bucket
+    params:
+      file: installation/installation-*.zip
+
+  - task: upgrade-opsmanager
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upgrade-opsman.yml
+    input_mapping:
+      config: config-repo
+      env: env
+      image: product
+      state: config-repo
+      installation: installation
+      vars: vars
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      STATE_FILE: ((state_file_destination))/((state_filename))
+      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+
+  - task: commit-files-into-git
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/make-git-commit.yml
+    input_mapping:
+      repository: config-repo
+      file-source: generated-state
+    params:
+      FILE_SOURCE_PATH: ((state_filename))
+      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
+      GIT_AUTHOR_NAME: ((ci_username))
+      GIT_AUTHOR_EMAIL: ((ci_email_address))
+      COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
+
+  - in_parallel:
+    - put: config-repo
+      params:
+        repository: repository-commit
+
+    - task: apply-changes
+      image: platform-automation-image
+      file: platform-automation-tasks/tasks/apply-director-changes.yml
+      input_mapping:
+        env: env
+      params:
+        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      attempts: ((attempts))
+
+- name: release-upgrade-opsman-lock
+  plan:
+  - in_parallel:
+    - get: product
+      resource: ops-manager
+      passed: [upgrade-ops-manager]
+      trigger: true
+    - get: pipeline-lock
+      passed: [upgrade-ops-manager]
+  - in_parallel:
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+    - put: pipeline-lock
+      params: {release: pipeline-lock}

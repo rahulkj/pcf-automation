@@ -1,0 +1,175 @@
+#@ load("@ytt:data", "data")
+resource_types:
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+resources:
+- name: config-repo
+  type: git
+  source:
+    uri: ((config_repo_git_url))
+    branch: ((config_repo_git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+#@ for product in data.values.products:
+#@ if product.is_platform_automation == True:
+- name: #@ product.name
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
+#@ end
+#@ end
+
+- name: email
+  type: email
+  source:
+    smtp:
+      host: ((smtp_address))
+      port: ((smtp_port))
+      username: ((smtp_username))
+      password: ((smtp_password))
+    from: ((from_address))
+    to: [((to_addresses))]
+
+- name: schedule
+  type: time
+  source:
+    start: ((scheduler_start_time))
+    stop: ((scheduler_stop_time))
+    location: ((scheduler_location))
+    days: ((scheduler_days))
+
+- name: locks
+  type: pool
+  source:
+    pool: ((lock_folder))
+    uri: ((locks_git_url))
+    branch: ((locks_git_branch))
+    username: ((git_username))
+    password: ((git_token))
+
+jobs:
+- name: configure-ops-director
+  plan:
+  - in_parallel:
+    - get: schedule
+      trigger: true
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+
+  - put: locks
+    params: {acquire: true}
+
+  - task: credhub-interpolate-config
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: config
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((product_config_path))
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: configure-ops-director
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-director.yml
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
+
+- name: apply-changes
+  serial: true
+  plan:
+  - in_parallel:
+    - get: schedule
+      trigger: true
+      passed: [configure-ops-director]
+    - get: config-repo
+    - get: platform-automation-image
+      params:
+        globs: ["*.tgz"]
+        unpack: true
+    - get: platform-automation-tasks
+      params:
+        globs: ["*.zip"]
+        unpack: true
+
+  - task: credhub-interpolate-env
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: config-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub_prefix))
+      CREDHUB_CA_CERT: ((credhub_ca_cert))
+      CREDHUB_CLIENT: ((credhub_client))
+      CREDHUB_SECRET: ((credhub_client_secret))
+      CREDHUB_SERVER: ((credhub_server))
+      INTERPOLATION_PATHS: ((opsman_env_path))
+
+  - task: apply-changes
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    attempts: ((attempts))
+
+  - put: email
+    params:
+      subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+      body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+
+- name: release-lock
+  plan:
+  - in_parallel:
+    - get: schedule
+      trigger: true
+      passed: [apply-changes]
+    - get: locks
+  - put: locks
+    params: {release: locks}
+
+- name: unset-lock
+  plan:
+  - get: locks
+  - put: locks
+    params: {release: locks}

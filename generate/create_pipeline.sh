@@ -14,22 +14,27 @@ for cli in "${clis[@]}"; do
     exit 1
   fi
 done
+
+folders=(pipelines pipelines/download-products pipelines/ops-manager pipelines/products pipelines/repave)
+
+for folder in "${folders[@]}"; do
+  if [[ ! -d "${folder}" ]]; then
+    mkdir -p "${PIPELINE_DIR}/${folder}"  
+  fi
+done
 set -e
 
-if [[ ! -d "${PIPELINE_DIR}/pipelines" || ! -d "${PIPELINE_DIR}/pipelines/products" || ! -d "${PIPELINE_DIR}/pipelines/download-products" ]]; then
-  mkdir -p "${PIPELINE_DIR}/pipelines"
-  mkdir -p "${PIPELINE_DIR}/pipelines/products"
-  mkdir -p "${PIPELINE_DIR}/pipelines/download-products"
-fi
+ytt -f "${BASE_DIR}/download-products/template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
+ytt -f "${BASE_DIR}/download-products/template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
-rm -rf "${PIPELINE_DIR}/pipelines/products/pipeline.yml" "${PIPELINE_DIR}/pipelines/products/params-template.yml"
-rm -rf "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml" "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
+ytt -f "${BASE_DIR}/opsman/template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/ops-manager/pipeline.yml"
+cp "${BASE_DIR}/opsman/template-params.yml" "${PIPELINE_DIR}/pipelines/ops-manager/params-template.yml"
 
-ytt -f "${BASE_DIR}/products-template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/pipeline.yml"
-ytt -f "${BASE_DIR}/products-template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/params-template.yml"
+ytt -f "${BASE_DIR}/repave-platform/template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/repave/pipeline.yml"
+cp "${BASE_DIR}/repave-platform/template-params.yml" "${PIPELINE_DIR}/pipelines/repave/params-template.yml"
 
-ytt -f "${BASE_DIR}/download-products-template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
-ytt -f "${BASE_DIR}/download-products-template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/download-products/params-template.yml"
+ytt -f "${BASE_DIR}/install-upgrade-products/template.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/pipeline.yml"
+ytt -f "${BASE_DIR}/install-upgrade-products/template-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/products/params-template.yml"
 
 ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/globals.yml"
 

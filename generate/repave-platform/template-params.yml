@@ -1,0 +1,8 @@
+product_config_path: config/director
+
+ops_director_config_filename: director.yml
+
+scheduler_start_time: "12:00 AM"
+scheduler_stop_time: "11:59 PM"
+scheduler_location: America/Chicago
+scheduler_days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]

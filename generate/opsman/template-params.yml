@@ -1,0 +1,14 @@
+product_config_path: config/install-pcf
+product_vars_path: vars/install-pcf
+
+opsman_config_filename: opsman-config.yml
+opsman_var_filename: opsman.yml
+opsman_auth_filename: opsman-auth.yml
+
+ops_director_config_filename: ops-director-config.yml
+ops_director_var_filename: director.yml
+
+state_file_destination: state-files
+state_filename: homelab-state.yml
+
+s3_opsman_backup_bucket: ((s3_opsman_backup_bucket))

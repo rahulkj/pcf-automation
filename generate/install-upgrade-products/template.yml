@@ -32,26 +32,6 @@ resources:
     username: ((git_username))
     password: ((git_token))
 
-- name: platform-automation-image
-  type: s3
-  source:
-    endpoint: ((s3_endpoint))
-    bucket: ((s3_automation_bucket))
-    regexp: ((s3_automation_image_regex))
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: true
-
-- name: platform-automation-tasks
-  type: s3
-  source:
-    endpoint: ((s3_endpoint))
-    bucket: ((s3_automation_bucket))
-    regexp: ((s3_automation_tasks_regex))
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: true
-
 - name: email
   type: email
   source:
@@ -107,7 +87,19 @@ resources:
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))
     bucket: #@ product.s3_stemcell_bucket
-    regexp: #@ "bosh-stemcell-(" + product.stemcell_version + ".*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
+    regexp: #@ "bosh-stemcell-(" + product.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"
+#@ end
+
+#@ if product.is_platform_automation == True:
+- name: #@ product.name
+  type: s3
+  source:
+    endpoint: ((s3_endpoint))
+    bucket: #@ product.s3_bucket
+    regexp: #@ product.s3_product_regex
+    access_key_id: ((s3_access_key))
+    secret_access_key: ((s3_secret_key))
+    disable_ssl: true
 #@ end
 #@ end
 

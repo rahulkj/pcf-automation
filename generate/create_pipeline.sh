@@ -19,7 +19,7 @@ set -e
 if [[ ! -d "${PIPELINE_DIR}/pipelines" || ! -d "${PIPELINE_DIR}/pipelines/products" || ! -d "${PIPELINE_DIR}/pipelines/download-products" ]]; then
   mkdir -p "${PIPELINE_DIR}/pipelines"
   mkdir -p "${PIPELINE_DIR}/pipelines/products"
-  mkdir -p "${PIPELINE_DIR}/pipelines/download-products" 
+  mkdir -p "${PIPELINE_DIR}/pipelines/download-products"
 fi
 
 rm -rf "${PIPELINE_DIR}/pipelines/products/pipeline.yml" "${PIPELINE_DIR}/pipelines/products/params-template.yml"
@@ -33,7 +33,7 @@ ytt -f "${BASE_DIR}/download-products-template-params.yml" -f "${BASE_DIR}/value
 
 ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/values.yml" > "${PIPELINE_DIR}/pipelines/globals.yml"
 
-PRODUCTS=$(yq r "${BASE_DIR}/values.yml" products -j | jq -r '.[].name')
+PRODUCTS=$(yq r "${BASE_DIR}/values.yml" products -j | jq -r '.[] | select(.deploy_product==true) | .name')
 
 for p in ${PRODUCTS}; do
   echo "------ ${p} ------"

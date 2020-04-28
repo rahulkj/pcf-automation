@@ -7,7 +7,7 @@ resource_types:
     tag: latest-final
 
 resources:
-#@ for product in data.values.download_products:
+#@ for product in data.values.products:
 - name: #@ product.name
   type: pivnet
   source:
@@ -48,7 +48,7 @@ resources:
 #@ end
 
 jobs:
-#@ for product in data.values.download_products:
+#@ for product in data.values.products:
 - name: #@ product.name
   plan:
   - in_parallel:

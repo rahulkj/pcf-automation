@@ -34,31 +34,49 @@ apply_changes_config_filename: deploy-products.yml
 products:
 - name: pks
   slug: pivotal-container-service
-  version: ^1\.7\..*$
+  glob: '*.pivotal'
+  version: ^1\.7\.[0-9]*$
+  has_stemcell: True
+  stemcell_version: "621"
   s3_bucket: pks
   s3_stemcell_bucket: stemcells
   s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "bosh-stemcell-(.*).tgz"
-  has_stemcell: True
+  deploy_product: True
 - name: harbor
   slug: harbor-container-registry
-  version: ^1\.10\..*$
+  glob: "(.*).pivotal"
+  version: ^1\.10\.[0-9]*$
+  has_stemcell: True
+  stemcell_version: "456"
   s3_bucket: harbor
   s3_stemcell_bucket: stemcells
   s3_product_regex: "(.*).pivotal"
-  s3_stemcell_regex: "bosh-stemcell-(.*).tgz"
-  has_stemcell: True
-
-download_products:
+  deploy_product: True
 - name: ops-manager
+  slug: ops-manager
+  glob: '*.ova'
+  version: ^2\.9\.[0-9]*$
   has_stemcell: False
+  deploy_product: False
 - name: pas
+  slug: elastic-runtime
+  glob: 'cf-*.pivotal'
+  version: ^2\.9\.[0-9]*$
   has_stemcell: True
-- name: pks
-  has_stemcell: True
-- name: harbor
-  has_stemcell: True
+  stemcell_version: "621"
+  s3_bucket: pas
+  s3_stemcell_bucket: stemcells
+  s3_product_regex: "(.*).pivotal"
+  deploy_product: False
 - name: platform-automation-image
+  slug: platform-automation
+  glob: '*.tgz'
+  version: ^4\.*\..*$
   has_stemcell: False
+  deploy_product: False
 - name: platform-automation-tasks
+  slug: platform-automation
+  glob: '*.zip'
+  version: ^4\.*\..*$
   has_stemcell: False
+  deploy_product: False

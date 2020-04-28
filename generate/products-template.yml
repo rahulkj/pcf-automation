@@ -76,6 +76,7 @@ resources:
     repository: rjain/buildbox
 
 #@ for product in data.values.products:
+#@ if product.deploy_product == True:
 - name: #@ product.name + "-git-repo"
   type: git
   source:
@@ -106,7 +107,8 @@ resources:
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))
     bucket: #@ product.s3_stemcell_bucket
-    regexp: #@ product.s3_stemcell_regex
+    regexp: #@ "bosh-stemcell-(" + product.stemcell_version + ".*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"
+#@ end
 #@ end
 
 groups:
@@ -115,6 +117,7 @@ groups:
   - scheduler
   - unset-lock
   #@ for product in data.values.products:
+  #@ if product.deploy_product == True:
   #@ if data.values.separate_config == True:
   - #@ "lock-upload-stage-" + product.name
   - #@ "configure-deploy-unlock-" + product.name
@@ -123,7 +126,9 @@ groups:
   #@ end
   - #@ "generate-config-" + product.name
   #@ end
+  #@ end
 #@ for product in data.values.products:
+#@ if product.deploy_product == True:
 - name: #@ product.name
   jobs:
   #@ if data.values.separate_config == True:
@@ -134,6 +139,7 @@ groups:
   #@ end
   - #@ "generate-config-" + product.name
 #@ end
+#@ end
 
 jobs:
 - name: scheduler
@@ -142,6 +148,7 @@ jobs:
     trigger: true
 
 #@ for product in data.values.products:
+#@ if product.deploy_product == True:
 #@ index=data.values.products.index(product)
 #@ if index != 0:
 #@  product_prev=data.values.products[index-1]
@@ -229,7 +236,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-  
+
   - put: locks
     params: {release: locks}
 
@@ -281,8 +288,10 @@ jobs:
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 #@ end
 #@ end
+#@ end
 
 #@ for product in data.values.products:
+#@ if product.deploy_product == True:
 #@ if data.values.separate_config == True:
 - name: #@ "configure-deploy-unlock-" + product.name
   serial: true
@@ -383,8 +392,10 @@ jobs:
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 #@ end
 #@ end
+#@ end
 
 #@ for product in data.values.products:
+#@ if product.deploy_product == True:
 - name: #@ "generate-config-" + product.name
   serial: true
   plan:
@@ -457,6 +468,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
+#@ end
 #@ end
 
 - name: unset-lock

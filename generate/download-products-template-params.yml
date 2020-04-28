@@ -8,17 +8,17 @@ s3_access_key: #@ data.values.s3_access_key
 s3_secret_key: #@ data.values.s3_secret_key
 s3_disable_ssl: #@ data.values.s3_disable_ssl
 
-#@ for product in data.values.download_products:
-_: #@ template.replace({product.name + "_slug": ""})
-_: #@ template.replace({product.name + "_version": "^0.\.*\.[0-9]*$"})
-_: #@ template.replace({product.name + "_glob": "*.pivotal"})
+#@ for product in data.values.products:
+_: #@ template.replace({product.name + "_slug": product.slug})
+_: #@ template.replace({product.name + "_version": product.version})
+_: #@ template.replace({product.name + "_glob": product.glob})
 _: #@ template.replace({product.name + "_s3_bucket": product.name})
-_: #@ template.replace({product.name + "_s3_product_regex": "(.*).pivotal"})
+_: #@ template.replace({product.name + "_s3_product_regex": product.glob})
 #@ if product.has_stemcell == True:
 _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-xenial"})
-_: #@ template.replace({product.name + "_stemcell_version": "^000.*"})
-_: #@ template.replace({product.name + "_s3_stemcell_bucket": ""})
-_: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(.*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"})
-_: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-(.*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"})
+_: #@ template.replace({product.name + "_stemcell_version": "^" + product.stemcell_version + ".*"})
+_: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3_stemcell_bucket})
+_: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.stemcell_version + ".*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"})
+_: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-(" + product.stemcell_version + ".*)-vsphere-esxi-ubuntu-xenial-go_agent.tgz"})
 #@ end
 #@ end

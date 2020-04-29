@@ -108,7 +108,7 @@ jobs:
     - get: product
       resource: ops-manager
       params:
-        skip_download: true
+        skip_download: "true"
   - put: pipeline-lock
     params: {acquire: true}
 
@@ -217,7 +217,7 @@ jobs:
     - get: product
       resource: ops-manager
       params:
-        skip_download: true
+        skip_download: "true"
       trigger: true
       passed: [install-ops-manager]
 
@@ -279,7 +279,7 @@ jobs:
     - get: product
       resource: ops-manager
       params:
-        skip_download: true
+        skip_download: "true"
       trigger: true
       passed: [configure-ops-director]
 
@@ -416,7 +416,7 @@ jobs:
   - get: product
     resource: ops-manager
     params:
-      skip_download: true
+      skip_download: "true"
     trigger: true
   - put: pipeline-lock
     params: {acquire: true}
@@ -530,6 +530,8 @@ jobs:
   - in_parallel:
     - get: product
       resource: ops-manager
+      params:
+        skip_download: "true"
       passed: [upgrade-ops-manager]
       trigger: true
     - get: pipeline-lock

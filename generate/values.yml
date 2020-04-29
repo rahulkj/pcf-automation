@@ -65,7 +65,7 @@ products:
   is_platform_automation: False
 - name: pas
   slug: elastic-runtime
-  glob: 'cf-*.pivotal'
+  glob: 'cf-(*.).pivotal'
   version: ^2\.9\.[0-9]*$
   s3_bucket: pas
   has_stemcell: True

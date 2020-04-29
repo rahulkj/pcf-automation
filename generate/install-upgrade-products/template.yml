@@ -228,7 +228,7 @@ jobs:
 
   - task: stage-product
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/upload-product.yml
+    file: platform-automation-tasks/tasks/stage-product.yml
     input_mapping:
       product: product
       env: env

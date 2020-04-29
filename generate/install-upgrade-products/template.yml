@@ -209,6 +209,9 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      on_failure:
+        put: locks
+        params: {release: locks}
 
     #@ if/end product.has_stemcell == True:
     - task: upload-stemcell
@@ -219,6 +222,9 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      on_failure:
+        put: locks
+        params: {release: locks}
 
   - task: stage-product
     image: platform-automation-image
@@ -228,6 +234,9 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - put: locks
     params: {release: locks}
@@ -248,6 +257,9 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - task: config-product
     image: platform-automation-image
@@ -260,6 +272,9 @@ jobs:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - task: deploy-product
     file: automation-repo/tasks/apply-product-changes.yml
@@ -270,6 +285,9 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     attempts: ((attempts))
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - put: locks
     params: {release: locks}
@@ -336,6 +354,9 @@ jobs:
       CREDHUB_SECRET: ((credhub_client_secret))
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: ((opsman_env_path))
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - task: create-product-var-files
     image: platform-automation-image
@@ -352,6 +373,9 @@ jobs:
       CREDHUB_SERVER: ((credhub_server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - task: config-product
     image: platform-automation-image
@@ -364,6 +388,9 @@ jobs:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
@@ -374,6 +401,9 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       APPLY_CHANGES_CONFIG: #@ "((" + product.name + "_config_path))/((apply_changes_config_filename))"
     attempts: ((attempts))
+    on_failure:
+      put: locks
+      params: {release: locks}
 
   - put: locks
     params: {release: locks}

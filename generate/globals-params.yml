@@ -37,4 +37,4 @@ opsman_env_filename: env.yml
 
 vars_folder: vars
 
-attempts: 1
+attempts: 3

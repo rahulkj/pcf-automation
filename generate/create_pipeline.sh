@@ -2,8 +2,6 @@
 
 BASE_DIR=$(dirname "$(realpath $0)")
 
-PIPELINE_DIR=/Users/rjain/Documents/github/rahulkj/secrets
-
 clis=(jq ytt yq)
 
 set +e
@@ -15,11 +13,13 @@ for cli in "${clis[@]}"; do
   fi
 done
 
+read -p "Enter the pipelines directory: " PIPELINE_DIR
+
 folders=(pipelines pipelines/download-products pipelines/ops-manager pipelines/products pipelines/repave)
 
 for folder in "${folders[@]}"; do
   if [[ ! -d "${folder}" ]]; then
-    mkdir -p "${PIPELINE_DIR}/${folder}"  
+    mkdir -p "${PIPELINE_DIR}/${folder}"
   fi
 done
 set -e

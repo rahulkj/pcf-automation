@@ -6,7 +6,7 @@ _: #@ template.replace({product.name + "_slug": product.slug})
 _: #@ template.replace({product.name + "_version": product.version})
 _: #@ template.replace({product.name + "_glob": product.glob})
 _: #@ template.replace({product.name + "_s3_bucket": product.s3_bucket})
-_: #@ template.replace({product.name + "_s3_product_regex": product.glob})
+_: #@ template.replace({product.name + "_s3_product_regex": product.s3_product_regex})
 #@ if product.has_stemcell == True:
 _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-xenial"})
 _: #@ template.replace({product.name + "_stemcell_version": "^" + product.stemcell_version + ".*"})

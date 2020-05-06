@@ -191,7 +191,32 @@ jobs:
     params:
       repository: repository-commit
 
-  - task: configure-authentication
+#@ for product in data.values.products:
+#@ if product.is_opsman == True:
+#@ if product.authentication == "ldap":
+  - task: configure-ldap-authentication
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-ldap-authentication.yml
+    input_mapping:
+      config: vars
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+    attempts: ((attempts))
+#@ elif product.authentication == "saml":
+  - task: configure-saml-authentication
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/configure-saml-authentication.yml
+    input_mapping:
+      config: vars
+      env: env
+    params:
+      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+    attempts: ((attempts))
+#@ else:
+  - task: configure-internal-authentication
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-authentication.yml
     input_mapping:
@@ -201,7 +226,9 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
-
+#@ end
+#@ end
+#@ end
 - name: configure-ops-director
   plan:
   - in_parallel:

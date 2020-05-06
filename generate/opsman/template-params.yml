@@ -1,5 +1,5 @@
-product_config_path: config/install-pcf
-product_vars_path: vars/install-pcf
+product_config_path: config/opsman
+product_vars_path: vars/opsman
 
 opsman_config_filename: opsman-config.yml
 opsman_var_filename: opsman.yml

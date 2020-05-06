@@ -67,6 +67,7 @@ resources:
     paths:
     - #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     - #@ "((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+    - ((opsman_env_path))/((opsman_env_filename))
 
 - name: #@ product.name
   type: s3

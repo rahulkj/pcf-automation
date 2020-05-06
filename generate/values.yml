@@ -63,6 +63,7 @@ products:
   deploy_product: False
   is_opsman: True
   is_platform_automation: False
+  authentication: ldap            # possible values: internal|ldap|saml
 - name: pas
   slug: elastic-runtime
   glob: 'cf-*.pivotal'

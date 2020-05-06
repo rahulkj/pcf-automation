@@ -43,7 +43,7 @@ products:
   is_platform_automation: False
 - name: harbor
   slug: harbor-container-registry
-  glob: "(.*).pivotal"
+  glob: "*.pivotal"
   version: ^1\.10\.[0-9]*$
   s3_bucket: harbor
   has_stemcell: True
@@ -65,7 +65,7 @@ products:
   is_platform_automation: False
 - name: pas
   slug: elastic-runtime
-  glob: 'cf-(*.).pivotal'
+  glob: 'cf-*.pivotal'
   version: ^2\.9\.[0-9]*$
   s3_bucket: pas
   has_stemcell: True

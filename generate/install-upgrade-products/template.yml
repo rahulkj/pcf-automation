@@ -425,7 +425,6 @@ jobs:
     - get: automation-repo
     - get: config-repo
       resource: #@ product.name + "-git-repo"
-      trigger: true
     - get: tile-config-convertor
       params:
         globs:
@@ -460,7 +459,6 @@ jobs:
       passed:
       - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
       #@ end
-      trigger: true
       params:
         skip_download: "true"
     #@ end

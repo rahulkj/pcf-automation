@@ -1,7 +1,10 @@
 #@ load("@ytt:data", "data")
 
-product_config_path: #@ data.values.env + "/config/opsman"
-product_vars_path: #@ data.values.env + "/vars/opsman"
+opsman_config_path: #@ data.values.env + "/config/opsman"
+opsman_vars_path: #@ data.values.env + "/vars/opsman"
+
+director_config_path: #@ data.values.env + "/config/director"
+director_vars_path: #@ data.values.env + "/vars/director"
 
 opsman_config_filename: opsman-config.yml
 opsman_var_filename: opsman.yml

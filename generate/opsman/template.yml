@@ -158,7 +158,7 @@ jobs:
       CREDHUB_CLIENT: ((credhub_client))
       CREDHUB_SECRET: ((credhub_client_secret))
       CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((product_vars_path))
+      INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
   - task: deploy-opsmanager-vm
@@ -170,9 +170,9 @@ jobs:
       config: config-repo
       vars: vars
     params:
-      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_filename))
-      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -202,7 +202,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+      AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ elif product.authentication == "saml":
   - task: configure-saml-authentication
@@ -213,7 +213,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+      AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ else:
   - task: configure-internal-authentication
@@ -224,7 +224,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      AUTH_CONFIG_FILE: ((product_vars_path))/((opsman_auth_filename))
+      AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ end
 #@ end
@@ -277,7 +277,7 @@ jobs:
       CREDHUB_CLIENT: ((credhub_client))
       CREDHUB_SECRET: ((credhub_client_secret))
       CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((product_vars_path))
+      INTERPOLATION_PATHS: ((director_vars_path))
       SKIP_MISSING: true
 
   - task: configure-ops-director
@@ -287,9 +287,9 @@ jobs:
       config: config-repo
       vars: vars
     params:
-      VARS_FILES: ((vars_folder))/((product_vars_path))/((ops_director_var_filename))
+      VARS_FILES: ((vars_folder))/((director_vars_path))/((director_var_filename))
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
+      DIRECTOR_CONFIG_FILE: ((director_config_path))/((director_config_filename))
 
 - name: deploy-director
   plan:
@@ -385,7 +385,7 @@ jobs:
       CREDHUB_CLIENT: ((credhub_client))
       CREDHUB_SECRET: ((credhub_client_secret))
       CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((product_vars_path))
+      INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
   - task: delete-products
@@ -404,9 +404,9 @@ jobs:
       config: config-repo
       vars: vars
     params:
-      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
-      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image
@@ -494,7 +494,7 @@ jobs:
       CREDHUB_CLIENT: ((credhub_client))
       CREDHUB_SECRET: ((credhub_client_secret))
       CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((product_vars_path))
+      INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
   - task: export-installation
@@ -521,9 +521,9 @@ jobs:
       vars: vars
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      OPSMAN_CONFIG_FILE: ((product_config_path))/((opsman_config_filename))
+      OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
-      VARS_FILES: ((vars_folder))/((product_vars_path))/((opsman_var_filename))
+      VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
   - task: commit-files-into-git
     image: platform-automation-image

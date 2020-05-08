@@ -1,4 +1,6 @@
-product_config_path: config/director
+#@ load("@ytt:data", "data")
+
+product_config_path: #@ data.values.env + "/config/director"
 
 ops_director_config_filename: director.yml
 

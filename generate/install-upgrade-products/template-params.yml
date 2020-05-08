@@ -6,10 +6,10 @@ apply_changes_config_filename: #@ data.values.apply_changes_config_filename
 
 #@ for product in data.values.products:
 #@ if product.deploy_product == True:
-_: #@ template.replace({product.name + "_config_path": "config/" + product.name})
+_: #@ template.replace({product.name + "_config_path": data.values.env + "/config/" + product.name})
 _: #@ template.replace({product.name + "_config_filename": "config.yml"})
-_: #@ template.replace({product.name + "_errand_file": "errands/" + product.name})
-_: #@ template.replace({product.name + "_vars_path": "vars/" + product.name})
+_: #@ template.replace({product.name + "_errand_file": data.values.env + "/errands/" + product.name})
+_: #@ template.replace({product.name + "_vars_path": data.values.env + "/vars/" + product.name})
 _: #@ template.replace({product.name + "_var_filename": "vars.yml"})
 #@ end
 #@ end

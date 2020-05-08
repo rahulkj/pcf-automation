@@ -1,5 +1,6 @@
 #@data/values
 ---
+env:
 separate_config: True
 pivnet_token: ((pivnet_token))
 automation_git_url: https://github.com/rahulkj/pcf-automation

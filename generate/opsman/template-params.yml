@@ -10,8 +10,8 @@ opsman_config_filename: opsman-config.yml
 opsman_var_filename: opsman.yml
 opsman_auth_filename: opsman-auth.yml
 
-ops_director_config_filename: ops-director-config.yml
-ops_director_var_filename: director.yml
+director_config_filename: director-config.yml
+director_var_filename: director.yml
 
 state_file_destination: state-files
 state_filename: #@ data.values.env + "-state.yml"

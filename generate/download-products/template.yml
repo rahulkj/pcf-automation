@@ -15,6 +15,7 @@ resources:
     product_slug: #@ "((" + product.name + "_slug))"
     product_version: #@ "((" + product.name + "_version))"
     sort_by: semver
+    check_every: 30m
 
 - name: #@ product.name + "-product-bucket"
   type: s3
@@ -34,6 +35,7 @@ resources:
     product_slug: #@ "((" + product.name + "_stemcell_slug))"
     product_version: #@ "((" + product.name + "_stemcell_version))"
     sort_by: semver
+    check_every: 30m
 
 - name: #@ product.name + "-stemcells"
   type: s3

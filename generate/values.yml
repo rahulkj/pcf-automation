@@ -77,6 +77,16 @@ products:
   deploy_product: False
   is_opsman: False
   is_platform_automation: False
+- name: nsx-t
+  slug: vmware-nsx-t
+  glob: 'VMware-NSX-T-*.pivotal'
+  version: ^3\.0\.[0-9]*$
+  s3_bucket: nsx-t
+  has_stemcell: False
+  s3_product_regex: "VMware-NSX-T-(3.0.*).pivotal"
+  deploy_product: False
+  is_opsman: False
+  is_platform_automation: False
 - name: platform-automation-image
   slug: platform-automation
   glob: '*.tgz'

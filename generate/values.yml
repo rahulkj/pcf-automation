@@ -90,9 +90,9 @@ products:
 - name: platform-automation-image
   slug: platform-automation
   glob: '*.tgz'
-  version: ^4\.3\..*$
+  version: ^4\.4\..*$
   s3_bucket: automation
-  s3_product_regex: image/platform-automation-image-(4.3.*).tgz
+  s3_product_regex: image/platform-automation-image-(4.4.*).tgz
   has_stemcell: False
   deploy_product: False
   is_opsman: False
@@ -100,9 +100,9 @@ products:
 - name: platform-automation-tasks
   slug: platform-automation
   glob: '*.zip'
-  version: ^4\.*\..*$
+  version: ^4\.4\..*$
   s3_bucket: automation
-  s3_product_regex: tasks/platform-automation-tasks-(4.3.*).zip
+  s3_product_regex: tasks/platform-automation-tasks-(4.4.*).zip
   has_stemcell: False
   deploy_product: False
   is_opsman: False

@@ -58,6 +58,7 @@ resources:
     branch: ((locks_git_branch))
     username: ((git_username))
     password: ((git_token))
+    retry_delay: 60s
 
 - name: opsman-backup-bucket
   type: s3

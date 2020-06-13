@@ -353,6 +353,8 @@ jobs:
       depth: 30
   - put: pipeline-lock
     params: {release: pipeline-lock}
+    get_params:
+      depth: 30
   - put: email
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"

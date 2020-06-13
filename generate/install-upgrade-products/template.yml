@@ -186,6 +186,8 @@ jobs:
       trigger: true
     - put: locks
       params: {acquire: true}
+      get_params:
+        depth: 30
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -214,6 +216,8 @@ jobs:
       on_failure:
         put: locks
         params: {release: locks}
+        get_params:
+          depth: 30
 
     #@ if/end product.has_stemcell == True:
     - task: upload-stemcell
@@ -227,6 +231,8 @@ jobs:
       on_failure:
         put: locks
         params: {release: locks}
+        get_params:
+          depth: 30
 
   - task: stage-product
     image: platform-automation-image
@@ -239,9 +245,13 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - put: locks
     params: {release: locks}
+    get_params:
+      depth: 30
 
 #@ if data.values.separate_config != True:
   - task: create-product-var-files
@@ -262,6 +272,8 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - task: config-product
     image: platform-automation-image
@@ -277,6 +289,8 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - task: deploy-product
     file: automation-repo/tasks/apply-product-changes.yml
@@ -290,9 +304,13 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - put: locks
     params: {release: locks}
+    get_params:
+      depth: 30
 
   - put: email
     params:
@@ -310,6 +328,8 @@ jobs:
   plan:
   - in_parallel:
     - get: locks
+      params:
+        depth: 30
     - get: config-repo
       resource: #@ product.name + "-git-repo"
       trigger: true
@@ -341,6 +361,8 @@ jobs:
 
     - put: locks
       params: {acquire: true}
+      get_params:
+        depth: 30
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -359,6 +381,8 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - task: create-product-var-files
     image: platform-automation-image
@@ -378,6 +402,8 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - task: config-product
     image: platform-automation-image
@@ -393,6 +419,8 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - task: deploy-product
     file: automation-repo/tasks/apply-changes.yml
@@ -406,9 +434,13 @@ jobs:
     on_failure:
       put: locks
       params: {release: locks}
+      get_params:
+        depth: 30
 
   - put: locks
     params: {release: locks}
+    get_params:
+        depth: 30
 
   - put: email
     params:
@@ -496,5 +528,9 @@ jobs:
 - name: unset-lock
   plan:
   - get: locks
+    params:
+      depth: 30
   - put: locks
     params: {release: locks}
+    get_params:
+        depth: 30

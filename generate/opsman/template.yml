@@ -112,12 +112,16 @@ jobs:
         skip_download: "true"
   - put: pipeline-lock
     params: {acquire: true}
+    get_params:
+      depth: 30
 
 - name: install-ops-manager
   plan:
   - in_parallel:
     - get: pipeline-lock
       passed: [set-opsman-lock]
+      params:
+        depth: 30
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -235,6 +239,8 @@ jobs:
   - in_parallel:
     - get: pipeline-lock
       passed: [install-ops-manager]
+      params:
+        depth: 30
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -297,6 +303,8 @@ jobs:
   - in_parallel:
     - get: pipeline-lock
       passed: [configure-ops-director]
+      params:
+        depth: 30
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -341,6 +349,8 @@ jobs:
   - get: pipeline-lock
     passed: [deploy-director]
     trigger: true
+    params:
+      depth: 30
   - put: pipeline-lock
     params: {release: pipeline-lock}
   - put: email
@@ -438,13 +448,19 @@ jobs:
 - name: unset-lock
   plan:
   - get: pipeline-lock
+    params:
+      depth: 30
   - put: pipeline-lock
     params: {release: pipeline-lock}
+    get_params:
+      depth: 30
 
 - name: set-upgrade-opsman-lock
   plan:
   - get: pipeline-lock
     passed: [release-opsman-lock]
+    params:
+      depth: 30
   - get: product
     resource: ops-manager
     params:
@@ -452,12 +468,16 @@ jobs:
     trigger: true
   - put: pipeline-lock
     params: {acquire: true}
+    get_params:
+      depth: 30
 
 - name: upgrade-ops-manager
   plan:
   - in_parallel:
     - get: pipeline-lock
       passed: [set-upgrade-opsman-lock]
+      params:
+        depth: 30
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -568,6 +588,9 @@ jobs:
       trigger: true
     - get: pipeline-lock
       passed: [upgrade-ops-manager]
+      params:
+        depth: 30
+
   - in_parallel:
     - put: email
       params:
@@ -576,3 +599,5 @@ jobs:
 
     - put: pipeline-lock
       params: {release: pipeline-lock}
+      get_params:
+        depth: 30

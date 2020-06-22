@@ -13,7 +13,7 @@ for cli in "${clis[@]}"; do
   fi
 done
 
-read -p "Enter the pipelines directory: " PIPELINE_DIR
+read -e -p "Enter the pipelines directory: " PIPELINE_DIR
 
 read -p "Enter env name: " ENV
 export YTT_env=${ENV}

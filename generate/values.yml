@@ -1,7 +1,7 @@
 #@data/values
 ---
 env:
-separate_config: True
+separate_config: False
 pivnet_token: ((pivnet_token))
 automation_git_url: https://github.com/rahulkj/pcf-automation
 automation_git_branch: master
@@ -30,30 +30,6 @@ s3_disable_ssl: true
 apply_changes_config_filename: deploy-products.yml
 iaas: vsphere
 products:
-- name: pks
-  slug: pivotal-container-service
-  glob: '*.pivotal'
-  version: ^1\.7\.[0-9]*$
-  s3_bucket: pks  
-  has_stemcell: True
-  stemcell_version: "621"
-  s3_stemcell_bucket: stemcells
-  s3_product_regex: "pivotal-container-service-(1.7.*).pivotal"
-  deploy_product: True
-  is_opsman: False
-  is_platform_automation: False
-- name: harbor
-  slug: harbor-container-registry
-  glob: "*.pivotal"
-  version: ^1\.10\.[0-9]*$
-  s3_bucket: harbor
-  has_stemcell: True
-  stemcell_version: "456"
-  s3_stemcell_bucket: stemcells
-  s3_product_regex: "harbor-container-registry-(1.10.*).pivotal"
-  deploy_product: True
-  is_opsman: False
-  is_platform_automation: False
 - name: ops-manager
   slug: ops-manager
   glob: '*.ova'
@@ -65,26 +41,16 @@ products:
   is_opsman: True
   is_platform_automation: False
   authentication: ldap            # possible values: internal|ldap|saml
-- name: pas
-  slug: elastic-runtime
-  glob: 'cf-*.pivotal'
-  version: ^2\.9\.[0-9]*$
-  s3_bucket: pas
+- name: pks
+  slug: pivotal-container-service
+  glob: '*.pivotal'
+  version: ^1\.7\.[0-9]*$
+  s3_bucket: pks  
   has_stemcell: True
   stemcell_version: "621"
   s3_stemcell_bucket: stemcells
-  s3_product_regex: "cf-(2.9.*).pivotal"
-  deploy_product: False
-  is_opsman: False
-  is_platform_automation: False
-- name: nsx-t
-  slug: vmware-nsx-t
-  glob: 'VMware-NSX-T-*.pivotal'
-  version: ^3\.0\.[0-9]*$
-  s3_bucket: nsx-t
-  has_stemcell: False
-  s3_product_regex: "VMware-NSX-T-(3.0.*).pivotal"
-  deploy_product: False
+  s3_product_regex: "pivotal-container-service-(1.7.*).pivotal"
+  deploy_product: True
   is_opsman: False
   is_platform_automation: False
 - name: platform-automation-image
@@ -107,3 +73,37 @@ products:
   deploy_product: False
   is_opsman: False
   is_platform_automation: True
+- name: harbor
+  slug: harbor-container-registry
+  glob: "*.pivotal"
+  version: ^1\.10\.[0-9]*$
+  s3_bucket: harbor
+  has_stemcell: True
+  stemcell_version: "456"
+  s3_stemcell_bucket: stemcells
+  s3_product_regex: "harbor-container-registry-(1.10.*).pivotal"
+  deploy_product: True
+  is_opsman: False
+  is_platform_automation: False
+- name: pas
+  slug: elastic-runtime
+  glob: 'cf-*.pivotal'
+  version: ^2\.9\.[0-9]*$
+  s3_bucket: pas
+  has_stemcell: True
+  stemcell_version: "621"
+  s3_stemcell_bucket: stemcells
+  s3_product_regex: "cf-(2.9.*).pivotal"
+  deploy_product: False
+  is_opsman: False
+  is_platform_automation: False
+- name: nsx-t
+  slug: vmware-nsx-t
+  glob: 'VMware-NSX-T-*.pivotal'
+  version: ^3\.0\.[0-9]*$
+  s3_bucket: nsx-t
+  has_stemcell: False
+  s3_product_regex: "VMware-NSX-T-(3.0.*).pivotal"
+  deploy_product: False
+  is_opsman: False
+  is_platform_automation: False

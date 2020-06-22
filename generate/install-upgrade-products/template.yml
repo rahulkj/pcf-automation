@@ -141,11 +141,11 @@ jobs:
   - get: schedule
     trigger: true
 
+#@ deploy_product_index=0
 #@ for product in data.values.products:
 #@ if product.deploy_product == True:
-#@ index=data.values.products.index(product)
-#@ if index != 0:
-#@  product_prev=data.values.products[index-1]
+#@ if deploy_product_index != 0:
+#@  product_prev=data.values.products[deploy_product_index]
 #@ end
 #@ if data.values.separate_config == True:
 #@   job_name="lock-upload-stage-"
@@ -159,7 +159,7 @@ jobs:
   plan:
   - in_parallel:
     - get: schedule
-      #@ if index != 0:
+      #@ if deploy_product_index != 0:
       passed:
       - #@ config_job_name + product_prev.name
       #@ else:
@@ -318,6 +318,7 @@ jobs:
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
+#@ deploy_product_index=data.values.products.index(product)
 #@ end
 #@ end
 #@ end

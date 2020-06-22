@@ -248,10 +248,12 @@ jobs:
       get_params:
         depth: 30
 
+#@ if data.values.separate_config == True:
   - put: locks
     params: {release: locks}
     get_params:
       depth: 30
+#@ end
 
 #@ if data.values.separate_config != True:
   - task: create-product-var-files

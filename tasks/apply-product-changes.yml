@@ -1,0 +1,25 @@
+---
+platform: linux
+
+inputs:
+- name: config
+- name: env
+
+params:
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - Relative to root of the `env` input
+
+  CONFIG_FILE: config.yml
+  # - Filepath to the product configuration yaml file
+  # - The path is relative to the root of the `config` input
+run:
+  path: bash
+  args:
+  - "-c"
+  - |
+    cat /var/version && echo ""
+    set -eux
+
+    product=$(bosh int config/${CONFIG_FILE} --path /product-name)
+    om --env env/"${ENV_FILE}" apply-changes --product-name ${product}

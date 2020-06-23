@@ -141,10 +141,10 @@ jobs:
   - get: schedule
     trigger: true
 
-#@ deploy_product_index=0
+#@ deploy_product_index=-1
 #@ for product in data.values.products:
 #@ if product.deploy_product == True:
-#@ if deploy_product_index != 0:
+#@ if deploy_product_index != -1:
 #@  product_prev=data.values.products[deploy_product_index]
 #@ end
 #@ if data.values.separate_config == True:
@@ -159,13 +159,14 @@ jobs:
   plan:
   - in_parallel:
     - get: schedule
-      #@ if deploy_product_index != 0:
+      #@ if deploy_product_index != -1:
       passed:
       - #@ config_job_name + product_prev.name
       #@ else:
       passed:
       - scheduler
       #@ end
+    - get: automation-repo
     - get: config-repo
       resource: #@ product.name + "-git-repo"
       trigger: true
@@ -295,6 +296,7 @@ jobs:
         depth: 30
 
   - task: deploy-product
+    image: platform-automation-image
     file: automation-repo/tasks/apply-product-changes.yml
     input_mapping:
       env: env
@@ -426,6 +428,7 @@ jobs:
         depth: 30
 
   - task: deploy-product
+    image: platform-automation-image
     file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env

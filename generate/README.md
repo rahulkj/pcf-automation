@@ -11,7 +11,8 @@ Install the following cli's
 
 * Update the `create_pipeline.sh` script to update the `PIPELINE_DIR` variable to point to the desired folder
 * Modify the script to your desired `config`, `pipelines` and `vars` folders
-* Update the `values.yml` to add the products you desire to be part of the pipeline
+* Copy the `values.yml` to `values-env.yml`
+* Update the `values-env.yml` to add the products you desire to be part of the pipeline
   ```
   products:
   - name: pks

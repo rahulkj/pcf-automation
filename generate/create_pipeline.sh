@@ -19,6 +19,7 @@ read -p "Enter env name: " ENV
 export YTT_env=${ENV}
 
 export ENV_PIPELINE_DIR=${PIPELINE_DIR}/${ENV}
+export VALUES_FILE=value-${ENV}.yml
 
 folders=(pipelines pipelines/download-products pipelines/ops-manager pipelines/products pipelines/repave)
 
@@ -29,30 +30,30 @@ for folder in "${folders[@]}"; do
 done
 set -e
 
-ytt -f "${BASE_DIR}/download-products/template.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/download-products/template.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments > "${ENV_PIPELINE_DIR}/pipelines/download-products/pipeline.yml"
-ytt -f "${BASE_DIR}/download-products/template-params.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/download-products/template-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
-ytt -f "${BASE_DIR}/opsman/template.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/opsman/template.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments > "${ENV_PIPELINE_DIR}/pipelines/ops-manager/pipeline.yml"
-ytt -f "${BASE_DIR}/opsman/template-params.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/opsman/template-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/ops-manager/params-template.yml"
 
-ytt -f "${BASE_DIR}/repave-platform/template.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/repave-platform/template.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/repave/pipeline.yml"
-ytt -f "${BASE_DIR}/repave-platform/template-params.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/repave-platform/template-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/repave/params-template.yml"
 
-ytt -f "${BASE_DIR}/install-upgrade-products/template.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/install-upgrade-products/template.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments > "${ENV_PIPELINE_DIR}/pipelines/products/pipeline.yml"
-ytt -f "${BASE_DIR}/install-upgrade-products/template-params.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/install-upgrade-products/template-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/products/params-template.yml"
 
-ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/values.yml" \
+ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/globals.yml"
 
-PRODUCTS=$(yq r "${BASE_DIR}/values.yml" products -j | jq -r '.[] | select(.deploy_product==true) | .name')
+PRODUCTS=$(yq r "${BASE_DIR}/${VALUES_FILE}" products -j | jq -r '.[] | select(.deploy_product==true) | .name')
 
 for p in ${PRODUCTS}; do
   echo "------ ${p} ------"

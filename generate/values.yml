@@ -44,12 +44,12 @@ products:
 - name: pks
   slug: pivotal-container-service
   glob: '*.pivotal'
-  version: ^1\.7\.[0-9]*$
+  version: ^1\.8\.[0-9]*$
   s3_bucket: pks  
   has_stemcell: True
   stemcell_version: "621"
   s3_stemcell_bucket: stemcells
-  s3_product_regex: "pivotal-container-service-(1.7.*).pivotal"
+  s3_product_regex: "pivotal-container-service-(1.8.*).pivotal"
   deploy_product: True
   is_opsman: False
   is_platform_automation: False

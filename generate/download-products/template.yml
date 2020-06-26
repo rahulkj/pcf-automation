@@ -49,6 +49,24 @@ resources:
 #@ end
 #@ end
 
+groups:
+  - name: all
+    jobs:
+    #@ for product in data.values.products:
+    - #@ product.name
+    #@ if product.has_stemcell == True:
+    - #@ product.name + "-stemcell"
+    #@ end
+    #@ end
+  #@ for product in data.values.products:
+  - name: #@ product.name
+    jobs:
+    - #@ product.name
+    #@ if product.has_stemcell == True:
+    - #@ product.name + "-stemcell"
+    #@ end
+  #@ end
+
 jobs:
 #@ for product in data.values.products:
 - name: #@ product.name

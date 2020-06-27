@@ -32,7 +32,6 @@ s3:
   secret_key: ((s3_credentials.password))
   disable_ssl: true
 configs:
-  apply_changes_config_filename: deploy-products.yml
   opsman_config_filename: opsman-config.yml
   director_config_filename: director-config.yml
   env_filename: env.yml

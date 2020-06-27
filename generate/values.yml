@@ -3,32 +3,48 @@
 env:
 separate_config: False
 pivnet_token: ((pivnet_token))
-automation_git_url: https://github.com/rahulkj/pcf-automation
-automation_git_branch: master
-config_repo_git_url: https://github.com/rahulkj/secrets
-config_repo_git_branch: master
-locks_git_url: https://github.com/rahulkj/pipeline-locks
-locks_git_branch: master
-lock_folder: pipeline-lock
-git_username: ((git_credentials.username))
-git_token: ((git_credentials.password))
-credhub_prefix: concourse/homelab
-credhub_ca_cert: ((credhub_server_ca.certificate))
-credhub_client: ((credhub_client))
-credhub_client_secret: ((credhub_client_secret))
-credhub_server: ((credhub_server))
-smtp_address: ((smtp_address))
-smtp_port: ((smtp_port))
-smtp_username: ((smtp_credentials.username))
-smtp_password: ((smtp_credentials.password))
-from_address: ((from_address))
-to_addresses: ((to_addresses))
-s3_endpoint: http://((s3_endpoint))/
-s3_access_key: ((s3_credentials.username))
-s3_secret_key: ((s3_credentials.password))
-s3_disable_ssl: true
-apply_changes_config_filename: deploy-products.yml
+git:
+  username: ((git_credentials.username))
+  token: ((git_credentials.password))
+  automation_git_url: https://github.com/rahulkj/pcf-automation
+  automation_git_branch: master
+  config_repo_git_url: https://github.com/rahulkj/secrets
+  config_repo_git_branch: master
+  locks_git_url: https://github.com/rahulkj/pipeline-locks
+  locks_git_branch: master
+  lock_folder: pipeline-lock
+credhub:
+  prefix: concourse/homelab
+  ca_cert: ((credhub_server_ca.certificate))
+  client: ((credhub_client))
+  client_secret: ((credhub_client_secret))
+  server: ((credhub_server))
+smtp:
+  address: ((smtp_address))
+  port: ((smtp_port))
+  username: ((smtp_credentials.username))
+  password: ((smtp_credentials.password))
+  from_address: ((from_address))
+  to_addresses: ((to_addresses))
+s3:
+  endpoint: http://((s3_endpoint))/
+  access_key: ((s3_credentials.username))
+  secret_key: ((s3_credentials.password))
+  disable_ssl: true
+configs:
+  apply_changes_config_filename: deploy-products.yml
+  opsman_config_filename: opsman-config.yml
+  director_config_filename: director-config.yml
+  env_filename: env.yml
+  state_file_destination: state-files
+vars:
+  folder: vars
+  opsman_var_filename: opsman.yml
+  opsman_auth_filename: opsman-auth.yml
+  director_var_filename: director.yml
 iaas: vsphere
+opsman_backup_bucket: ((s3_opsman_backup_bucket))
+attempts: 3
 products:
 - name: ops-manager
   slug: ops-manager

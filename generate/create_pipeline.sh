@@ -21,10 +21,10 @@ export YTT_env=${ENV}
 export ENV_PIPELINE_DIR=${PIPELINE_DIR}/${ENV}
 export VALUES_FILE=values-${ENV}.yml
 
-folders=(pipelines pipelines/download-products pipelines/ops-manager pipelines/products pipelines/repave)
+folders=(pipelines pipelines/download-products pipelines/ops-manager pipelines/repave pipelines/products)
 
 for folder in "${folders[@]}"; do
-  if [[ ! -d "${folder}" ]]; then
+  if [[ ! -d "${ENV_PIPELINE_DIR}/${folder}" ]]; then
     mkdir -p "${ENV_PIPELINE_DIR}/${folder}"
   fi
 done

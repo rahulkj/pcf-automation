@@ -429,13 +429,13 @@ jobs:
 
   - task: deploy-product
     image: platform-automation-image
-    file: automation-repo/tasks/apply-changes.yml
+    file: automation-repo/tasks/apply-product-changes.yml
     input_mapping:
       env: env
       config: config-repo
     params:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
-      APPLY_CHANGES_CONFIG: #@ "((" + product.name + "_config_path))/((apply_changes_config_filename))"
+      CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     attempts: ((attempts))
     on_failure:
       put: locks

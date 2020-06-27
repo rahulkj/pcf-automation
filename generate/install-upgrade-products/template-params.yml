@@ -1,8 +1,7 @@
 #@ load("@ytt:data", "data")
 #@ load("@ytt:template", "template")
 
-vars_folder: vars
-apply_changes_config_filename: #@ data.values.apply_changes_config_filename
+vars_folder: #@ data.values.vars.folder
 
 #@ for product in data.values.products:
 #@ if product.deploy_product == True:

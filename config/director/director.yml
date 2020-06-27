@@ -1,4 +1,0 @@
-properties-configuration:
-  director_configuration:
-    bosh_recreate_on_next_deploy: true
-    bosh_recreate_persistent_disks_on_next_deploy: false

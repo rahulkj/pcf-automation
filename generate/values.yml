@@ -45,80 +45,101 @@ iaas: vsphere
 opsman_backup_bucket: ((s3_opsman_backup_bucket))
 attempts: 3
 products:
-- name: ops-manager
-  slug: ops-manager
-  glob: '*.ova'
-  version: ^2\.9\.[0-9]*$
-  s3_bucket: opsman
-  s3_product_regex: "ops-manager-vsphere-(2.9.*).ova"
-  has_stemcell: False
-  deploy_product: False
-  is_opsman: True
-  is_platform_automation: False
-  authentication: ldap            # possible values: internal|ldap|saml
+  - name: ops-manager
+  metadata:
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: True
+    is_platform_automation: False
+    authentication: ldap            # possible values: internal|ldap|saml
+  pivnet:
+    slug: ops-manager
+    glob: '*.ova'
+    version: ^2\.9\.[0-9]*$
+  s3:
+    bucket: opsman
+    product_regex: "ops-manager-vsphere-(2.9.*).ova"
 - name: pks
-  slug: pivotal-container-service
-  glob: '*.pivotal'
-  version: ^1\.8\.[0-9]*$
-  s3_bucket: pks  
-  has_stemcell: True
-  stemcell_version: "621"
-  s3_stemcell_bucket: stemcells
-  s3_product_regex: "pivotal-container-service-(1.8.*).pivotal"
-  deploy_product: True
-  is_opsman: False
-  is_platform_automation: False
+  metadata:
+    has_stemcell: True
+    deploy_product: True
+    is_opsman: False
+    is_platform_automation: False
+  pivnet:
+    slug: pivotal-container-service
+    glob: '*.pivotal'
+    version: ^1\.8\..*$
+    stemcell_version: "621"
+  s3:
+    bucket: pks  
+    product_regex: "pivotal-container-service-(1.8.*).pivotal"
+    stemcell_bucket: stemcells
 - name: platform-automation-image
-  slug: platform-automation
-  glob: '*.tgz'
-  version: ^4\.4\..*$
-  s3_bucket: automation
-  s3_product_regex: image/platform-automation-image-(4.4.*).tgz
-  has_stemcell: False
-  deploy_product: False
-  is_opsman: False
-  is_platform_automation: True
+  metadata:
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: True
+  pivnet:
+    slug: platform-automation
+    glob: '*.tgz'
+    version: ^4\.4\..*$
+  s3:
+    bucket: automation
+    product_regex: image/platform-automation-image-(4.4.*).tgz
 - name: platform-automation-tasks
-  slug: platform-automation
-  glob: '*.zip'
-  version: ^4\.4\..*$
-  s3_bucket: automation
-  s3_product_regex: tasks/platform-automation-tasks-(4.4.*).zip
-  has_stemcell: False
-  deploy_product: False
-  is_opsman: False
-  is_platform_automation: True
+  metadata:
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: True
+  pivnet:
+    slug: platform-automation
+    glob: '*.zip'
+    version: ^4\.4\..*$
+  s3:
+    bucket: automation
+    product_regex: tasks/platform-automation-tasks-(4.4.*).zip
 - name: harbor
-  slug: harbor-container-registry
-  glob: "*.pivotal"
-  version: ^1\.10\.[0-9]*$
-  s3_bucket: harbor
-  has_stemcell: True
-  stemcell_version: "456"
-  s3_stemcell_bucket: stemcells
-  s3_product_regex: "harbor-container-registry-(1.10.*).pivotal"
-  deploy_product: True
-  is_opsman: False
-  is_platform_automation: False
+  metadata:
+    has_stemcell: True
+    deploy_product: True
+    is_opsman: False
+    is_platform_automation: False
+  pivnet:
+    slug: harbor-container-registry
+    glob: "*.pivotal"
+    version: ^1\.10\.[0-9]*$
+    stemcell_version: "456"
+  s3:
+    bucket: harbor
+    stemcell_bucket: stemcells
+    product_regex: "harbor-container-registry-(1.10.*).pivotal"
 - name: pas
-  slug: elastic-runtime
-  glob: 'cf-*.pivotal'
-  version: ^2\.9\.[0-9]*$
-  s3_bucket: pas
-  has_stemcell: True
-  stemcell_version: "621"
-  s3_stemcell_bucket: stemcells
-  s3_product_regex: "cf-(2.9.*).pivotal"
-  deploy_product: False
-  is_opsman: False
-  is_platform_automation: False
+  metadata:
+    has_stemcell: True
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: False
+  pivnet:
+    slug: elastic-runtime
+    glob: 'cf-*.pivotal'
+    version: ^2\.9\.[0-9]*$
+    stemcell_version: "621"
+  s3:
+    bucket: pas
+    stemcell_bucket: stemcells
+    product_regex: "cf-(2.9.*).pivotal"
 - name: nsx-t
-  slug: vmware-nsx-t
-  glob: 'VMware-NSX-T-*.pivotal'
-  version: ^3\.0\.[0-9]*$
-  s3_bucket: nsx-t
-  has_stemcell: False
-  s3_product_regex: "VMware-NSX-T-(3.0.*).pivotal"
-  deploy_product: False
-  is_opsman: False
-  is_platform_automation: False
+  metadata:
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: False
+  pivnet:
+    slug: vmware-nsx-t
+    glob: 'VMware-NSX-T-*.pivotal'
+    version: ^3\.0\.[0-9]*$
+  s3:
+    bucket: nsx-t
+    product_regex: "VMware-NSX-T-(3.0.*).pivotal"

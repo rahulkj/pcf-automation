@@ -57,7 +57,7 @@ resources:
     repository: rjain/buildbox
 
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 - name: #@ product.name + "-git-repo"
   type: git
   source:
@@ -77,10 +77,10 @@ resources:
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))
-    bucket: #@ product.s3_bucket
-    regexp: #@ product.s3_product_regex
+    bucket: #@ product.s3.bucket
+    regexp: #@ product.s3.product_regex
 
-#@ if/end product.has_stemcell == True:
+#@ if/end product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcells"
   type: s3
   source:
@@ -88,17 +88,17 @@ resources:
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: ((s3_disable_ssl))
-    bucket: #@ product.s3_stemcell_bucket
-    regexp: #@ "bosh-stemcell-(" + product.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"
+    bucket: #@ product.s3.stemcell_bucket
+    regexp: #@ "bosh-stemcell-(" + product.pivnet.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"
 #@ end
 
-#@ if product.is_platform_automation == True:
+#@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: #@ product.s3_bucket
-    regexp: #@ product.s3_product_regex
+    bucket: #@ product.s3.bucket
+    regexp: #@ product.s3.product_regex
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: true
@@ -111,7 +111,7 @@ groups:
   - scheduler
   - unset-lock
   #@ for product in data.values.products:
-  #@ if product.deploy_product == True:
+  #@ if product.metadata.deploy_product == True:
   #@ if data.values.separate_config == True:
   - #@ "lock-upload-stage-" + product.name
   - #@ "configure-deploy-unlock-" + product.name
@@ -122,7 +122,7 @@ groups:
   #@ end
   #@ end
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 - name: #@ product.name
   jobs:
   #@ if data.values.separate_config == True:
@@ -143,7 +143,7 @@ jobs:
 
 #@ deploy_product_index=-1
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 #@ if deploy_product_index != -1:
 #@  product_prev=data.values.products[deploy_product_index]
 #@ end
@@ -181,7 +181,7 @@ jobs:
     - get: product
       resource: #@ product.name
       trigger: true
-    #@ if/end product.has_stemcell == True:
+    #@ if/end product.metadata.has_stemcell == True:
     - get: stemcells
       resource: #@ product.name + "-stemcells"
       trigger: true
@@ -220,7 +220,7 @@ jobs:
         get_params:
           depth: 30
 
-    #@ if/end product.has_stemcell == True:
+    #@ if/end product.metadata.has_stemcell == True:
     - task: upload-stemcell
       image: platform-automation-image
       file: platform-automation-tasks/tasks/upload-stemcell.yml
@@ -326,7 +326,7 @@ jobs:
 #@ end
 
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 #@ if data.values.separate_config == True:
 - name: #@ "configure-deploy-unlock-" + product.name
   serial: true
@@ -355,7 +355,7 @@ jobs:
       passed:
       - #@ "lock-upload-stage-" + product.name
       trigger: true
-    #@ if/end product.has_stemcell == True:
+    #@ if/end product.metadata.has_stemcell == True:
     - get: stemcells
       resource: #@ product.name + "-stemcells"
       passed:
@@ -457,7 +457,7 @@ jobs:
 #@ end
 
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 - name: #@ "generate-config-" + product.name
   serial: true
   plan:
@@ -490,7 +490,7 @@ jobs:
       passed:
       - #@ "lock-upload-stage-configure-deploy-unlock-" + product.name
       #@ end
-    #@ if product.has_stemcell == True:
+    #@ if product.metadata.has_stemcell == True:
     - get: #@ product.name + "-stemcells"
       #@ if data.values.separate_config == True:
       passed:

@@ -2,16 +2,16 @@
 #@ load("@ytt:data", "data")
 
 #@ for product in data.values.products:
-_: #@ template.replace({product.name + "_slug": product.slug})
-_: #@ template.replace({product.name + "_version": product.version})
-_: #@ template.replace({product.name + "_glob": product.glob})
-_: #@ template.replace({product.name + "_s3_bucket": product.s3_bucket})
-_: #@ template.replace({product.name + "_s3_product_regex": product.s3_product_regex})
-#@ if product.has_stemcell == True:
+_: #@ template.replace({product.name + "_slug": product.pivnet.slug})
+_: #@ template.replace({product.name + "_version": product.pivnet.version})
+_: #@ template.replace({product.name + "_glob": product.pivnet.glob})
+_: #@ template.replace({product.name + "_s3_bucket": product.s3.bucket})
+_: #@ template.replace({product.name + "_s3_product_regex": product.s3.product_regex})
+#@ if product.metadata.has_stemcell == True:
 _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-xenial"})
-_: #@ template.replace({product.name + "_stemcell_version": "^" + product.stemcell_version + ".*"})
-_: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3_stemcell_bucket})
-_: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"})
+_: #@ template.replace({product.name + "_stemcell_version": "^" + product.pivnet.stemcell_version + ".*"})
+_: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3.stemcell_bucket})
+_: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.pivnet.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"})
 _: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"})
 #@ end
 #@ end

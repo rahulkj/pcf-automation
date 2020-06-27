@@ -4,7 +4,7 @@
 vars_folder: #@ data.values.vars.folder
 
 #@ for product in data.values.products:
-#@ if product.deploy_product == True:
+#@ if product.metadata.deploy_product == True:
 _: #@ template.replace({product.name + "_config_path": data.values.env + "/config/" + product.name})
 _: #@ template.replace({product.name + "_config_filename": "config.yml"})
 _: #@ template.replace({product.name + "_errand_file": data.values.env + "/errands/" + product.name})

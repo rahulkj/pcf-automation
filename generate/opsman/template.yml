@@ -15,24 +15,24 @@ resources:
     password: ((git_token))
 
 #@ for product in data.values.products:
-#@ if/end product.is_opsman == True:
+#@ if/end product.metadata.is_opsman == True:
 - name: ops-manager
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: #@ product.s3_bucket
-    regexp: #@ product.s3_product_regex
+    bucket: #@ product.s3.bucket
+    regexp: #@ product.s3.product_regex
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: true
 
-#@ if product.is_platform_automation == True:
+#@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
   source:
     endpoint: ((s3_endpoint))
-    bucket: #@ product.s3_bucket
-    regexp: #@ product.s3_product_regex
+    bucket: #@ product.s3.bucket
+    regexp: #@ product.s3.product_regex
     access_key_id: ((s3_access_key))
     secret_access_key: ((s3_secret_key))
     disable_ssl: true
@@ -197,8 +197,8 @@ jobs:
       repository: repository-commit
 
 #@ for product in data.values.products:
-#@ if product.is_opsman == True:
-#@ if product.authentication == "ldap":
+#@ if product.metadata.is_opsman == True:
+#@ if product.metadata.authentication == "ldap":
   - task: configure-ldap-authentication
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-ldap-authentication.yml
@@ -209,7 +209,7 @@ jobs:
       ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
-#@ elif product.authentication == "saml":
+#@ elif product.metadata.authentication == "saml":
   - task: configure-saml-authentication
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-saml-authentication.yml

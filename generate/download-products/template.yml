@@ -27,7 +27,7 @@ resources:
     bucket: #@ "((" + product.name + "_s3_bucket))"
     regexp: #@ "((" + product.name + "_s3_product_regex))"
 
-#@ if product.has_stemcell == True:
+#@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"
   type: pivnet
   source:
@@ -54,7 +54,7 @@ groups:
     jobs:
     #@ for product in data.values.products:
     - #@ product.name
-    #@ if product.has_stemcell == True:
+    #@ if product.metadata.has_stemcell == True:
     - #@ product.name + "-stemcell"
     #@ end
     #@ end
@@ -62,7 +62,7 @@ groups:
   - name: #@ product.name
     jobs:
     - #@ product.name
-    #@ if product.has_stemcell == True:
+    #@ if product.metadata.has_stemcell == True:
     - #@ product.name + "-stemcell"
     #@ end
   #@ end
@@ -83,7 +83,7 @@ jobs:
     params:
       file: #@ "product/((" + product.name + "_glob))"
 
-#@ if product.has_stemcell == True:
+#@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"
   plan:
   - in_parallel:

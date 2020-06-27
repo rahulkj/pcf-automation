@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 BASE_DIR=$(dirname "$(realpath $0)")
 
@@ -53,7 +53,7 @@ ytt -f "${BASE_DIR}/install-upgrade-products/template-params.yml" -f "${BASE_DIR
 ytt -f "${BASE_DIR}/globals-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/globals.yml"
 
-PRODUCTS=$(yq r "${BASE_DIR}/${VALUES_FILE}" products -j | jq -r '.[] | select(.deploy_product==true) | .name')
+PRODUCTS=$(yq r "${BASE_DIR}/${VALUES_FILE}" products -j | jq -r '.[] | select(.metadata.deploy_product==true) | .name')
 
 for p in ${PRODUCTS}; do
   echo "------ ${p} ------"

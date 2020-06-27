@@ -42,13 +42,17 @@ resources:
 - name: email
   type: email
   source:
+    from: ((from_address))
+    to: [((to_addresses))]
     smtp:
       host: ((smtp_address))
       port: ((smtp_port))
+      #@ if data.values.smtp.is_auth_required == True:
       username: ((smtp_username))
       password: ((smtp_password))
-    from: ((from_address))
-    to: [((to_addresses))]
+      #@ else:
+      anonymous: true
+      #@ end
 
 - name: pipeline-lock
   type: pool

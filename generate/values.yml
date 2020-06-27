@@ -22,10 +22,11 @@ credhub:
 smtp:
   address: ((smtp_address))
   port: ((smtp_port))
-  username: ((smtp_credentials.username))
-  password: ((smtp_credentials.password))
+  is_auth_required: true
   from_address: ((from_address))
   to_addresses: ((to_addresses))
+  username: ((smtp_credentials.username))
+  password: ((smtp_credentials.password))
 s3:
   endpoint: http://((s3_endpoint))/
   access_key: ((s3_credentials.username))

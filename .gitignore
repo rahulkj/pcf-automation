@@ -2,3 +2,4 @@
 creds.yml
 *params.yml
 test
+.envrc

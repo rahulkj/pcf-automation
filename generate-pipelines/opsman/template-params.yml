@@ -1,0 +1,19 @@
+#@ load("@ytt:data", "data")
+
+opsman_config_path: #@ data.values.env + "/config/opsman"
+opsman_vars_path: #@ data.values.env + "/vars/opsman"
+
+director_config_path: #@ data.values.env + "/config/director"
+director_vars_path: #@ data.values.env + "/vars/director"
+
+opsman_config_filename: #@ data.values.configs.opsman_config_filename
+opsman_var_filename: #@ data.values.vars.opsman_var_filename
+opsman_auth_filename: #@ data.values.vars.opsman_auth_filename
+
+director_config_filename: #@ data.values.configs.director_config_filename
+director_var_filename: #@ data.values.vars.director_var_filename
+
+state_file_destination: #@ data.values.configs.state_file_destination
+state_filename: #@ data.values.env + "-state.yml"
+
+s3_opsman_backup_bucket: #@ data.values.opsman_backup_bucket

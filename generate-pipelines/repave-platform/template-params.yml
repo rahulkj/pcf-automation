@@ -1,0 +1,10 @@
+#@ load("@ytt:data", "data")
+
+product_config_path: #@ data.values.env + "/config/director"
+
+ops_director_config_filename: #@ data.values.vars.director_var_filename
+
+scheduler_start_time: "12:00 AM"
+scheduler_stop_time: "11:59 PM"
+scheduler_location: America/Chicago
+scheduler_days: [Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]

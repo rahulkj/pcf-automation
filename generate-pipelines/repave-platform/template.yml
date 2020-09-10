@@ -9,21 +9,21 @@ resources:
 - name: config-repo
   type: git
   source:
-    uri: ((config_repo_git_url))
-    branch: ((config_repo_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((config_repo_git.url))
+    branch: ((config_repo_git.branch))
+    username: ((git.username))
+    password: ((git.token))
 
 #@ for product in data.values.products:
 #@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
   source:
-    endpoint: ((s3_endpoint))
+    endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
     disable_ssl: true
 #@ end
 #@ end
@@ -31,14 +31,14 @@ resources:
 - name: email
   type: email
   source:
-    from: ((from_address))
-    to: [((to_addresses))]
+    from: ((smtp.from_address))
+    to: [((smtp.to_addresses))]
     smtp:
-      host: ((smtp_address))
-      port: ((smtp_port))
+      host: ((smtp.address))
+      port: ((smtp.port))
       #@ if data.values.smtp.is_auth_required == True:
-      username: ((smtp_username))
-      password: ((smtp_password))
+      username: ((smtp.username))
+      password: ((smtp.password))
       #@ else:
       anonymous: true
       #@ end
@@ -55,10 +55,10 @@ resources:
   type: pool
   source:
     pool: ((lock_folder))
-    uri: ((locks_git_url))
-    branch: ((locks_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((locks_git.url))
+    branch: ((locks_git.branch))
+    username: ((git.username))
+    password: ((git.token))
 
 jobs:
 - name: configure-ops-director
@@ -87,11 +87,11 @@ jobs:
     output_mapping:
       interpolated-files: config
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((product_config_path))
 
   - task: credhub-interpolate-env
@@ -102,18 +102,18 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
 
   - task: configure-ops-director
     image: platform-automation-image
     file: platform-automation-tasks/tasks/configure-director.yml
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       DIRECTOR_CONFIG_FILE: ((product_config_path))/((ops_director_config_filename))
 
 - name: apply-changes
@@ -141,12 +141,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
 
   - task: apply-changes
     image: platform-automation-image
@@ -154,7 +154,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((attempts))
 
   - put: email

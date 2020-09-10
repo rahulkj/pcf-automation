@@ -18,32 +18,32 @@ resources:
 - name: automation-repo
   type: git
   source:
-    uri: ((automation_git_url))
-    branch: ((automation_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((automation_git.url))
+    branch: ((automation_git.branch))
+    username: ((git.username))
+    password: ((git.token))
 
 - name: locks
   type: pool
   source:
     pool: ((lock_folder))
-    uri: ((locks_git_url))
-    branch: ((locks_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((locks_git.url))
+    branch: ((locks_git.branch))
+    username: ((git.username))
+    password: ((git.token))
     retry_delay: 60s
 
 - name: email
   type: email
   source:
-    from: ((from_address))
-    to: [((to_addresses))]
+    from: ((smtp.from_address))
+    to: [((smtp.to_addresses))]
     smtp:
-      host: ((smtp_address))
-      port: ((smtp_port))
+      host: ((smtp.address))
+      port: ((smtp.port))
       #@ if data.values.smtp.is_auth_required == True:
-      username: ((smtp_username))
-      password: ((smtp_password))
+      username: ((smtp.username))
+      password: ((smtp.password))
       #@ else:
       anonymous: true
       #@ end
@@ -53,7 +53,7 @@ resources:
   source:
     user: rahulkj
     repository: tile-config-convertor
-    access_token: ((git_token))
+    access_token: ((git.token))
 
 - name: custom-docker-image
   type: docker-image
@@ -65,22 +65,22 @@ resources:
 - name: #@ product.name + "-git-repo"
   type: git
   source:
-    uri: ((config_repo_git_url))
-    branch: ((config_repo_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((config_repo_git.url))
+    branch: ((config_repo_git.branch))
+    username: ((git.username))
+    password: ((git.token))
     paths:
     - #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     - #@ "((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
-    - ((opsman_env_path))/((opsman_env_filename))
+    - ((opsman_env.path))/((opsman_env.filename))
 
 - name: #@ product.name
   type: s3
   source:
-    endpoint: ((s3_endpoint))
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: ((s3_disable_ssl))
+    endpoint: ((s3.endpoint))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
+    disable_ssl: ((s3.disable_ssl))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
 
@@ -88,10 +88,10 @@ resources:
 - name: #@ product.name + "-stemcells"
   type: s3
   source:
-    endpoint: ((s3_endpoint))
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: ((s3_disable_ssl))
+    endpoint: ((s3.endpoint))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
+    disable_ssl: ((s3.disable_ssl))
     bucket: #@ product.s3.stemcell_bucket
     regexp: #@ "bosh-stemcell-(" + product.pivnet.stemcell_version + ".*)-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"
 #@ end
@@ -100,11 +100,11 @@ resources:
 - name: #@ product.name
   type: s3
   source:
-    endpoint: ((s3_endpoint))
+    endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
     disable_ssl: true
 #@ end
 #@ end
@@ -202,12 +202,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
 
   - in_parallel:
     - task: upload-product
@@ -217,7 +217,7 @@ jobs:
         product: product
         env: env
       params:
-        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       on_failure:
         put: locks
         params: {release: locks}
@@ -232,7 +232,7 @@ jobs:
         stemcell: stemcells
         env: env
       params:
-        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       on_failure:
         put: locks
         params: {release: locks}
@@ -246,7 +246,7 @@ jobs:
       product: product
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     on_failure:
       put: locks
       params: {release: locks}
@@ -269,11 +269,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
     on_failure:
@@ -291,7 +291,7 @@ jobs:
       vars: vars
     params:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
     on_failure:
       put: locks
@@ -306,7 +306,7 @@ jobs:
       env: env
       config: config-repo
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     attempts: ((attempts))
     on_failure:
@@ -381,12 +381,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
     on_failure:
       put: locks
       params: {release: locks}
@@ -401,11 +401,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
     on_failure:
@@ -423,7 +423,7 @@ jobs:
       vars: vars
     params:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
     on_failure:
       put: locks
@@ -438,7 +438,7 @@ jobs:
       env: env
       config: config-repo
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
     attempts: ((attempts))
     on_failure:
@@ -515,12 +515,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
 
   - task: generate-config
     image: custom-docker-image
@@ -530,7 +530,7 @@ jobs:
       env: env
       config: config-repo
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
 #@ end
 #@ end

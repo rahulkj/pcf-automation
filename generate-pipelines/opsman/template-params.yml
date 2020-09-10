@@ -15,5 +15,3 @@ director_var_filename: #@ data.values.vars.director_var_filename
 
 state_file_destination: #@ data.values.configs.state_file_destination
 state_filename: #@ data.values.env + "-state.yml"
-
-s3_opsman_backup_bucket: #@ data.values.opsman_backup_bucket

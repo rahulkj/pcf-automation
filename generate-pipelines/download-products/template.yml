@@ -20,10 +20,10 @@ resources:
 - name: #@ product.name + "-product-bucket"
   type: s3
   source:
-    endpoint: ((s3_endpoint))
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: ((s3_disable_ssl))
+    endpoint: ((s3.endpoint))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
+    disable_ssl: ((s3.disable_ssl))
     bucket: #@ "((" + product.name + "_s3_bucket))"
     regexp: #@ "((" + product.name + "_s3_product_regex))"
 
@@ -40,11 +40,11 @@ resources:
 - name: #@ product.name + "-stemcells"
   type: s3
   source:
-    endpoint: ((s3_endpoint))
+    endpoint: ((s3.endpoint))
     regexp: #@ "((" + product.name + "_s3_stemcells_regex))"
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
-    disable_ssl: ((s3_disable_ssl))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
+    disable_ssl: ((s3.disable_ssl))
     bucket: #@ "((" + product.name + "_s3_stemcell_bucket))"
 #@ end
 #@ end

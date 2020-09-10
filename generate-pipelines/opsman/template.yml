@@ -9,32 +9,42 @@ resources:
 - name: config-repo
   type: git
   source:
-    uri: ((config_repo_git_url))
-    branch: ((config_repo_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((config_repo_git.url))
+    branch: ((config_repo_git.branch))
+    username: ((git.username))
+    password: ((git.token))
 
 #@ for product in data.values.products:
 #@ if/end product.metadata.is_opsman == True:
 - name: ops-manager
   type: s3
   source:
-    endpoint: ((s3_endpoint))
+    endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
     disable_ssl: true
+
+#@ if/end product.metadata.is_opsman == True:
+- name: opsman-backup-bucket
+  type: s3
+  source:
+    endpoint: ((s3.endpoint))
+    bucket: #@ product.s3.backup_bucket
+    regexp: installation-(.*).zip
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
 
 #@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
   source:
-    endpoint: ((s3_endpoint))
+    endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
     disable_ssl: true
 #@ end
 #@ end
@@ -42,14 +52,14 @@ resources:
 - name: email
   type: email
   source:
-    from: ((from_address))
-    to: [((to_addresses))]
+    from: ((smtp.from_address))
+    to: [((smtp.to_addresses))]
     smtp:
-      host: ((smtp_address))
-      port: ((smtp_port))
+      host: ((smtp.address))
+      port: ((smtp.port))
       #@ if data.values.smtp.is_auth_required == True:
-      username: ((smtp_username))
-      password: ((smtp_password))
+      username: ((smtp.username))
+      password: ((smtp.password))
       #@ else:
       anonymous: true
       #@ end
@@ -58,20 +68,11 @@ resources:
   type: pool
   source:
     pool: ((lock_folder))
-    uri: ((locks_git_url))
-    branch: ((locks_git_branch))
-    username: ((git_username))
-    password: ((git_token))
+    uri: ((locks_git.url))
+    branch: ((locks_git.branch))
+    username: ((git.username))
+    password: ((git.token))
     retry_delay: 60s
-
-- name: opsman-backup-bucket
-  type: s3
-  source:
-    endpoint: ((s3_endpoint))
-    bucket: ((s3_opsman_backup_bucket))
-    regexp: installation-(.*).zip
-    access_key_id: ((s3_access_key))
-    secret_access_key: ((s3_secret_key))
 
 groups:
 - name: complete
@@ -146,12 +147,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
       SKIP_MISSING: true
 
   - task: credhub-interpolate-vars
@@ -162,11 +163,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
@@ -210,7 +211,7 @@ jobs:
       config: vars
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ elif product.metadata.authentication == "saml":
@@ -221,7 +222,7 @@ jobs:
       config: vars
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ else:
@@ -232,7 +233,7 @@ jobs:
       config: vars
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
     attempts: ((attempts))
 #@ end
@@ -267,12 +268,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
       SKIP_MISSING: true
 
   - task: credhub-interpolate-vars
@@ -283,11 +284,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((director_vars_path))
       SKIP_MISSING: true
 
@@ -299,7 +300,7 @@ jobs:
       vars: vars
     params:
       VARS_FILES: ((vars_folder))/((director_vars_path))/((director_var_filename))
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       DIRECTOR_CONFIG_FILE: ((director_config_path))/((director_config_filename))
 
 - name: deploy-director
@@ -331,12 +332,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
       SKIP_MISSING: true
 
   - task: deploy-ops-director
@@ -345,7 +346,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((attempts))
 
 - name: release-opsman-lock
@@ -385,12 +386,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
       SKIP_MISSING: true
 
   - task: credhub-interpolate-vars
@@ -401,11 +402,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
@@ -415,7 +416,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
 
   - task: delete-opsmanager-vm
     image: platform-automation-image
@@ -504,12 +505,12 @@ jobs:
     output_mapping:
       interpolated-files: env
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
-      INTERPOLATION_PATHS: ((opsman_env_path))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
       SKIP_MISSING: true
 
   - task: credhub-interpolate-vars
@@ -520,11 +521,11 @@ jobs:
     output_mapping:
       interpolated-files: vars
     params:
-      PREFIX: ((credhub_prefix))
-      CREDHUB_CA_CERT: ((credhub_ca_cert))
-      CREDHUB_CLIENT: ((credhub_client))
-      CREDHUB_SECRET: ((credhub_client_secret))
-      CREDHUB_SERVER: ((credhub_server))
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_vars_path))
       SKIP_MISSING: true
 
@@ -534,7 +535,7 @@ jobs:
     input_mapping:
       env: env
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
 
   - put: opsman-backup-bucket
     params:
@@ -551,7 +552,7 @@ jobs:
       installation: installation
       vars: vars
     params:
-      ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
       STATE_FILE: ((state_file_destination))/((state_filename))
       VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
@@ -580,7 +581,7 @@ jobs:
       input_mapping:
         env: env
       params:
-        ENV_FILE: ((opsman_env_path))/((opsman_env_filename))
+        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       attempts: ((attempts))
 
 - name: release-upgrade-opsman-lock

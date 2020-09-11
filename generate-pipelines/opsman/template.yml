@@ -32,7 +32,17 @@ resources:
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.backup_bucket
-    regexp: installation-(.*).zip
+    regexp: #@ data.values.env + "/installation-(.*).zip"
+    access_key_id: ((s3.access_key))
+    secret_access_key: ((s3.secret_key))
+
+#@ if/end product.metadata.is_opsman == True:
+- name: state
+  type: s3
+  source:
+    endpoint: ((s3.endpoint))
+    bucket: #@ product.s3.state_bucket
+    regexp: #@ data.values.env + "/" + data.values.env + "-(.*).yml"
     access_key_id: ((s3.access_key))
     secret_access_key: ((s3.secret_key))
 
@@ -138,6 +148,7 @@ jobs:
       resource: ops-manager
       passed: [set-opsman-lock]
       trigger: true
+    - get: state
 
   - task: credhub-interpolate-env
     image: platform-automation-image
@@ -175,7 +186,7 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/create-vm.yml
     input_mapping:
-      state: config-repo
+      state: state
       image: product
       config: config-repo
       vars: vars
@@ -184,22 +195,9 @@ jobs:
       STATE_FILE: ((state_filename))
       VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
-  - task: commit-files-into-git
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/make-git-commit.yml
-    input_mapping:
-      repository: config-repo
-      file-source: generated-state
+  - put: state
     params:
-      FILE_SOURCE_PATH: ((state_filename))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
-      GIT_AUTHOR_NAME: ((ci_username))
-      GIT_AUTHOR_EMAIL: ((ci_email_address))
-      COMMIT_MESSAGE: "Updated state file after creating the OpsManager VM"
-
-  - put: config-repo
-    params:
-      repository: repository-commit
+      file: generated-state/((state_filename))
 
 #@ for product in data.values.products:
 #@ if product.metadata.is_opsman == True:
@@ -377,6 +375,7 @@ jobs:
       params:
         globs: ["*.zip"]
         unpack: true
+    - get: state
 
   - task: credhub-interpolate-env
     image: platform-automation-image
@@ -422,30 +421,18 @@ jobs:
     image: platform-automation-image
     file: platform-automation-tasks/tasks/delete-vm.yml
     input_mapping:
-      state: config-repo
+      state: state
       config: config-repo
       vars: vars
     params:
       OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
-      STATE_FILE: ((state_file_destination))/((state_filename))
+      STATE_FILE: ((state_filename))
       VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
-  - task: commit-files-into-git
-    image: platform-automation-image
-    file: platform-automation-tasks/tasks/make-git-commit.yml
-    input_mapping:
-      repository: config-repo
-      file-source: generated-state
-    params:
-      FILE_SOURCE_PATH: ((state_filename))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
-      GIT_AUTHOR_NAME: ((ci_username))
-      GIT_AUTHOR_EMAIL: ((ci_email_address))
-      COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
   - in_parallel:
-    - put: config-repo
+    - put: state
       params:
-        repository: repository-commit
+        file: generated-state/((state_filename))
 
     - put: email
       params:
@@ -496,6 +483,7 @@ jobs:
       resource: ops-manager
       trigger: true
       passed: [set-upgrade-opsman-lock]
+    - get: state
 
   - task: credhub-interpolate-env
     image: platform-automation-image
@@ -548,41 +536,23 @@ jobs:
       config: config-repo
       env: env
       image: product
-      state: config-repo
+      state: state
       installation: installation
       vars: vars
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       OPSMAN_CONFIG_FILE: ((opsman_config_path))/((opsman_config_filename))
-      STATE_FILE: ((state_file_destination))/((state_filename))
+      STATE_FILE: ((state_filename))
       VARS_FILES: ((vars_folder))/((opsman_vars_path))/((opsman_var_filename))
 
-  - task: commit-files-into-git
+  - task: apply-changes
     image: platform-automation-image
-    file: platform-automation-tasks/tasks/make-git-commit.yml
+    file: platform-automation-tasks/tasks/apply-director-changes.yml
     input_mapping:
-      repository: config-repo
-      file-source: generated-state
+      env: env
     params:
-      FILE_SOURCE_PATH: ((state_filename))
-      FILE_DESTINATION_PATH: ((state_file_destination))/((state_filename))
-      GIT_AUTHOR_NAME: ((ci_username))
-      GIT_AUTHOR_EMAIL: ((ci_email_address))
-      COMMIT_MESSAGE: "Updated state file after deleting the OpsManager VM"
-
-  - in_parallel:
-    - put: config-repo
-      params:
-        repository: repository-commit
-
-    - task: apply-changes
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/apply-director-changes.yml
-      input_mapping:
-        env: env
-      params:
-        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-      attempts: ((attempts))
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+    attempts: ((attempts))
 
 - name: release-upgrade-opsman-lock
   plan:

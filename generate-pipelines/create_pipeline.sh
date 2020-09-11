@@ -41,7 +41,7 @@ ytt -f "${BASE_DIR}/download-products/template-params.yml" -f "${BASE_DIR}/${VAL
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/download-products/params-template.yml"
 
 ytt -f "${BASE_DIR}/opsman/template.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
-  --ignore-unknown-comments > "${ENV_PIPELINE_DIR}/pipelines/ops-manager/pipeline.yml"
+  --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/ops-manager/pipeline.yml"
 ytt -f "${BASE_DIR}/opsman/template-params.yml" -f "${BASE_DIR}/${VALUES_FILE}" \
   --ignore-unknown-comments --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/ops-manager/params-template.yml"
 

@@ -308,7 +308,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
-    attempts: ((attempts))
+    attempts: ((apply_changes_attempts))
     on_failure:
       put: locks
       params: {release: locks}
@@ -440,7 +440,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
-    attempts: ((attempts))
+    attempts: ((apply_changes_attempts))
     on_failure:
       put: locks
       params: {release: locks}

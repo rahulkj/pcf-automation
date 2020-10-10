@@ -4,7 +4,8 @@ env:
 separate_config: False
 pivnet_token: ((pivnet_token))
 iaas: vsphere
-attempts: 3
+auth_configure_attempts: 3
+apply_changes_attempts: 3
 
 git:
   username: ((git_credentials.username))

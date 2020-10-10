@@ -48,4 +48,5 @@ opsman_env:
 
 vars_folder: #@ data.values.vars.folder
 
-attempts: #@ data.values.attempts
+auth_configure_attempts: #@ data.values.auth_configure_attempts
+apply_changes_attempts: #@ data.values.apply_changes_attempts

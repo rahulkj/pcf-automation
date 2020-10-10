@@ -155,7 +155,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-    attempts: ((attempts))
+    attempts: ((apply_changes_attempts))
 
   - put: email
     params:

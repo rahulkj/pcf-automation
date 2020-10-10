@@ -211,7 +211,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
-    attempts: ((attempts))
+    attempts: ((auth_configure_attempts))
 #@ elif product.metadata.authentication == "saml":
   - task: configure-saml-authentication
     image: platform-automation-image
@@ -222,7 +222,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
-    attempts: ((attempts))
+    attempts: ((auth_configure_attempts))
 #@ else:
   - task: configure-internal-authentication
     image: platform-automation-image
@@ -233,7 +233,7 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       AUTH_CONFIG_FILE: ((opsman_vars_path))/((opsman_auth_filename))
-    attempts: ((attempts))
+    attempts: ((auth_configure_attempts))
 #@ end
 #@ end
 #@ end
@@ -345,7 +345,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-    attempts: ((attempts))
+    attempts: ((apply_changes_attempts))
 
 - name: release-opsman-lock
   plan:
@@ -552,7 +552,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-    attempts: ((attempts))
+    attempts: ((apply_changes_attempts))
 
 - name: release-upgrade-opsman-lock
   plan:

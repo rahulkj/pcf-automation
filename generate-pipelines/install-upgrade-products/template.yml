@@ -1,4 +1,6 @@
 #@ load("@ytt:data", "data")
+
+#@ if/end data.values.smtp.enabled == True:
 resource_types:
 - name: email
   type: docker-image
@@ -33,6 +35,7 @@ resources:
     password: ((git.token))
     retry_delay: 60s
 
+#@ if data.values.smtp.enabled == True:
 - name: email
   type: email
   source:
@@ -47,6 +50,7 @@ resources:
       #@ else:
       anonymous: true
       #@ end
+#@ end
 
 - name: tile-config-convertor
   type: github-release
@@ -319,7 +323,8 @@ jobs:
     params: {release: locks}
     get_params:
       depth: 30
-
+  
+  #@ if/end data.values.smtp.enabled == True:
   - put: email
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
@@ -452,6 +457,7 @@ jobs:
     get_params:
         depth: 30
 
+  #@ if/end data.values.smtp.enabled == True:
   - put: email
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"

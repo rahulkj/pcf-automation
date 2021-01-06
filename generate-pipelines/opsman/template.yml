@@ -1,4 +1,6 @@
 #@ load("@ytt:data", "data")
+
+#@ if/end data.values.smtp.enabled == True:
 resource_types:
 - name: email
   type: docker-image
@@ -59,6 +61,7 @@ resources:
 #@ end
 #@ end
 
+#@ if/end data.values.smtp.enabled == True:
 - name: email
   type: email
   source:
@@ -358,6 +361,7 @@ jobs:
     params: {release: pipeline-lock}
     get_params:
       depth: 30
+  #@ if/end data.values.smtp.enabled == True:
   - put: email
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
@@ -434,6 +438,7 @@ jobs:
       params:
         file: generated-state/((state_filename))
 
+    #@ if/end data.values.smtp.enabled == True:
     - put: email
       params:
         subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
@@ -569,12 +574,12 @@ jobs:
         depth: 30
 
   - in_parallel:
-    - put: email
-      params:
-        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
-        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
-
     - put: pipeline-lock
       params: {release: pipeline-lock}
       get_params:
         depth: 30
+    #@ if/end data.values.smtp.enabled == True:
+    - put: email
+      params:
+        subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
+        body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"

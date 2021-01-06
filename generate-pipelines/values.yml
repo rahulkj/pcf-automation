@@ -26,6 +26,7 @@ credhub:
   server: ((credhub_server))
 
 smtp:
+  enabled: False
   address: ((smtp_address))
   port: ((smtp_port))
   is_auth_required: true

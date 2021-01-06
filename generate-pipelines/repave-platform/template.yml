@@ -1,4 +1,6 @@
 #@ load("@ytt:data", "data")
+
+#@ if/end data.values.smtp.enabled == True:
 resource_types:
 - name: email
   type: docker-image
@@ -28,6 +30,7 @@ resources:
 #@ end
 #@ end
 
+#@ if/end data.values.smtp.enabled == True:
 - name: email
   type: email
   source:
@@ -157,6 +160,7 @@ jobs:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((apply_changes_attempts))
 
+  #@ if/end data.values.smtp.enabled == True:
   - put: email
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"

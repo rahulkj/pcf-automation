@@ -329,8 +329,8 @@ jobs:
     params:
       subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
       body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
-#@ deploy_product_index=data.values.products.index(product)
 #@ end
+#@ deploy_product_index=data.values.products.index(product)
 #@ end
 #@ end
 

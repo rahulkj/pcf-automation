@@ -75,6 +75,8 @@ products:
     deploy_product: True
     is_opsman: False
     is_platform_automation: False
+    skip_apply_changes: False
+    selective_apply_changes: "pivotal-container-service"
   pivnet:
     slug: pivotal-container-service
     glob: '*.pivotal'
@@ -116,6 +118,8 @@ products:
     deploy_product: True
     is_opsman: False
     is_platform_automation: False
+    skip_apply_changes: False
+    selective_apply_changes: "harbor-container-registry"
   pivnet:
     slug: harbor-container-registry
     glob: "*.pivotal"
@@ -125,12 +129,28 @@ products:
     bucket: harbor
     stemcell_bucket: stemcells
     product_regex: "harbor-container-registry-(1.10.*).pivotal"
+- name: nsx-t
+  metadata:
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: False
+    skip_apply_changes: True
+  pivnet:
+    slug: vmware-nsx-t
+    glob: 'VMware-NSX-T-*.pivotal'
+    version: ^3\.0\.[0-9]*$
+  s3:
+    bucket: nsx-t
+    product_regex: "VMware-NSX-T-(3.0.*).pivotal"
 - name: pas
   metadata:
     has_stemcell: True
     deploy_product: False
     is_opsman: False
     is_platform_automation: False
+    selective_apply_changes: "VMware-NSX-T,cf"
+    skip_apply_changes: False
   pivnet:
     slug: elastic-runtime
     glob: 'cf-*.pivotal'
@@ -140,16 +160,3 @@ products:
     bucket: pas
     stemcell_bucket: stemcells
     product_regex: "cf-(2.9.*).pivotal"
-- name: nsx-t
-  metadata:
-    has_stemcell: False
-    deploy_product: False
-    is_opsman: False
-    is_platform_automation: False
-  pivnet:
-    slug: vmware-nsx-t
-    glob: 'VMware-NSX-T-*.pivotal'
-    version: ^3\.0\.[0-9]*$
-  s3:
-    bucket: nsx-t
-    product_regex: "VMware-NSX-T-(3.0.*).pivotal"

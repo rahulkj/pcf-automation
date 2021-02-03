@@ -303,15 +303,15 @@ jobs:
       get_params:
         depth: 30
 
+  #@ if/end product.metadata.skip_apply_changes != True:
   - task: deploy-product
     image: platform-automation-image
-    file: automation-repo/tasks/apply-product-changes.yml
+    file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env
-      config: config-repo
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-      CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
+      PRODUCT_NAMES: #@ product.metadata.selective_apply_changes
     attempts: ((apply_changes_attempts))
     on_failure:
       put: locks
@@ -436,15 +436,15 @@ jobs:
       get_params:
         depth: 30
 
+  #@ if/end product.metadata.skip_apply_changes != True:
   - task: deploy-product
     image: platform-automation-image
-    file: automation-repo/tasks/apply-product-changes.yml
+    file: automation-repo/tasks/apply-changes.yml
     input_mapping:
       env: env
-      config: config-repo
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-      CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
+      PRODUCT_NAMES: #@ product.metadata.selective_apply_changes
     attempts: ((apply_changes_attempts))
     on_failure:
       put: locks

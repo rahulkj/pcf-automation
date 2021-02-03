@@ -1,51 +1,25 @@
 ---
-
 platform: linux
 
-image_resource:
-  type: docker-image
-  source: {repository: rjain/buildbox}
+inputs:
+- name: env
 
 params:
-  ENV_FILE:
-  APPLY_CHANGES_CONFIG: deploy-products.yml
-
-inputs:
-  - name: env
-  - name: config
+  ENV_FILE: env.yml
+  # - Filepath of the env config YAML
+  # - Relative to root of the `env` input
+  PRODUCT_NAMES:
 
 run:
   path: bash
   args:
   - "-c"
   - |
-    OM_CMD=om
-    JQ_CMD=jq
+    OPTIONS=""
 
-    if [[ ! -z "${APPLY_CHANGES_CONFIG}" && null != "${APPLY_CHANGES_CONFIG}" ]]; then
-      apply_changes_config=$(yq e -j config/${APPLY_CHANGES_CONFIG})
-
-      deploy_products_type=$(echo "$apply_changes_config" | $JQ_CMD -r '.deploy_products | type')
-
-      staged_products=$($OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/staged/products)
-
-      if [[ "$deploy_products_type" == "array" ]]; then
-        products=$(echo "$apply_changes_config" | $JQ_CMD -r '.deploy_products[]')
-
-        for product in $(echo $products | sed "s/\n/ /g"); do
-          product_guid=$(echo "$staged_products" | $JQ_CMD -r --arg product_name $product '.[] | select(.type == $product_name) | .guid')
-          if [[ ! -z "$product_guid" ]]; then
-            sed -i -e "s/$product/$product_guid/g" config/${APPLY_CHANGES_CONFIG}
-          else
-            echo "$product specified in the apply changes config, not found"
-            exit 1
-          fi
-        done
-
-        apply_changes_config=$(yq e -j config/${APPLY_CHANGES_CONFIG})
-      fi
-
-      $OM_CMD --env env/"${ENV_FILE}" curl -s -p /api/v0/installations -x POST -d "$apply_changes_config"
-    fi
-
-    $OM_CMD --env env/"${ENV_FILE}" apply-changes --reattach true --ignore-warnings true
+    IFS=',' read -r PRODUCTS <<< "$PRODUCT_NAMES"
+    for i in "${PRODUCTS[@]}"; do
+      OPTIONS+=" --product-name $i"
+    done
+    
+    om --env env/"${ENV_FILE}" apply-changes ${OPTIONS}

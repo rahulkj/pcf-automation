@@ -22,4 +22,4 @@ run:
       OPTIONS+=" --product-name $i"
     done
     
-    om --env env/"${ENV_FILE}" apply-changes ${OPTIONS}
+    om --env env/"${ENV_FILE}" apply-changes --ignore-warnings ${OPTIONS}

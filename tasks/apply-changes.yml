@@ -17,7 +17,7 @@ run:
   - |
     OPTIONS=""
 
-    IFS=',' read -r PRODUCTS <<< "$PRODUCT_NAMES"
+    IFS=',' read -ra PRODUCTS <<< "$PRODUCT_NAMES"
     for i in "${PRODUCTS[@]}"; do
       OPTIONS+=" --product-name $i"
     done

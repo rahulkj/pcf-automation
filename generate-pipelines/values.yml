@@ -16,7 +16,9 @@ git:
   config_repo_git_branch: master
   locks_git_url: https://github.com/rahulkj/pipeline-locks
   locks_git_branch: master
-  lock_folder: pipeline-lock
+  opsman_install_lock_folder: opsman-install-pipeline-lock
+  opsman_upgrade_lock_folder: opsman-upgrade-pipeline-lock
+  product_lock_folder: product-pipeline-lock
 
 credhub:
   prefix: concourse/homelab

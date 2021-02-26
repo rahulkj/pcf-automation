@@ -21,7 +21,9 @@ locks_git:
   url: #@ data.values.git.locks_git_url
   branch: #@ data.values.git.locks_git_branch
 
-lock_folder: #@ data.values.git.lock_folder
+opsman_install_lock_folder: #@ data.values.git.opsman_install_lock_folder
+opsman_upgrade_lock_folder: #@ data.values.git.opsman_upgrade_lock_folder
+product_lock_folder: #@ data.values.git.product_lock_folder
 
 git:
   username: #@ data.values.git.username

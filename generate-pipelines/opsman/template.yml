@@ -77,10 +77,30 @@ resources:
       anonymous: true
       #@ end
 
-- name: pipeline-lock
+- name: opsman-install-pipeline-lock
   type: pool
   source:
-    pool: ((lock_folder))
+    pool: ((opsman_install_lock_folder))
+    uri: ((locks_git.url))
+    branch: ((locks_git.branch))
+    username: ((git.username))
+    password: ((git.token))
+    retry_delay: 60s
+
+- name: opsman-upgrade-pipeline-lock
+  type: pool
+  source:
+    pool: ((opsman_upgrade_lock_folder))
+    uri: ((locks_git.url))
+    branch: ((locks_git.branch))
+    username: ((git.username))
+    password: ((git.token))
+    retry_delay: 60s
+
+- name: product-locks
+  type: pool
+  source:
+    pool: ((product_lock_folder))
     uri: ((locks_git.url))
     branch: ((locks_git.branch))
     username: ((git.username))
@@ -90,45 +110,46 @@ resources:
 groups:
 - name: complete
   jobs:
-  - set-opsman-lock
+  - set-opsman-install-lock
   - install-ops-manager
   - configure-ops-director
   - deploy-director
-  - release-opsman-lock
+  - release-opsman-install-lock
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
   - install-ops-manager
   - release-upgrade-opsman-lock
-  - unset-lock
+  - unset-locks
   - delete-all
 - name: install-opsman
   jobs:
-  - set-opsman-lock
+  - set-opsman-install-lock
   - install-ops-manager
   - configure-ops-director
   - deploy-director
-  - release-opsman-lock
-  - unset-lock
+  - release-opsman-install-lock
+  - unset-locks
 - name: upgrade-opsman
   jobs:
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
-  - install-ops-manager
   - release-upgrade-opsman-lock
-  - unset-lock
 - name: cleanup
   jobs:
   - delete-all
+- name: unset-locks
+  jobs:
+  - unset-locks
 
 jobs:
-- name: set-opsman-lock
+- name: set-opsman-install-lock
   plan:
   - in_parallel:
     - get: product
       resource: ops-manager
       params:
         skip_download: "true"
-  - put: pipeline-lock
+  - put: opsman-install-pipeline-lock
     params: {acquire: true}
     get_params:
       depth: 30
@@ -136,8 +157,8 @@ jobs:
 - name: install-ops-manager
   plan:
   - in_parallel:
-    - get: pipeline-lock
-      passed: [set-opsman-lock]
+    - get: opsman-install-pipeline-lock
+      passed: [set-opsman-install-lock]
       params:
         depth: 30
     - get: config-repo
@@ -149,7 +170,7 @@ jobs:
         unpack: true
     - get: product
       resource: ops-manager
-      passed: [set-opsman-lock]
+      passed: [set-opsman-install-lock]
       trigger: true
     - get: state
 
@@ -243,7 +264,7 @@ jobs:
 - name: configure-ops-director
   plan:
   - in_parallel:
-    - get: pipeline-lock
+    - get: opsman-install-pipeline-lock
       passed: [install-ops-manager]
       params:
         depth: 30
@@ -307,7 +328,7 @@ jobs:
 - name: deploy-director
   plan:
   - in_parallel:
-    - get: pipeline-lock
+    - get: opsman-install-pipeline-lock
       passed: [configure-ops-director]
       params:
         depth: 30
@@ -350,15 +371,22 @@ jobs:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((apply_changes_attempts))
 
-- name: release-opsman-lock
+- name: release-opsman-install-lock
   plan:
-  - get: pipeline-lock
+  - get: opsman-install-pipeline-lock
     passed: [deploy-director]
     trigger: true
     params:
       depth: 30
-  - put: pipeline-lock
-    params: {release: pipeline-lock}
+  - get: opsman-upgrade-pipeline-lock
+    params:
+      depth: 30
+  - put: opsman-upgrade-pipeline-lock
+    params: {release: opsman-install-pipeline-lock}
+    get_params:
+      depth: 30
+  - put: opsman-install-pipeline-lock
+    params: {release: opsman-upgrade-pipeline-lock}
     get_params:
       depth: 30
   #@ if/end data.values.smtp.enabled == True:
@@ -380,6 +408,15 @@ jobs:
         globs: ["*.zip"]
         unpack: true
     - get: state
+    - get: opsman-install-pipeline-lock
+      params:
+        depth: 30
+    - get: opsman-upgrade-pipeline-lock
+      params:
+        depth: 30
+    - get: product-locks
+      params:
+        depth: 30
 
   - task: credhub-interpolate-env
     image: platform-automation-image
@@ -444,20 +481,51 @@ jobs:
         subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
-- name: unset-lock
+    - put: opsman-install-pipeline-lock
+      params: {release: opsman-install-pipeline-lock}
+      get_params:
+        depth: 30
+
+    - put: opsman-upgrade-pipeline-lock
+      params: {acquire: true}
+      get_params:
+        depth: 30
+
+    - put: product-locks
+      params: {acquire: true}
+      get_params:
+        depth: 30
+
+- name: unset-locks
   plan:
-  - get: pipeline-lock
+  - get: opsman-install-pipeline-lock
     params:
       depth: 30
-  - put: pipeline-lock
-    params: {release: pipeline-lock}
+  - get: opsman-upgrade-pipeline-lock
+    params:
+      depth: 30
+  - get: product-locks
+    params:
+      depth: 30
+  - put: opsman-install-pipeline-lock
+    params: {release: opsman-install-pipeline-lock}
+    get_params:
+      depth: 30
+  - put: opsman-upgrade-pipeline-lock
+    params: {acquire: true}
+    get_params:
+      depth: 30
+  - put: product-locks
+    params: {acquire: true}
     get_params:
       depth: 30
 
 - name: set-upgrade-opsman-lock
   plan:
-  - get: pipeline-lock
-    passed: [release-opsman-lock]
+  - get: opsman-upgrade-pipeline-lock
+    params:
+      depth: 30
+  - get: product-locks
     params:
       depth: 30
   - get: product
@@ -465,7 +533,11 @@ jobs:
     params:
       skip_download: "true"
     trigger: true
-  - put: pipeline-lock
+  - put: opsman-upgrade-pipeline-lock
+    params: {acquire: true}
+    get_params:
+      depth: 30
+  - put: product-locks
     params: {acquire: true}
     get_params:
       depth: 30
@@ -473,7 +545,7 @@ jobs:
 - name: upgrade-ops-manager
   plan:
   - in_parallel:
-    - get: pipeline-lock
+    - get: opsman-upgrade-pipeline-lock
       passed: [set-upgrade-opsman-lock]
       params:
         depth: 30
@@ -568,14 +640,21 @@ jobs:
         skip_download: "true"
       passed: [upgrade-ops-manager]
       trigger: true
-    - get: pipeline-lock
+    - get: product-locks
+      params:
+        depth: 30
+    - get: opsman-upgrade-pipeline-lock
       passed: [upgrade-ops-manager]
       params:
         depth: 30
 
   - in_parallel:
-    - put: pipeline-lock
-      params: {release: pipeline-lock}
+    - put: opsman-upgrade-pipeline-lock
+      params: {release: opsman-upgrade-pipeline-lock}
+      get_params:
+        depth: 30
+    - put: product-locks
+      params: {release: product-locks}
       get_params:
         depth: 30
     #@ if/end data.values.smtp.enabled == True:

@@ -1,7 +1,7 @@
-PCF product tiles Concourse Pipelines:
+Tanzu product (PCF) tiles Concourse Pipelines:
 ---
 
-> **CAUTION:** Pivotal does not provide support for these pipelines.
+> **CAUTION:** VMware does not provide support for these pipelines.
 > If you find anything broken, then please submit a PR.
 
 ---
@@ -22,3 +22,32 @@ If you choose to have auto-generated pipelines, then please head to [generate-pi
 If you choose to run individual pipelines, then please head to [individual-pipelines](./individual-pipelines)
 
 Please file bugs if something isn't right. PR's are welcome too.
+
+## Begin here:
+
+The pipelines leverage locks ([concourse pool resource](https://github.com/concourse/pool-resource)), for locking mechanism. To begin, we will need 3 locks in 1 repo, so create a new repo called `pipeline-locks`
+
+```
+.
+├── opsman-install-pipeline-lock
+│   ├── README.md
+│   ├── claimed
+│   └── unclaimed
+│       └── homelab
+├── opsman-upgrade-pipeline-lock
+│   ├── README.md
+│   ├── claimed
+│   │   └── homelab
+│   └── unclaimed
+└── product-pipeline-lock
+    ├── README.md
+    ├── claimed
+    └── unclaimed
+       └── homelab
+```
+
+Notice the state of the locks, this is intentional. We can to run install of ops manager just once, and the others will locked/unlocked back on the upgrade of ops manager/product tiles.
+
+Once this is set, you can generate the pipelines after filling out the `values.yml`
+
+Fly the pipelines and orchestrate the deployment.

@@ -152,7 +152,7 @@ jobs:
   - put: opsman-install-pipeline-lock
     params: {acquire: true}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
 
 - name: install-ops-manager
   plan:
@@ -160,7 +160,7 @@ jobs:
     - get: opsman-install-pipeline-lock
       passed: [set-opsman-install-lock]
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -267,7 +267,7 @@ jobs:
     - get: opsman-install-pipeline-lock
       passed: [install-ops-manager]
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -331,7 +331,7 @@ jobs:
     - get: opsman-install-pipeline-lock
       passed: [configure-ops-director]
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -377,18 +377,18 @@ jobs:
     passed: [deploy-director]
     trigger: true
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - get: opsman-upgrade-pipeline-lock
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: opsman-upgrade-pipeline-lock
     params: {release: opsman-install-pipeline-lock}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: opsman-install-pipeline-lock
     params: {release: opsman-upgrade-pipeline-lock}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   #@ if/end data.values.smtp.enabled == True:
   - put: email
     params:
@@ -410,13 +410,13 @@ jobs:
     - get: state
     - get: opsman-install-pipeline-lock
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: opsman-upgrade-pipeline-lock
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: product-locks
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: credhub-interpolate-env
     image: platform-automation-image
@@ -484,50 +484,50 @@ jobs:
     - put: opsman-install-pipeline-lock
       params: {release: opsman-install-pipeline-lock}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
     - put: opsman-upgrade-pipeline-lock
       params: {acquire: true}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
     - put: product-locks
       params: {acquire: true}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
 - name: unset-locks
   plan:
   - get: opsman-install-pipeline-lock
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - get: opsman-upgrade-pipeline-lock
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - get: product-locks
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: opsman-install-pipeline-lock
     params: {release: opsman-install-pipeline-lock}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: opsman-upgrade-pipeline-lock
     params: {acquire: true}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: product-locks
     params: {acquire: true}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
 
 - name: set-upgrade-opsman-lock
   plan:
   - get: opsman-upgrade-pipeline-lock
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - get: product-locks
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - get: product
     resource: ops-manager
     params:
@@ -536,11 +536,11 @@ jobs:
   - put: opsman-upgrade-pipeline-lock
     params: {acquire: true}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: product-locks
     params: {acquire: true}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
 
 - name: upgrade-ops-manager
   plan:
@@ -548,7 +548,7 @@ jobs:
     - get: opsman-upgrade-pipeline-lock
       passed: [set-upgrade-opsman-lock]
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: config-repo
     - get: platform-automation-image
       params:
@@ -642,21 +642,21 @@ jobs:
       trigger: true
     - get: product-locks
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: opsman-upgrade-pipeline-lock
       passed: [upgrade-ops-manager]
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - in_parallel:
     - put: opsman-upgrade-pipeline-lock
       params: {release: opsman-upgrade-pipeline-lock}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - put: product-locks
       params: {release: product-locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     #@ if/end data.values.smtp.enabled == True:
     - put: email
       params:

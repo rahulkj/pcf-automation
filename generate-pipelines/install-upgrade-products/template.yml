@@ -196,7 +196,7 @@ jobs:
     - put: locks
       params: {acquire: true}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -226,7 +226,7 @@ jobs:
         put: locks
         params: {release: locks}
         get_params:
-          depth: 30
+          depth: #@ data.values.pipelines_clone_depth
 
     #@ if/end product.metadata.has_stemcell == True:
     - task: upload-stemcell
@@ -241,7 +241,7 @@ jobs:
         put: locks
         params: {release: locks}
         get_params:
-          depth: 30
+          depth: #@ data.values.pipelines_clone_depth
 
   - task: stage-product
     image: platform-automation-image
@@ -255,13 +255,13 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
 #@ if data.values.separate_config == True:
   - put: locks
     params: {release: locks}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
 #@ end
 
 #@ if data.values.separate_config != True:
@@ -284,7 +284,7 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: config-product
     image: platform-automation-image
@@ -301,7 +301,7 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   #@ if/end product.metadata.skip_apply_changes != True:
   - task: deploy-product
@@ -317,12 +317,12 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - put: locks
     params: {release: locks}
     get_params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   
   #@ if/end data.values.smtp.enabled == True:
   - put: email
@@ -343,7 +343,7 @@ jobs:
   - in_parallel:
     - get: locks
       params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
     - get: config-repo
       resource: #@ product.name + "-git-repo"
       trigger: true
@@ -376,7 +376,7 @@ jobs:
     - put: locks
       params: {acquire: true}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: create-opsman-env-file
     image: platform-automation-image
@@ -396,7 +396,7 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: create-product-var-files
     image: platform-automation-image
@@ -417,7 +417,7 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: config-product
     image: platform-automation-image
@@ -434,7 +434,7 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   #@ if/end product.metadata.skip_apply_changes != True:
   - task: deploy-product
@@ -450,12 +450,12 @@ jobs:
       put: locks
       params: {release: locks}
       get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   - put: locks
     params: {release: locks}
     get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth
 
   #@ if/end data.values.smtp.enabled == True:
   - put: email
@@ -545,8 +545,8 @@ jobs:
   plan:
   - get: locks
     params:
-      depth: 30
+      depth: #@ data.values.pipelines_clone_depth
   - put: locks
     params: {release: locks}
     get_params:
-        depth: 30
+        depth: #@ data.values.pipelines_clone_depth

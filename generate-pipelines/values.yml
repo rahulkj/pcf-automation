@@ -6,6 +6,7 @@ pivnet_token: ((pivnet_token))
 iaas: vsphere
 auth_configure_attempts: 3
 apply_changes_attempts: 3
+pipelines_clone_depth: 30
 
 git:
   username: ((git_credentials.username))

@@ -64,6 +64,16 @@ resources:
   source:
     repository: rjain/buildbox
 
+- name: env-repo
+  type: git
+  source:
+    uri: ((config_repo_git.url))
+    branch: ((config_repo_git.branch))
+    username: ((git.username))
+    password: ((git.token))
+    paths:
+    - ((opsman_env.path))/((opsman_env.filename))
+
 #@ for product in data.values.products:
 #@ if product.metadata.deploy_product == True:
 - name: #@ product.name + "-git-repo"
@@ -118,6 +128,7 @@ groups:
   jobs:
   - scheduler
   - unset-lock
+  - apply-changes
   #@ for product in data.values.products:
   #@ if product.metadata.deploy_product == True:
   #@ if data.values.separate_config == True:
@@ -142,6 +153,9 @@ groups:
   - #@ "generate-config-" + product.name
 #@ end
 #@ end
+- name: apply-changes
+  jobs:
+  - apply-changes
 
 jobs:
 - name: scheduler
@@ -550,3 +564,66 @@ jobs:
     params: {release: locks}
     get_params:
         depth: #@ data.values.pipelines_clone_depth
+
+- name: apply-changes
+  serial: true
+  plan:
+  - in_parallel:
+    - get: locks
+      params:
+        depth: #@ data.values.pipelines_clone_depth
+    - get: env-repo
+    - get: platform-automation-image
+      params:
+        unpack: true
+        globs:
+        - '*.tgz'
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+        globs:
+        - '*.zip'
+    - put: locks
+      params:
+        acquire: true
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
+  - task: create-opsman-env-file
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/credhub-interpolate.yml
+    input_mapping:
+      files: env-repo
+    output_mapping:
+      interpolated-files: env
+    params:
+      PREFIX: ((credhub.prefix))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      INTERPOLATION_PATHS: ((opsman_env.path))
+    on_failure:
+      put: locks
+      params:
+        release: locks
+      get_params:
+        depth: 300
+  - task: deploy-all-products
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/apply-changes.yml
+    input_mapping:
+      env: env
+    params:
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+    attempts: ((apply_changes_attempts))
+    on_failure:
+      put: locks
+      params:
+        release: locks
+      get_params:
+        depth: 300
+  - put: locks
+    params:
+      release: locks
+    get_params:
+      depth: 300

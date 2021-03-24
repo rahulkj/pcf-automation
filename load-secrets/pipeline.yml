@@ -1,0 +1,55 @@
+resources:
+- name: custom-docker-image
+  type: docker-image
+  source:
+    repository: rjain/buildbox
+
+jobs:
+- name: load-secrets
+  plan:
+  - in_parallel:
+    - get: custom-docker-image
+  - task: load-secrets
+    image: custom-docker-image
+    params:
+      OM_TARGET: ((om_target))
+      OM_CLIENT_ID: ((om_client_id))
+      OM_CLIENT_SECRET: ((om_client_secret))
+      OM_SKIP_SSL_VALIDATION: ((om_skip_ssl_validation))
+      CREDHUB_CLIENT: ((credhub.client))
+      CREDHUB_SECRET: ((credhub.client_secret))
+      CREDHUB_SERVER: ((credhub.server))
+      CREDHUB_CA_CERT: ((credhub.ca_cert))
+      CREDHUB_PREFIX: ((credhub.prefix))
+      PRODUCTS: ((products))
+    config:
+      platform: linux     
+      run:
+        path: bash
+        args:
+        - "-c"
+        - |
+          set -e
+
+          echo "${PRODUCTS}" >> products.yml
+          yq e products.yml -j >> products.json
+
+          PRODUCT_NAMES=($(cat products.json | jq -r '.[] | .name'))
+          for product in ${PRODUCT_NAMES[@]}; do
+            CREDENTIALS=($(cat products.json | jq -r --arg product ${product} '.[] | select(.name==$product) | .credential_references[] | .name'))
+
+            for credential in ${CREDENTIALS[@]}; do
+              CRED_TYPE=$(cat products.json | jq -r --arg product ${product} --arg credential ${credential} '.[] | select(.name==$product) | .credential_references[] | select(.name==$credential) | .type')
+              CREDHUB_REFERENCE=$(cat products.json | jq -r --arg product ${product} --arg credential ${credential} '.[] | select(.name==$product) | .credential_references[] | select(.name==$credential) | .credhub_ref')
+
+              if [[ ${CRED_TYPE} == "simple_credentials" ]]; then
+                USERNAME=$(om -t ${OM_TARGET} credentials -p ${product} -c ${credential} -t json | jq ".identity")
+                PASSWORD=$(om -t ${OM_TARGET} credentials -p ${product} -c ${credential} -t json | jq ".password")
+                credhub set -n /${CREDHUB_PREFIX}/${CREDHUB_REFERENCE} -t user -z ${USERNAME} -w ${PASSWORD}
+              elif [[ ${CRED_TYPE} == "secret" ]]; then
+                CREDS=$(om -t ${OM_TARGET} credentials -p ${product} -c ${credential} -t json | jq ".secret")
+                credhub set -n /${CREDHUB_PREFIX}/${CREDHUB_REFERENCE} -t password -w ${CREDS}
+              fi
+
+            done
+          done

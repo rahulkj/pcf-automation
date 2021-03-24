@@ -1,0 +1,26 @@
+om_target: ((opsman_host))
+om_client_id: precreated-client
+om_client_secret: ((precreated_client_secret))
+om_skip_ssl_validation: true
+
+credhub:
+  prefix: concourse/homelab
+  ca_cert: ((credhub_server_ca.certificate))
+  client: ((credhub_client))
+  client_secret: ((credhub_client_secret))
+  server: ((credhub_server))
+
+products:
+- name: p-bosh
+  credential_references:
+  - type: simple_credentials
+    name: .director.uaa_bosh_client_credentials
+    credhub_ref: bosh_admin_client
+- name: pivotal-container-service
+  credential_references:
+  - type: secret
+    name: .properties.uaa_admin_password
+    credhub_ref: pks_uaa_admin_password
+  - type: secret
+    name: .properties.pks_uaa_management_admin_client
+    credhub_ref: pks_uaa_client_secret

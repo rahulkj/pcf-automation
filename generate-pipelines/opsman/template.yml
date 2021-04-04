@@ -481,11 +481,6 @@ jobs:
         subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
-    - put: opsman-install-pipeline-lock
-      params: {release: opsman-install-pipeline-lock}
-      get_params:
-        depth: #@ data.values.pipelines_clone_depth
-
     - put: opsman-upgrade-pipeline-lock
       params: {acquire: true}
       get_params:

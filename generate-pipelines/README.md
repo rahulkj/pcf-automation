@@ -5,7 +5,7 @@ HOW TO USE
 Install the following cli's
 - jq
 - yq
-- ytt
+- ytt (v0.32.0+)
 
 ## Steps to execute
 

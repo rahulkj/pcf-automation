@@ -11,7 +11,7 @@
   _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-xenial"})
   _: #@ template.replace({product.name + "_stemcell_version": "^" + product.pivnet.stemcell_version})
   _: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3.stemcell_bucket})
-  _: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"})
-  _: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"})
+  _: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + data.values.stemcell_postfix})
+  _: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-" + data.values.iaas + data.values.stemcell_postfix})
   #@ end
-  #@ end
+#@ end

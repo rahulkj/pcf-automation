@@ -4,6 +4,7 @@ env:
 separate_config: False
 pivnet_token: ((pivnet_token))
 iaas: vsphere
+stemcell_postfix: "-esxi-ubuntu-xenial-go_agent.tgz"
 auth_configure_attempts: 3
 apply_changes_attempts: 3
 pipelines_clone_depth: 30

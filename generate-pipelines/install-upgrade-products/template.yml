@@ -107,7 +107,7 @@ resources:
     secret_access_key: ((s3.secret_key))
     disable_ssl: ((s3.disable_ssl))
     bucket: #@ product.s3.stemcell_bucket
-    regexp: #@ "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + "-esxi-ubuntu-xenial-go_agent.tgz"
+    regexp: #@ "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + data.values.stemcell_postfix
 #@ end
 
 #@ if product.metadata.is_platform_automation == True:

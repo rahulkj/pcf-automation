@@ -10,6 +10,7 @@ resource_types:
 resources:
 - name: schedule
   type: time
+  icon: camera-timer
   source:
     interval: 24h
     start: "12:00 AM"
@@ -19,6 +20,7 @@ resources:
 
 - name: automation-repo
   type: git
+  icon: github
   source:
     uri: ((automation_git.url))
     branch: ((automation_git.branch))
@@ -27,6 +29,7 @@ resources:
 
 - name: locks
   type: pool
+  icon: lock
   source:
     pool: ((product_lock_folder))
     uri: ((locks_git.url))
@@ -38,6 +41,7 @@ resources:
 #@ if data.values.smtp.enabled == True:
 - name: email
   type: email
+  icon: email-fast
   source:
     from: ((smtp.from_address))
     to: [((smtp.to_addresses))]
@@ -54,6 +58,7 @@ resources:
 
 - name: tile-config-convertor
   type: github-release
+  icon: github
   source:
     user: rahulkj
     repository: tile-config-convertor
@@ -61,11 +66,13 @@ resources:
 
 - name: custom-docker-image
   type: docker-image
+  icon: docker
   source:
     repository: rjain/buildbox
 
 - name: env-repo
   type: git
+  icon: github
   source:
     uri: ((config_repo_git.url))
     branch: ((config_repo_git.branch))
@@ -78,6 +85,7 @@ resources:
 #@ if product.metadata.deploy_product == True:
 - name: #@ product.name + "-git-repo"
   type: git
+  icon: github
   source:
     uri: ((config_repo_git.url))
     branch: ((config_repo_git.branch))
@@ -90,6 +98,7 @@ resources:
 
 - name: #@ product.name
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     access_key_id: ((s3.access_key))
@@ -101,6 +110,7 @@ resources:
 #@ if/end product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcells"
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     access_key_id: ((s3.access_key))
@@ -113,6 +123,7 @@ resources:
 #@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket

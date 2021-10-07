@@ -10,6 +10,7 @@ resources:
 #@ for product in data.values.products:
 - name: #@ product.name
   type: pivnet
+  icon: cloud-download
   source:
     api_token: ((pivnet_token))
     product_slug: #@ "((" + product.name + "_slug))"
@@ -19,6 +20,7 @@ resources:
 
 - name: #@ product.name + "-product-bucket"
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     access_key_id: ((s3.access_key))
@@ -30,6 +32,7 @@ resources:
 #@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"
   type: pivnet
+  icon: cloud-download
   source:
     api_token: ((pivnet_token))
     product_slug: #@ "((" + product.name + "_stemcell_slug))"
@@ -39,6 +42,7 @@ resources:
 
 - name: #@ product.name + "-stemcells"
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     regexp: #@ "((" + product.name + "_s3_stemcells_regex))"

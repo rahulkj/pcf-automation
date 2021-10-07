@@ -10,6 +10,7 @@ resource_types:
 resources:
 - name: config-repo
   type: git
+  icon: github
   source:
     uri: ((config_repo_git.url))
     branch: ((config_repo_git.branch))
@@ -20,6 +21,7 @@ resources:
 #@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
@@ -33,6 +35,7 @@ resources:
 #@ if/end data.values.smtp.enabled == True:
 - name: email
   type: email
+  icon: email-fast
   source:
     from: ((smtp.from_address))
     to: [((smtp.to_addresses))]
@@ -48,6 +51,7 @@ resources:
 
 - name: schedule
   type: time
+  icon: camera-timer
   source:
     start: ((scheduler_start_time))
     stop: ((scheduler_stop_time))
@@ -56,6 +60,7 @@ resources:
 
 - name: locks
   type: pool
+  icon: lock
   source:
     pool: ((lock_folder))
     uri: ((locks_git.url))

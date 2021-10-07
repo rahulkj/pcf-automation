@@ -10,6 +10,7 @@ resource_types:
 resources:
 - name: config-repo
   type: git
+  icon: github
   source:
     uri: ((config_repo_git.url))
     branch: ((config_repo_git.branch))
@@ -20,6 +21,7 @@ resources:
 #@ if/end product.metadata.is_opsman == True:
 - name: ops-manager
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
@@ -31,6 +33,7 @@ resources:
 #@ if/end product.metadata.is_opsman == True:
 - name: opsman-backup-bucket
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.backup_bucket
@@ -41,6 +44,7 @@ resources:
 #@ if/end product.metadata.is_opsman == True:
 - name: state
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.state_bucket
@@ -51,6 +55,7 @@ resources:
 #@ if product.metadata.is_platform_automation == True:
 - name: #@ product.name
   type: s3
+  icon: database
   source:
     endpoint: ((s3.endpoint))
     bucket: #@ product.s3.bucket
@@ -64,6 +69,7 @@ resources:
 #@ if/end data.values.smtp.enabled == True:
 - name: email
   type: email
+  icon: email-fast
   source:
     from: ((smtp.from_address))
     to: [((smtp.to_addresses))]
@@ -79,6 +85,7 @@ resources:
 
 - name: opsman-install-pipeline-lock
   type: pool
+  icon: lock
   source:
     pool: ((opsman_install_lock_folder))
     uri: ((locks_git.url))
@@ -89,6 +96,7 @@ resources:
 
 - name: opsman-upgrade-pipeline-lock
   type: pool
+  icon: lock
   source:
     pool: ((opsman_upgrade_lock_folder))
     uri: ((locks_git.url))
@@ -99,6 +107,7 @@ resources:
 
 - name: product-locks
   type: pool
+  icon: lock
   source:
     pool: ((product_lock_folder))
     uri: ((locks_git.url))

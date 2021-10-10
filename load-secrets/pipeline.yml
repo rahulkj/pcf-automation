@@ -1,6 +1,7 @@
 resources:
 - name: custom-docker-image
   type: docker-image
+  icon: docker
   source:
     repository: rjain/buildbox
 

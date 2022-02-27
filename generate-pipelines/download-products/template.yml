@@ -74,6 +74,7 @@ groups:
 jobs:
 #@ for product in data.values.products:
 - name: #@ product.name
+  serial: true
   plan:
   - in_parallel:
     - get: product
@@ -89,6 +90,7 @@ jobs:
 
 #@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"
+  serial: true
   plan:
   - in_parallel:
     - get: stemcells

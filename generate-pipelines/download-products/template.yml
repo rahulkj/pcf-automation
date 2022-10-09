@@ -27,7 +27,11 @@ resources:
     secret_access_key: ((s3.secret_key))
     disable_ssl: ((s3.disable_ssl))
     bucket: #@ "((" + product.name + "_s3_bucket))"
+    #@ if product.s3.product_regex != '':
     regexp: #@ "((" + product.name + "_s3_product_regex))"
+    #@ else:
+    versioned_file: #@ "((" + product.name + "_s3_versioned_file))"
+    #@ end
 
 #@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"

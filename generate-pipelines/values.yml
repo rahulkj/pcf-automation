@@ -86,6 +86,7 @@ products:
     glob: '*.pivotal'
     version: ^1\.8\..*$
     stemcell_version: "621.*"
+    stemcell_os: "xenial"
   s3:
     bucket: pks  
     product_regex: "pivotal-container-service-(1.8.*).pivotal"
@@ -129,6 +130,7 @@ products:
     glob: "*.pivotal"
     version: ^1\.10\.[0-9]*$
     stemcell_version: "456.*"
+    stemcell_os: "xenial"
   s3:
     bucket: harbor
     stemcell_bucket: stemcells
@@ -160,6 +162,7 @@ products:
     glob: 'cf-*.pivotal'
     version: ^2\.9\.[0-9]*$
     stemcell_version: "621.*"
+    stemcell_os: "xenial"
   s3:
     bucket: pas
     stemcell_bucket: stemcells

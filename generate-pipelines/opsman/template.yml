@@ -502,27 +502,30 @@ jobs:
 
 - name: unset-locks
   plan:
-  - get: opsman-install-pipeline-lock
-    params:
-      depth: #@ data.values.pipelines_clone_depth
-  - get: opsman-upgrade-pipeline-lock
-    params:
-      depth: #@ data.values.pipelines_clone_depth
-  - get: product-locks
-    params:
-      depth: #@ data.values.pipelines_clone_depth
-  - put: opsman-install-pipeline-lock
-    params: {release: opsman-install-pipeline-lock}
-    get_params:
-      depth: #@ data.values.pipelines_clone_depth
-  - put: opsman-upgrade-pipeline-lock
-    params: {acquire: true}
-    get_params:
-      depth: #@ data.values.pipelines_clone_depth
-  - put: product-locks
-    params: {acquire: true}
-    get_params:
-      depth: #@ data.values.pipelines_clone_depth
+  - in_parallel:
+    - get: opsman-install-pipeline-lock
+      params:
+        depth: #@ data.values.pipelines_clone_depth
+    - get: opsman-upgrade-pipeline-lock
+      params:
+        depth: #@ data.values.pipelines_clone_depth
+    - get: product-locks
+      params:
+        depth: #@ data.values.pipelines_clone_depth
+
+  - in_parallel:
+    - put: opsman-install-pipeline-lock
+      params: {release: opsman-install-pipeline-lock}
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
+    - put: opsman-upgrade-pipeline-lock
+      params: {acquire: true}
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
+    - put: product-locks
+      params: {acquire: true}
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
 
 - name: set-upgrade-opsman-lock
   plan:

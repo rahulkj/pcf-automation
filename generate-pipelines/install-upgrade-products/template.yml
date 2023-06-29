@@ -27,6 +27,7 @@ resources:
     username: ((git.username))
     password: ((git.token))
 
+#@ if/end data.values.git.product_lock_folder != "":
 - name: locks
   type: pool
   icon: lock
@@ -138,6 +139,7 @@ groups:
 - name: all
   jobs:
   - scheduler
+  #@ if/end data.values.git.product_lock_folder != "":
   - unset-lock
   - apply-changes
   #@ for product in data.values.products:
@@ -218,6 +220,7 @@ jobs:
     - get: stemcells
       resource: #@ product.name + "-stemcells"
       trigger: true
+    #@ if/end data.values.git.product_lock_folder != "":
     - put: locks
       params: {acquire: true}
       get_params:
@@ -247,6 +250,7 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+      #@ if/end data.values.git.product_lock_folder != "":
       on_failure:
         put: locks
         params: {release: locks}
@@ -262,6 +266,7 @@ jobs:
         env: env
       params:
         ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+      #@ if/end data.values.git.product_lock_folder != "":
       on_failure:
         put: locks
         params: {release: locks}
@@ -276,6 +281,7 @@ jobs:
       env: env
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
@@ -283,6 +289,7 @@ jobs:
         depth: #@ data.values.pipelines_clone_depth
 
 #@ if data.values.separate_config == True:
+  #@ if/end data.values.git.product_lock_folder != "":
   - put: locks
     params: {release: locks}
     get_params:
@@ -305,6 +312,7 @@ jobs:
       CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
+    #@ if/end data.values.git.product_lock_folder != "":  
     on_failure:
       put: locks
       params: {release: locks}
@@ -322,6 +330,7 @@ jobs:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
@@ -338,12 +347,14 @@ jobs:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       PRODUCT_NAMES: #@ product.metadata.selective_apply_changes
     attempts: ((apply_changes_attempts))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
       get_params:
         depth: #@ data.values.pipelines_clone_depth
 
+  #@ if/end data.values.git.product_lock_folder != "":
   - put: locks
     params: {release: locks}
     get_params:
@@ -366,6 +377,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    #@ if/end data.values.git.product_lock_folder != "":
     - get: locks
       params:
         depth: #@ data.values.pipelines_clone_depth
@@ -398,6 +410,7 @@ jobs:
       params:
         skip_download: "true"
 
+    #@ if/end data.values.git.product_lock_folder != "":
     - put: locks
       params: {acquire: true}
       get_params:
@@ -417,6 +430,7 @@ jobs:
       CREDHUB_SECRET: ((credhub.client_secret))
       CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_env.path))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
@@ -438,6 +452,7 @@ jobs:
       CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: #@ "((" + product.name + "_vars_path))"
       SKIP_MISSING: true
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
@@ -455,6 +470,7 @@ jobs:
       CONFIG_FILE: #@ "((" + product.name + "_config_path))/((" + product.name + "_config_filename))"
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       VARS_FILES: #@ "((vars_folder))/((" + product.name + "_vars_path))/((" + product.name + "_var_filename))"
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
@@ -471,12 +487,14 @@ jobs:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
       PRODUCT_NAMES: #@ product.metadata.selective_apply_changes
     attempts: ((apply_changes_attempts))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params: {release: locks}
       get_params:
         depth: #@ data.values.pipelines_clone_depth
-
+  
+  #@ if/end data.values.git.product_lock_folder != "":
   - put: locks
     params: {release: locks}
     get_params:
@@ -566,6 +584,7 @@ jobs:
 #@ end
 #@ end
 
+#@ if/end data.values.git.product_lock_folder != "":
 - name: unset-lock
   plan:
   - get: locks
@@ -580,6 +599,7 @@ jobs:
   serial: true
   plan:
   - in_parallel:
+    #@ if/end data.values.git.product_lock_folder != "":
     - get: locks
       params:
         depth: #@ data.values.pipelines_clone_depth
@@ -594,6 +614,7 @@ jobs:
         unpack: true
         globs:
         - '*.zip'
+    #@ if/end data.values.git.product_lock_folder != "":
     - put: locks
       params:
         acquire: true
@@ -613,6 +634,7 @@ jobs:
       CREDHUB_SECRET: ((credhub.client_secret))
       CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_env.path))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params:
@@ -627,12 +649,14 @@ jobs:
     params:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((apply_changes_attempts))
+    #@ if/end data.values.git.product_lock_folder != "":
     on_failure:
       put: locks
       params:
         release: locks
       get_params:
         depth: 300
+  #@ if/end data.values.git.product_lock_folder != "":
   - put: locks
     params:
       release: locks

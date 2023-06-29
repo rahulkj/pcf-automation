@@ -52,3 +52,5 @@ vars_folder: #@ data.values.vars.folder
 
 auth_configure_attempts: #@ data.values.auth_configure_attempts
 apply_changes_attempts: #@ data.values.apply_changes_attempts
+
+ignore_warnings: #@ data.values.ignore_warnings

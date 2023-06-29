@@ -15,3 +15,5 @@ director_var_filename: #@ data.values.vars.director_var_filename
 
 state_file_destination: #@ data.values.configs.state_file_destination
 state_filename: #@ data.values.env + "-state.yml"
+
+ignore_warnings: 

@@ -83,6 +83,7 @@ resources:
       anonymous: true
       #@ end
 
+#@ if/end data.values.git.opsman_install_lock_folder != "":
 - name: opsman-install-pipeline-lock
   type: pool
   icon: lock
@@ -94,6 +95,7 @@ resources:
     password: ((git.token))
     retry_delay: 60s
 
+#@ if/end data.values.git.opsman_upgrade_lock_folder != "":
 - name: opsman-upgrade-pipeline-lock
   type: pool
   icon: lock
@@ -105,6 +107,7 @@ resources:
     password: ((git.token))
     retry_delay: 60s
 
+#@ if/end data.values.git.product_lock_folder != "":
 - name: product-locks
   type: pool
   icon: lock
@@ -119,38 +122,47 @@ resources:
 groups:
 - name: complete
   jobs:
+  #@ if/end data.values.git.opsman_install_lock_folder != "":
   - set-opsman-install-lock
   - install-ops-manager
   - configure-ops-director
   - deploy-director
-  - release-opsman-install-lock
+  - post-install-notification
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
   - install-ops-manager
-  - release-upgrade-opsman-lock
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
+  - post-upgrade-notification
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "" and data.values.git.opsman_install_lock_folder != "":
   - unset-locks
   - delete-all
 - name: install-opsman
   jobs:
+  #@ if/end data.values.git.opsman_install_lock_folder != "":
   - set-opsman-install-lock
   - install-ops-manager
   - configure-ops-director
   - deploy-director
-  - release-opsman-install-lock
+  - post-install-notification
+  #@ if/end data.values.git.opsman_install_lock_folder != "":
   - unset-locks
 - name: upgrade-opsman
   jobs:
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
   - set-upgrade-opsman-lock
   - upgrade-ops-manager
-  - release-upgrade-opsman-lock
+  - post-upgrade-notification
 - name: cleanup
   jobs:
   - delete-all
+#@ if/end data.values.git.opsman_upgrade_lock_folder != "" and data.values.git.opsman_install_lock_folder != "":
 - name: unset-locks
   jobs:
   - unset-locks
 
 jobs:
+#@ if/end data.values.git.opsman_install_lock_folder != "":
 - name: set-opsman-install-lock
   plan:
   - in_parallel:
@@ -166,6 +178,7 @@ jobs:
 - name: install-ops-manager
   plan:
   - in_parallel:
+    #@ if/end data.values.git.opsman_install_lock_folder != "":
     - get: opsman-install-pipeline-lock
       passed: [set-opsman-install-lock]
       params:
@@ -179,8 +192,9 @@ jobs:
         unpack: true
     - get: product
       resource: ops-manager
-      passed: [set-opsman-install-lock]
       trigger: true
+      #@ if/end data.values.git.opsman_install_lock_folder != "":
+      passed: [set-opsman-install-lock]
     - get: state
 
   - task: credhub-interpolate-env
@@ -273,6 +287,7 @@ jobs:
 - name: configure-ops-director
   plan:
   - in_parallel:
+    #@ if/end data.values.git.opsman_install_lock_folder != "":
     - get: opsman-install-pipeline-lock
       passed: [install-ops-manager]
       params:
@@ -337,6 +352,7 @@ jobs:
 - name: deploy-director
   plan:
   - in_parallel:
+    #@ if/end data.values.git.opsman_install_lock_folder != "":
     - get: opsman-install-pipeline-lock
       passed: [configure-ops-director]
       params:
@@ -377,23 +393,28 @@ jobs:
     input_mapping:
       env: env
     params:
+      IGNORE_WARNINGS: ((ignore_warnings))
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((apply_changes_attempts))
 
-- name: release-opsman-install-lock
+- name: post-install-notification
   plan:
+  #@ if/end data.values.git.opsman_install_lock_folder != "":
   - get: opsman-install-pipeline-lock
     passed: [deploy-director]
     trigger: true
     params:
       depth: #@ data.values.pipelines_clone_depth
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
   - get: opsman-upgrade-pipeline-lock
     params:
       depth: #@ data.values.pipelines_clone_depth
+  #@ if/end data.values.git.opsman_install_lock_folder != "":
   - put: opsman-upgrade-pipeline-lock
     params: {release: opsman-install-pipeline-lock}
     get_params:
       depth: #@ data.values.pipelines_clone_depth
+  #@ if/end data.values.git.opsman_upgrade_lock_folder != "":      
   - put: opsman-install-pipeline-lock
     params: {release: opsman-upgrade-pipeline-lock}
     get_params:
@@ -417,12 +438,15 @@ jobs:
         globs: ["*.zip"]
         unpack: true
     - get: state
+    #@ if/end data.values.git.opsman_install_lock_folder != "":
     - get: opsman-install-pipeline-lock
       params:
         depth: #@ data.values.pipelines_clone_depth
+    #@ if/end data.values.git.opsman_upgrade_lock_folder != "": 
     - get: opsman-upgrade-pipeline-lock
       params:
         depth: #@ data.values.pipelines_clone_depth
+    #@ if/end data.values.git.product_lock_folder != "": 
     - get: product-locks
       params:
         depth: #@ data.values.pipelines_clone_depth
@@ -490,16 +514,19 @@ jobs:
         subject_text: "Build finished: ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}"
         body_text: "Build finished: ${ATC_EXTERNAL_URL}/teams/main/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}"
 
+    #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
     - put: opsman-upgrade-pipeline-lock
       params: {acquire: true}
       get_params:
         depth: #@ data.values.pipelines_clone_depth
 
+    #@ if/end data.values.git.product_lock_folder != "":
     - put: product-locks
       params: {acquire: true}
       get_params:
         depth: #@ data.values.pipelines_clone_depth
 
+#@ if/end data.values.git.opsman_upgrade_lock_folder != "" and data.values.git.opsman_install_lock_folder != "":
 - name: unset-locks
   plan:
   - in_parallel:
@@ -527,6 +554,7 @@ jobs:
       get_params:
         depth: #@ data.values.pipelines_clone_depth
 
+#@ if/end data.values.git.opsman_upgrade_lock_folder != "":
 - name: set-upgrade-opsman-lock
   plan:
   - get: opsman-upgrade-pipeline-lock
@@ -552,6 +580,7 @@ jobs:
 - name: upgrade-ops-manager
   plan:
   - in_parallel:
+    #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
     - get: opsman-upgrade-pipeline-lock
       passed: [set-upgrade-opsman-lock]
       params:
@@ -566,6 +595,7 @@ jobs:
     - get: product
       resource: ops-manager
       trigger: true
+      #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
       passed: [set-upgrade-opsman-lock]
     - get: state
 
@@ -638,7 +668,7 @@ jobs:
       ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
     attempts: ((apply_changes_attempts))
 
-- name: release-upgrade-opsman-lock
+- name: post-upgrade-notification
   plan:
   - in_parallel:
     - get: product
@@ -647,19 +677,23 @@ jobs:
         skip_download: "true"
       passed: [upgrade-ops-manager]
       trigger: true
+    #@ if/end data.values.git.product_lock_folder != "":
     - get: product-locks
       params:
         depth: #@ data.values.pipelines_clone_depth
+    #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
     - get: opsman-upgrade-pipeline-lock
       passed: [upgrade-ops-manager]
       params:
         depth: #@ data.values.pipelines_clone_depth
 
   - in_parallel:
+    #@ if/end data.values.git.opsman_upgrade_lock_folder != "":
     - put: opsman-upgrade-pipeline-lock
       params: {release: opsman-upgrade-pipeline-lock}
       get_params:
         depth: #@ data.values.pipelines_clone_depth
+    #@ if/end data.values.git.product_lock_folder != "":
     - put: product-locks
       params: {release: product-locks}
       get_params:

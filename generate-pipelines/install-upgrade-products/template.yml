@@ -241,37 +241,36 @@ jobs:
       CREDHUB_SERVER: ((credhub.server))
       INTERPOLATION_PATHS: ((opsman_env.path))
 
-  - in_parallel:
-    - task: upload-product
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-product.yml
-      input_mapping:
-        product: product
-        env: env
-      params:
-        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-      #@ if/end data.values.git.product_lock_folder != "":
-      on_failure:
-        put: locks
-        params: {release: locks}
-        get_params:
-          depth: #@ data.values.pipelines_clone_depth
+  - task: upload-product
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-product.yml
+    input_mapping:
+      product: product
+      env: env
+    params:
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+    #@ if/end data.values.git.product_lock_folder != "":
+    on_failure:
+      put: locks
+      params: {release: locks}
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
 
-    #@ if/end product.metadata.has_stemcell == True:
-    - task: upload-stemcell
-      image: platform-automation-image
-      file: platform-automation-tasks/tasks/upload-stemcell.yml
-      input_mapping:
-        stemcell: stemcells
-        env: env
-      params:
-        ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
-      #@ if/end data.values.git.product_lock_folder != "":
-      on_failure:
-        put: locks
-        params: {release: locks}
-        get_params:
-          depth: #@ data.values.pipelines_clone_depth
+  #@ if/end product.metadata.has_stemcell == True:
+  - task: upload-stemcell
+    image: platform-automation-image
+    file: platform-automation-tasks/tasks/upload-stemcell.yml
+    input_mapping:
+      stemcell: stemcells
+      env: env
+    params:
+      ENV_FILE: ((opsman_env.path))/((opsman_env.filename))
+    #@ if/end data.values.git.product_lock_folder != "":
+    on_failure:
+      put: locks
+      params: {release: locks}
+      get_params:
+        depth: #@ data.values.pipelines_clone_depth
 
   - task: stage-product
     image: platform-automation-image

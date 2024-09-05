@@ -192,9 +192,10 @@ jobs:
         unpack: true
     - get: product
       resource: ops-manager
-      trigger: true
-      #@ if/end data.values.git.opsman_install_lock_folder != "":
+      #@ if data.values.git.opsman_install_lock_folder != "":
       passed: [set-opsman-install-lock]
+      trigger: true
+      #@ end
     - get: state
 
   - task: credhub-interpolate-env

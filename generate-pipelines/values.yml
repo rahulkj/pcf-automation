@@ -9,6 +9,12 @@ auth_configure_attempts: 3
 apply_changes_attempts: 3
 pipelines_clone_depth: 30
 
+registry:
+  host: docker.io
+  username: ((docker_credentials.username))
+  password: ((docker_credentials.password))
+  image: docker.io/rjain/buildbox
+
 git:
   username: ((git_credentials.username))
   token: ((git_credentials.password))

@@ -54,3 +54,9 @@ auth_configure_attempts: #@ data.values.auth_configure_attempts
 apply_changes_attempts: #@ data.values.apply_changes_attempts
 
 ignore_warnings: #@ data.values.ignore_warnings
+
+registry:
+  host: #@ data.values.registry.host
+  username: #@ data.values.registry.username
+  password: #@ data.values.registry.password
+  image: #@ data.values.registry.image

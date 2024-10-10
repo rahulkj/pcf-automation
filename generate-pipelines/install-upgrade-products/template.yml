@@ -69,7 +69,12 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: rjain/buildbox
+    repository: ((harbor_host))/rjain/buildbox
+    username: ((harbor_credentials.username))
+    password: ((harbor_credentials.password))
+    insecure_registries:
+      - ((harbor_host))
+      - ((harbor_host)):443
 
 - name: env-repo
   type: git

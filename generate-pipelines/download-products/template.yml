@@ -92,6 +92,7 @@ jobs:
   - put: #@ product.name + "-product-bucket"
     params:
       file: #@ "product/((" + product.name + "_glob))"
+    no_get: true
 
 #@ if product.metadata.has_stemcell == True:
 - name: #@ product.name + "-stemcell"
@@ -115,5 +116,6 @@ jobs:
   - put: #@ product.name + "-stemcells"
     params:
       file: stemcells/*.tgz
+    no_get: true
 #@ end
 #@ end

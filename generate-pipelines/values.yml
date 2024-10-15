@@ -50,6 +50,7 @@ s3:
   access_key: ((s3_credentials.username))
   secret_key: ((s3_credentials.password))
   disable_ssl: true
+  region: us-east
 
 configs:
   opsman_config_filename: opsman-config.yml

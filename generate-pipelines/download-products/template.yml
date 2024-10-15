@@ -23,6 +23,7 @@ resources:
   icon: database
   source:
     endpoint: ((s3.endpoint))
+    region_name: ((s3.region))
     access_key_id: ((s3.access_key))
     secret_access_key: ((s3.secret_key))
     disable_ssl: ((s3.disable_ssl))
@@ -49,6 +50,7 @@ resources:
   icon: database
   source:
     endpoint: ((s3.endpoint))
+    region_name: ((s3.region))
     regexp: #@ "((" + product.name + "_s3_stemcells_regex))"
     access_key_id: ((s3.access_key))
     secret_access_key: ((s3.secret_key))

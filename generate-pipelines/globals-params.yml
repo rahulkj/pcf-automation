@@ -8,6 +8,7 @@ s3:
   access_key: #@ data.values.s3.access_key
   secret_key: #@ data.values.s3.secret_key
   disable_ssl: #@ data.values.s3.disable_ssl
+  region: #@ data.values.s3.region
 
 automation_git:
   url: #@ data.values.git.automation_git_url

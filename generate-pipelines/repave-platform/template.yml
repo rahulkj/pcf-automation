@@ -24,6 +24,7 @@ resources:
   icon: database
   source:
     endpoint: ((s3.endpoint))
+    region_name: ((s3.region))
     bucket: #@ product.s3.bucket
     regexp: #@ product.s3.product_regex
     access_key_id: ((s3.access_key))

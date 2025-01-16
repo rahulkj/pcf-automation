@@ -67,10 +67,9 @@ ytt -f "${BASE_DIR}/globals-params.yml" \
     -f "${BASE_DIR}/${VALUES_FILE}" \
   --data-values-env YTT > "${ENV_PIPELINE_DIR}/pipelines/globals.yml"
 
-PRODUCTS=$(yq e .products "${BASE_DIR}/${VALUES_FILE}" -j | jq -r '.[] | select(.metadata.deploy_product==true) | .name')
+PRODUCTS=$(yq e .products "${BASE_DIR}/${VALUES_FILE}" -o=json | jq -r '.[] | select(.metadata.deploy_product==true) | .name')
 
 for p in ${PRODUCTS}; do
-  echo "------ ${p} ------"
   if [[ ! -d "${ENV_PIPELINE_DIR}/config/${p}" ]]; then
     mkdir -p "${ENV_PIPELINE_DIR}/config/${p}" && touch "${ENV_PIPELINE_DIR}/config/${p}/.gitkeep"
   fi

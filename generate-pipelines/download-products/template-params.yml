@@ -2,20 +2,22 @@
 #@ load("@ytt:data", "data")
 
 #@ for product in data.values.products:
-  _: #@ template.replace({product.name + "_slug": product.pivnet.slug})
-  _: #@ template.replace({product.name + "_version": product.pivnet.version})
-  _: #@ template.replace({product.name + "_glob": product.pivnet.glob})
-  _: #@ template.replace({product.name + "_s3_bucket": product.s3.bucket})
-  #@ if product.s3.product_regex != '':
-  _: #@ template.replace({product.name + "_s3_product_regex": product.s3.product_regex})
-  #@ else:
-  _: #@ template.replace({product.name + "_s3_versioned_file": product.s3.versioned_file})
-  #@ end
-  #@ if product.metadata.has_stemcell == True:
-  _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-" + product.pivnet.stemcell_os})
-  _: #@ template.replace({product.name + "_stemcell_version": "^" + product.pivnet.stemcell_version})
-  _: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3.stemcell_bucket})
-  _: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + data.values.stemcell_prefix + product.pivnet.stemcell_os + data.values.stemcell_postfix})
-  _: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-" + data.values.iaas + data.values.stemcell_prefix + product.pivnet.stemcell_os + data.values.stemcell_postfix})
+   #@ if product.metadata.skip_product == False:
+    _: #@ template.replace({product.name + "_slug": product.pivnet.slug})
+    _: #@ template.replace({product.name + "_version": product.pivnet.version})
+    _: #@ template.replace({product.name + "_glob": product.pivnet.glob})
+    _: #@ template.replace({product.name + "_s3_bucket": product.s3.bucket})
+    #@ if product.s3.product_regex != '':
+    _: #@ template.replace({product.name + "_s3_product_regex": product.s3.product_regex})
+    #@ else:
+    _: #@ template.replace({product.name + "_s3_versioned_file": product.s3.versioned_file})
+    #@ end
+    #@ if product.metadata.has_stemcell == True:
+    _: #@ template.replace({product.name + "_stemcell_slug": "stemcells-ubuntu-" + product.pivnet.stemcell_os})
+    _: #@ template.replace({product.name + "_stemcell_version": "^" + product.pivnet.stemcell_version})
+    _: #@ template.replace({product.name + "_s3_stemcell_bucket": product.s3.stemcell_bucket})
+    _: #@ template.replace({product.name + "_s3_stemcells_regex": "bosh-stemcell-(" + product.pivnet.stemcell_version + ")-" + data.values.iaas + data.values.stemcell_prefix + product.pivnet.stemcell_os + data.values.stemcell_postfix})
+    _: #@ template.replace({product.name + "_stemcell_glob": "bosh-stemcell-*-" + data.values.iaas + data.values.stemcell_prefix + product.pivnet.stemcell_os + data.values.stemcell_postfix})
+    #@ end
   #@ end
 #@ end

@@ -8,6 +8,7 @@ resource_types:
 
 resources:
 #@ for product in data.values.products:
+#@ if product.metadata.skip_product == False:
 - name: #@ product.name
   type: pivnet
   icon: cloud-download
@@ -18,7 +19,7 @@ resources:
     sort_by: semver
   check_every: 30m
 
-- name: #@ product.name + "-product-bucket"
+- name: #@ product.name + "-bucket"
   type: s3
   icon: database
   source:
@@ -58,17 +59,21 @@ resources:
     bucket: #@ "((" + product.name + "_s3_stemcell_bucket))"
 #@ end
 #@ end
+#@ end
 
 groups:
   - name: all
     jobs:
     #@ for product in data.values.products:
+    #@ if product.metadata.skip_product == False:
     - #@ product.name
     #@ if product.metadata.has_stemcell == True:
     - #@ product.name + "-stemcell"
     #@ end
     #@ end
+    #@ end
   #@ for product in data.values.products:
+  #@ if product.metadata.skip_product == False:
   - name: #@ product.name
     jobs:
     - #@ product.name
@@ -76,9 +81,11 @@ groups:
     - #@ product.name + "-stemcell"
     #@ end
   #@ end
+  #@ end
 
 jobs:
 #@ for product in data.values.products:
+#@ if product.metadata.skip_product == False:
 - name: #@ product.name
   serial: true
   serial_groups: [product-download]
@@ -91,7 +98,7 @@ jobs:
         globs:
         - #@ "((" + product.name + "_glob))"
 
-  - put: #@ product.name + "-product-bucket"
+  - put: #@ product.name + "-bucket"
     params:
       file: #@ "product/((" + product.name + "_glob))"
     no_get: true
@@ -119,5 +126,6 @@ jobs:
     params:
       file: stemcells/*.tgz
     no_get: true
+#@ end
 #@ end
 #@ end

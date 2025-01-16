@@ -4,10 +4,12 @@ env:
 separate_config: False
 pivnet_token: ((pivnet_token))
 iaas: vsphere
-stemcell_postfix: "-esxi-ubuntu-xenial-go_agent.tgz"
+stemcell_prefix: "-esxi-ubuntu-"
+stemcell_postfix: "-go_agent.tgz"
 auth_configure_attempts: 3
 apply_changes_attempts: 3
 pipelines_clone_depth: 30
+ignore_warnings: true
 
 registry:
   host: docker.io
@@ -67,6 +69,7 @@ vars:
 products:
 - name: ops-manager
   metadata:
+    skip_product: False
     has_stemcell: False
     deploy_product: False
     is_opsman: True
@@ -82,6 +85,7 @@ products:
     product_regex: "ops-manager-vsphere-(2.9.*).ova"
 - name: pks
   metadata:
+    skip_product: False
     has_stemcell: True
     deploy_product: True
     is_opsman: False
@@ -92,14 +96,12 @@ products:
     slug: pivotal-container-service
     glob: '*.pivotal'
     version: ^1\.8\..*$
-    stemcell_version: "621.*"
-    stemcell_os: "xenial"
   s3:
     bucket: pks  
     product_regex: "pivotal-container-service-(1.8.*).pivotal"
-    stemcell_bucket: stemcells
 - name: platform-automation-image
   metadata:
+    skip_product: False
     has_stemcell: False
     deploy_product: False
     is_opsman: False
@@ -113,6 +115,7 @@ products:
     product_regex: image/platform-automation-image-(4.4.*).tgz
 - name: platform-automation-tasks
   metadata:
+    skip_product: False
     has_stemcell: False
     deploy_product: False
     is_opsman: False
@@ -126,6 +129,7 @@ products:
     product_regex: tasks/platform-automation-tasks-(4.4.*).zip
 - name: harbor
   metadata:
+    skip_product: False
     has_stemcell: True
     deploy_product: True
     is_opsman: False
@@ -140,10 +144,10 @@ products:
     stemcell_os: "xenial"
   s3:
     bucket: harbor
-    stemcell_bucket: stemcells
     product_regex: "harbor-container-registry-(1.10.*).pivotal"
 - name: nsx-t
   metadata:
+    skip_product: False
     has_stemcell: False
     deploy_product: False
     is_opsman: False
@@ -158,6 +162,7 @@ products:
     product_regex: "VMware-NSX-T-(3.0.*).pivotal"
 - name: pas
   metadata:
+    skip_product: True
     has_stemcell: True
     deploy_product: False
     is_opsman: False
@@ -168,9 +173,21 @@ products:
     slug: elastic-runtime
     glob: 'cf-*.pivotal'
     version: ^2\.9\.[0-9]*$
-    stemcell_version: "621.*"
-    stemcell_os: "xenial"
   s3:
     bucket: pas
-    stemcell_bucket: stemcells
     product_regex: "cf-(2.9.*).pivotal"
+- name: jammy-stemcell
+  metadata:
+    skip_product: False
+    has_stemcell: False
+    deploy_product: False
+    is_opsman: False
+    is_platform_automation: False
+    skip_apply_changes: False
+  pivnet:
+    slug: stemcells-ubuntu-jammy
+    glob: bosh-stemcell-*-((iaas))-jammy-go_agent.tgz
+    version: 1.*
+  s3:
+    bucket: stemcells
+    product_regex: bosh-stemcell-*-((iaas))-jammy-go_agent.tgz
